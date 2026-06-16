@@ -8,7 +8,7 @@ Use respectful, concrete, and constructive reviews. The goal of review is to imp
 
 ## Branch Strategy
 
-Use short-lived branches from `main`:
+Use short-lived feature branches from `develop`:
 
 - `feat/<scope>-AM-<ticket>`
 - `fix/<scope>-AM-<ticket>`
@@ -46,13 +46,15 @@ fixing stuff
 
 ## Pull Request Process
 
-1. Create a ticket-specific branch from `main`.
+1. Create a ticket-specific branch from `develop`.
 2. Implement only the approved ticket scope.
 3. Run lint, typecheck, tests, and build locally.
 4. Update `ai-log/` for significant AI-assisted work.
-5. Open a PR against `main`.
+5. Open a PR against `develop`.
 6. Require at least one reviewer and passing CI.
 7. Merge only through the approved team workflow.
+
+Release PRs from `develop` to `main` are created only by humans after the milestone is reviewed.
 
 ## Code Review Guidelines
 

@@ -9,6 +9,6 @@ branch="$type/$scope-$ticket"
 path="../am-$ticket"
 
 git fetch origin
-git worktree add "$path" -b "$branch" origin/main
+git worktree add "$path" -b "$branch" origin/develop
 
 printf "Created worktree %s on branch %s\n" "$path" "$branch"

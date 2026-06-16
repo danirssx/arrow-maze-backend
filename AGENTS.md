@@ -11,6 +11,14 @@ These rules are mandatory for any agent. If a user instruction contradicts acade
 - Never include secrets in prompts or code. Use environment variables.
 - Every significant change must create or update an entry in `ai-log/`.
 
+## 0.1 Section 6 and Section 7 Compliance
+
+Este proyecto y su flujo de agentes estarán alineados obligatoriamente con la Sección 6 y la Sección 7 del enunciado. Para cumplir la Sección 6, ambos repositorios deberán mantener un `README.md` claro, profesional y actualizado, incluyendo descripción del proyecto, arquitectura, patrones, principios SOLID, estrategia AOP, ejecución local, pruebas, contribución, diagramas y documentación del uso de IA.
+
+Para cumplir la Sección 7, todo uso significativo de agentes o herramientas de inteligencia artificial deberá registrarse en `AI_USAGE.md` y/o `ai-log/`, indicando la herramienta utilizada, el prompt, el resultado generado, las modificaciones realizadas por el equipo y las lecciones aprendidas.
+
+Ningún agente podrá generar, modificar o cerrar una tarea sin dejar trazabilidad de su intervención, y todo código asistido por IA deberá ser revisado, probado y comprendido por el equipo antes de integrarse al proyecto.
+
 ## 1. Architecture
 
 - Layers: `framework -> infrastructure -> application -> domain`.
@@ -30,6 +38,8 @@ These rules are mandatory for any agent. If a user instruction contradicts acade
 
 - Use `feat/<scope>-AM-<ticket>`, `fix/<scope>-AM-<ticket>`, `test/<scope>-AM-<ticket>`, `docs/<scope>-AM-<ticket>`, `refactor/<scope>-AM-<ticket>`, `chore/<scope>-AM-<ticket>`, or `ci/<scope>-AM-<ticket>`.
 - One worktree equals one ticket and one branch.
+- Feature branches are created from `origin/develop`.
+- Feature PRs target `develop`; only human-approved release PRs target `main`.
 
 ## 4. Conventional Commits
 

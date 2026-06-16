@@ -17,6 +17,36 @@ Raw entries live in `ai-log/` and are compiled into this section before delivery
 
 ---
 
+# AI Usage Log: Branch Workflow Setup
+
+## Task / Problem
+
+Configure the repository branch workflow after `main` and `develop` were created.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked Codex to configure branches for the client and backend repositories and clarify what must be set in GitHub before starting the workflow.
+
+## Result Obtained
+
+Updated worktree scripts and agent/contribution documentation so feature work starts from `origin/develop`, feature PRs target `develop`, and only human-approved release PRs target `main`.
+
+## Team Modifications Pending Human Review
+
+- Confirm whether the team wants `develop` or `main` as the GitHub default branch.
+- Configure branch protection rules in GitHub for `main` and `develop`.
+
+## Lessons / Limitations
+
+When a project uses both `main` and `develop`, agent instructions must be explicit about PR targets to avoid accidental release-branch work.
+
+
+---
+
 # AI Usage Log: Project Setup
 
 ## Task / Problem
@@ -44,6 +74,36 @@ Generated initial Node/Express/TypeScript configuration, Clean Architecture fold
 ## Lessons / Limitations
 
 The setup intentionally avoids auth, progress, leaderboard, level definitions, and persistence adapters because those require team approval under `AGENTS.md`.
+
+
+---
+
+# AI Usage Log: Section 6 and Section 7 Compliance
+
+## Task / Problem
+
+Add explicit project rules requiring README completeness and AI usage traceability according to Section 6 and Section 7 of the project statement.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user provided compliance text in Spanish and asked to add it to the guideline or `AGENTS.md`, emphasizing README completeness, AI documentation, critical review, tests, and team responsibility.
+
+## Result Obtained
+
+Updated `AGENTS.md` with a mandatory Section 6 and Section 7 compliance section, and added an Academic Compliance section to `README.md`.
+
+## Team Modifications Pending Human Review
+
+- Confirm the final wording matches the professor's statement.
+- Expand README sections for SOLID, AOP strategy, and diagrams as the implementation decisions are approved.
+
+## Lessons / Limitations
+
+Compliance rules should live where agents cannot miss them: `AGENTS.md`, with a README summary for human contributors and evaluators.
 
 
 <!-- AI_LOG_ENTRIES_END -->

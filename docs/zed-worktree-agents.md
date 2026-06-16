@@ -12,7 +12,7 @@ Use one Zed window per worktree and one ticket per worktree.
 
 ## Worktree Commands
 
-From this repository root:
+From this repository root. Feature worktrees are created from `origin/develop`:
 
 ```bash
 ./scripts/new-worktree.sh AM-42 feat auth-flow
@@ -25,6 +25,8 @@ zed ../am-AM-42
 ```
 
 Assign the matching `.agents/*.md` prompt to that Zed assistant session. Do not let an agent switch branches inside its worktree.
+
+Feature PRs target `develop`. Only human-approved release PRs target `main`.
 
 ## Parallel Rule
 

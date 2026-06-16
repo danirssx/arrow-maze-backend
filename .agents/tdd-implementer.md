@@ -10,6 +10,6 @@ Para dominio/casos de uso, marca tests como sujetos a revision humana.
 Al terminar:
 - Escribe `ai-log/<fecha>-<ticket>.md`.
 - Usa commits Conventional en ingles.
-- Abre PR contra `main`.
+- Abre PR contra `develop`.
 - Mueve el ticket a In Review si el sistema de tickets esta disponible.
 - Detente.
