@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - database
+
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: arrow_maze
+      POSTGRES_PASSWORD: arrow_maze
+      POSTGRES_DB: arrow_maze
+    ports:
+      - "5432:5432"
+    volumes:
+      - arrow_maze_data:/var/lib/postgresql/data
+
+volumes:
+  arrow_maze_data:
