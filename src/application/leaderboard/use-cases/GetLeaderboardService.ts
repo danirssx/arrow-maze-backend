@@ -1,0 +1,55 @@
+import type { UseCase } from '../../aspects/UseCase.js';
+import type { ILeaderboardRepository } from '../ports/ILeaderboardRepository.js';
+import { LevelId } from '../../../domain/leaderboard/value-objects/LevelId.js';
+import { NotFoundError } from '../../../shared/errors/ApplicationError.js';
+
+export interface GetLeaderboardInput {
+  levelId: string;
+}
+
+export interface ScoreEntryDto {
+  entryId: string;
+  userId: string;
+  usernameSnapshot: string;
+  score: number;
+  timeSeconds: number;
+  movesCount: number;
+  rank: number;
+  submittedAt: Date;
+}
+
+export interface GetLeaderboardOutput {
+  leaderboardId: string;
+  levelId: string;
+  entries: ScoreEntryDto[];
+  updatedAt: Date;
+}
+
+export class GetLeaderboardService implements UseCase<GetLeaderboardInput, GetLeaderboardOutput> {
+  constructor(private readonly repo: ILeaderboardRepository) {}
+
+  async execute(input: GetLeaderboardInput): Promise<GetLeaderboardOutput> {
+    const levelId = new LevelId(input.levelId);
+    const leaderboard = await this.repo.findByLevelId(levelId);
+
+    if (leaderboard === null) {
+      throw new NotFoundError(`Leaderboard not found for level ${input.levelId}`);
+    }
+
+    return {
+      leaderboardId: leaderboard.id.value,
+      levelId: leaderboard.levelId.value,
+      updatedAt: leaderboard.updatedAt.value,
+      entries: leaderboard.entries.map((e) => ({
+        entryId: e.id.value,
+        userId: e.userId.value,
+        usernameSnapshot: e.usernameSnapshot.value,
+        score: e.score.value,
+        timeSeconds: e.timeSeconds.value,
+        movesCount: e.movesCount.value,
+        rank: e.rank?.value ?? 0,
+        submittedAt: e.submittedAt.value,
+      })),
+    };
+  }
+}
