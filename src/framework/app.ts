@@ -3,13 +3,16 @@ import express from "express";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 
-import { errorMiddleware } from "./errors/errorMiddleware.js";
+import { ConsoleLogger } from "../infrastructure/logging/ConsoleLogger.js";
 import { loadEnvironment } from "./config/environment.js";
+import { createErrorMiddleware } from "./errors/errorMiddleware.js";
+import { notFoundMiddleware } from "./errors/notFoundMiddleware.js";
 import { createHealthRouter } from "./routes/healthRoutes.js";
 import { openApiSpec } from "./swagger/openApiSpec.js";
 
 export function createApp() {
   const environment = loadEnvironment();
+  const logger = new ConsoleLogger();
   const app = express();
 
   app.use(helmet());
@@ -17,7 +20,8 @@ export function createApp() {
   app.use(express.json());
   app.use(createHealthRouter());
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
-  app.use(errorMiddleware);
+  app.use(notFoundMiddleware);
+  app.use(createErrorMiddleware(logger));
 
   return app;
 }
