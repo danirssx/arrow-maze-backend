@@ -551,6 +551,68 @@ Generated 5 files:
 - Application layer coverage reached 100% statements and 100% branches for both use cases after this ticket.
 
 
+---
+
+# AI Log — AM-009 — Model Level Catalog domain
+
+**Date:** 2026-06-17
+**Ticket:** MAZ-80 (AM-009)
+**Branch:** feat/level-domain-AM-009
+
+## Task / problem
+
+Model the Level Catalog bounded context as an authoritative definition of puzzle levels, with structural and solvability validation based on a lightweight directed graph. No gameplay engine, no mobile step-by-step mechanics.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+User instructed to implement ticket AM-009 (Model Level Catalog domain) following the same workflow established in claude-memory.md.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | In-scope/out-of-scope list and acceptance criteria from MAZ-80 used to define CellType, LevelSolvabilityPolicy boundary, and what NOT to build | MAZ-80 description |
+| Planner/Slicer | Referenced | Domain structured in enums → value objects → policy → aggregate, following the same layering as Identity domain | src/domain/level-catalog/ layout |
+| TDD Implementer | Used | All tests written before running verify; fixed `.toBeInstanceOf()` → `.toThrow()` for synchronous throws after first verify run | tests/domain/level-catalog/ |
+| Judge | Not used | N/A |
+| Mutation Tester | Not used | N/A |
+
+## Result obtained
+
+Generated 18 source files and 8 test files:
+
+**Enums** — `CellType` (ARROW, START, EXIT), `Direction` (8 cardinal + diagonal), `Difficulty` (EASY, MEDIUM, HARD), `LevelStatus` (DRAFT, PUBLISHED, ARCHIVED)
+
+**Value Objects** — `LevelId` (UUID), `LevelName` (1-100 chars), `LevelDescription` (max 500 chars), `BoardSize` (2-20 rows/cols), `Position` (non-negative integers), `CellSpec` (position + type + optional direction; enforces direction rules per cell type), `LevelDefinition` (validates exactly one START, exactly one EXIT, all cells within bounds), `LevelVersion` (positive integer), `TimeLimit` (positive seconds), `MoveCount` (positive integer)
+
+**Domain service** — `LevelSolvabilityPolicy`: follows the direction chain from START using BFS with cycle detection; returns true if EXIT is reached
+
+**Domain event** — `LevelPublished` (levelId, name, difficulty)
+
+**Aggregate Root** — `Level`: `draft()` factory, `reconstitute()`, `publish(policy)` (throws if not DRAFT or not solvable; emits LevelPublished), `pullDomainEvents()`
+
+`npm run verify` passes: lint ✅ typecheck ✅ 172 tests ✅ build ✅ (+41 tests from 131 baseline)
+
+## Team modifications pending human review
+
+- `CellType.START` cells require a direction (the initial movement direction). This means START is not a passive marker — it has an arrow. Team should confirm this game mechanic interpretation is correct.
+- `CellType.EXIT` cells have no direction. Movement terminates when the path lands on EXIT.
+- `LevelSolvabilityPolicy` uses deterministic chain-following (each cell has exactly one outgoing edge). If the team wants to support branching paths in the future (multiple traversal choices), the policy will need a BFS graph approach instead.
+- `LevelDescription` allows empty string. If a non-empty description is required, the validation bound needs updating.
+- `Level.draft()` does not validate solvability. Solvability is only checked at publish time. Team should confirm this is acceptable.
+
+## Lessons / limitations
+
+- Synchronous throws must be tested with `.toThrow(ErrorClass)`, not `.toBeInstanceOf()`. `.toBeInstanceOf()` works for async rejections via `.rejects`, not for `expect(() => fn())`.
+- `LevelSolvabilityPolicy` depends on `Position.create()` internally to construct the next step position. Since `Position` validates non-negative integers and the policy checks bounds before creating, this is safe.
+- `MoveCount` and `TimeLimit` have 0% coverage because `Level.draft()` makes them optional and no test exercises those paths yet. Coverage will improve in AM-010 (application services).
+
+
 <!-- AI_LOG_ENTRIES_END -->
 
 ## Critical Evaluation
