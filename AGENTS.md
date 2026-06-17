@@ -63,11 +63,34 @@ Before finishing a significant task, write `ai-log/<date>-<ticket>.md` with:
 - Task / problem.
 - Tool and model.
 - Prompt used.
+- Agent roles used.
 - Result obtained.
 - Team modifications pending human review.
 - Lessons / limitations.
 
 Commit the log with the related change.
+
+### 6.1 Agent Role Traceability
+
+Every `ai-log/` entry must include a section named `Agent Roles Used`.
+
+For each configured prompt in `.agents/`, state whether it was:
+
+- `Used`: the prompt was applied directly for that task.
+- `Referenced`: the prompt was read and its constraints guided the task, but no separate agent session was run.
+- `Not used`: the role was not applicable for that task.
+
+Use this table format:
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Used / Referenced / Not used | ... | spec, Linear issue, question, or N/A |
+| Planner/Slicer | Used / Referenced / Not used | ... | plan, Linear issue, or N/A |
+| TDD Implementer | Used / Referenced / Not used | ... | tests, code, commit |
+| Judge | Used / Referenced / Not used | ... | review checklist, PR comment, or N/A |
+| Mutation Tester | Used / Referenced / Not used | ... | mutation log or N/A |
+
+Do not claim an agent was `Used` if it was only followed conceptually in the same Codex session. In that case, write `Referenced` and describe the exact rule applied.
 
 ## 7. Worktrees
 
