@@ -348,7 +348,7 @@ Implement the application layer for the Identity bounded context: ports (interfa
 
 ## Prompt used
 
-> Arrancamos con MAZ-76 o AM-005 — implement Identity application services. The domain is complete (AM-004 Done). Create the ports and use cases needed for register and login.
+User instructed to implement ticket AM-005 (Identity application services), creating the application ports and use cases for user registration and login on top of the completed AM-004 domain layer.
 
 ## Result obtained
 
@@ -394,7 +394,7 @@ Implement the concrete adapters in the infrastructure layer for the Identity bou
 
 ## Prompt used
 
-> comienza con el ticket AM-006, recuerda hacer todo lo que dice el claude-memory y el AGENTS.md
+User instructed to implement ticket AM-006 (Identity infrastructure and persistence), following all project conventions from claude-memory.md and AGENTS.md.
 
 ## Agent Roles Used
 
@@ -436,6 +436,63 @@ Generated 10 files:
 - ESM + ts-jest requires `import type` for enum imports used only as type casts — ESLint enforces this.
 - `jest.fn()` is not available as a global in ESM mode without `import { jest } from '@jest/globals'`; using hand-rolled fake classes (FakePool, FakeClient) matches the project's existing testing style and avoids this limitation.
 - `loadEnvironment()` is called at module import time inside `createApp()`; adding mandatory env var checks broke existing API tests that don't set those vars. Fixed by adding `jest.setup.ts` with safe placeholder values.
+
+
+---
+
+# AI Log — AM-007 — Expose Identity HTTP API and Swagger
+
+**Date:** 2026-06-17
+**Ticket:** MAZ-78 (AM-007)
+**Branch:** feat/identity-http-AM-007
+
+## Task / problem
+
+Expose the Identity bounded context via HTTP: add POST /auth/register and POST /auth/login endpoints, wire the DI composition in app.ts, and document both endpoints in the OpenAPI spec.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+User instructed to implement ticket AM-007 (expose Identity HTTP API and Swagger), following the established workflow from claude-memory.md and compiling AI_USAGE.md after coding.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Use case contracts (RegisterUserInput/Output, LoginInput/Output) from AM-005 used as the HTTP contract | src/application/identity/use-cases/ |
+| Planner/Slicer | Referenced | Dependency direction enforced: controller stays in framework, no business rules in controller | AGENTS.md §1, §8 |
+| TDD Implementer | Used | Controller tests written with fake use cases before verifying green | tests/framework/identity/IdentityController.test.ts |
+| Judge | Not used | N/A |
+| Mutation Tester | Not used | N/A |
+
+## Result obtained
+
+Generated 4 files, updated 2:
+
+- `src/framework/identity/IdentityController.ts` — Pattern: Controller. Handles POST /auth/register (201) and POST /auth/login (200); validates required fields, delegates to use cases, forwards errors to Express next().
+- `src/framework/identity/identityRoutes.ts` — Express Router factory accepting an IdentityController instance.
+- `src/framework/app.ts` — Updated: full DI composition wiring (PgPool → PgUserRepository, BcryptPasswordHasher, JwtTokenService, PgUnitOfWork, use cases wrapped in UseCaseLoggingDecorator + TransactionDecorator); mounts identity router.
+- `src/framework/swagger/openApiSpec.ts` — Updated: added /auth/register and /auth/login paths with request/response schemas (RegisterRequest, RegisterResponse, LoginRequest, LoginResponse), all error codes documented.
+- `tests/framework/identity/IdentityController.test.ts` — 9 unit tests covering register success, login success, missing fields (BadRequestError), and use case error propagation.
+
+`npm run verify` passes: lint ✅ typecheck ✅ 107 tests ✅ build ✅
+
+## Team modifications pending human review
+
+- Confirm that wrapping RegisterUserUseCase in TransactionDecorator(UseCaseLoggingDecorator(...)) is the correct decorator order (transaction outermost).
+- Confirm that LoginUseCase is intentionally NOT wrapped in TransactionDecorator (read-only path).
+- Review request body validation in IdentityController — currently only checks for field presence; domain layer handles format/length validation.
+- Swagger examples use placeholder values — team may want to refine them before delivery.
+
+## Lessons / limitations
+
+- `pg` Pool does not establish a connection on instantiation — only on first `pool.query()` call. This allowed wiring the real PgPool inside `createApp()` without breaking existing API tests that don't hit identity endpoints.
+- Controller tests use hand-rolled fake use cases (same pattern as the rest of the test suite) — no jest.fn() needed in ESM mode.
+- `identityRoutes.ts` coverage shows 66% statements because the router factory itself is never called from a test; the controller is unit-tested directly. End-to-end route coverage belongs in AM-008.
 
 
 <!-- AI_LOG_ENTRIES_END -->
