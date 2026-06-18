@@ -1,4 +1,4 @@
-import type { Logger } from "../../application/ports/Logger.js";
+﻿import type { Logger } from "../../application/ports/Logger.js";
 
 export class ConsoleLogger implements Logger {
   error(message: string, context?: Record<string, unknown>): void {
