@@ -38,7 +38,7 @@ export function createApp() {
   const environment = loadEnvironment();
   const logger = new ConsoleLogger();
 
-  const pool = createPool(environment.databaseUrl);
+  const pool = createPool(environment.databaseUrl, { ssl: environment.databaseSsl });
   const userRepository = new PgUserRepository(pool);
   const passwordHasher = new BcryptPasswordHasher();
   const tokenService = new JwtTokenService(environment.jwtSecret);

@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    name: Verify before deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - run: npm run build
+
+  deploy:
+    name: Deploy to production
+    needs: verify
+    runs-on: ubuntu-latest
+    # Uncomment and configure for your chosen cloud platform.
+    # Example below shows Railway CLI deployment.
+    # Required secrets in GitHub repository settings:
+    #   RAILWAY_TOKEN — service token from Railway project settings
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy
+        # Replace this step with the deployment command for your platform:
+        #
+        # Railway:
+        #   run: npx @railway/cli@latest up --service arrow-maze-backend
+        #   env:
+        #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        #
+        # Render:
+        #   use: render deploy hook URL stored in secrets.RENDER_DEPLOY_HOOK
+        #   run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+        #
+        # Docker registry + VPS:
+        #   docker build, push, then SSH and pull
+        run: echo "Configure deployment step for your cloud platform (see comments above)."
