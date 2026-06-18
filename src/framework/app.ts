@@ -3,7 +3,7 @@ import express from "express";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 
-import { errorMiddleware } from "./errors/errorMiddleware.js";
+import { createErrorMiddleware } from "./errors/errorMiddleware.js";
 import { loadEnvironment } from "./config/environment.js";
 import { createHealthRouter } from "./routes/healthRoutes.js";
 import { openApiSpec } from "./swagger/openApiSpec.js";
@@ -17,7 +17,7 @@ export function createApp() {
   app.use(express.json());
   app.use(createHealthRouter());
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
-  app.use(errorMiddleware);
+  app.use(createErrorMiddleware({ error: () => {}, warn: () => {}, info: () => {} }));
 
   return app;
 }
