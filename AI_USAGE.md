@@ -1060,6 +1060,67 @@ The 8 divergences:
 
 ---
 
+# AI Log — feat: expose Level Catalog HTTP API and Swagger (AM-012)
+
+**Date:** 2026-06-18
+**Branch:** feat/level-api-AM-012
+**Linear:** MAZ-83
+
+## Task / problem
+
+Expose the Level Catalog bounded context as an HTTP API. The use cases (`GetLevelsUseCase`, `GetLevelUseCase`, `CreateLevelUseCase`, `UpdateLevelDefinitionUseCase`, `PublishLevelUseCase`, `ArchiveLevelUseCase`) and infrastructure (`PgLevelRepository`) were already implemented in AM-010 and AM-011. This ticket adds the framework layer: controller, routes, wiring in `app.ts`, and Swagger documentation.
+
+Public endpoints return published levels for all clients. Admin endpoints (create, update definition, publish, archive) require `Authorization: Bearer <token>` and `role === 'ADMIN'` — enforced inline in the controller using the existing `AuthenticatedRequest` pattern.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+User requested implementing AM-012 following the established workflow: read AGENTS.md, check Linear, create branch, implement controller and routes following existing patterns (IdentityController, LeaderboardController), wire in app.ts, add Swagger schemas, write tests, and update Linear.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Not used | N/A | N/A |
+| Planner/Slicer | Not used | N/A | N/A |
+| TDD Implementer | Referenced | Tests written for all public and admin endpoints; AAA pattern applied; fake use cases used throughout; 15 new tests | tests/api/level-catalog/ |
+| Judge | Referenced | Controller pattern verified against IdentityController and LeaderboardController; role check pattern verified against AuthenticatedRequest usage in existing controllers | N/A |
+| Mutation Tester | Not used | N/A | N/A |
+
+## Result obtained
+
+**New files:**
+- `src/framework/level-catalog/LevelCatalogController.ts`: 6 methods (listLevels, getLevel, createLevel, updateDefinition, publishLevel, archiveLevel); admin methods enforce `role === 'ADMIN'`
+- `src/framework/level-catalog/levelCatalogRoutes.ts`: `GET /levels`, `GET /levels/:levelId` (public); `POST /levels`, `PUT /levels/:levelId/definition`, `POST /levels/:levelId/publish`, `POST /levels/:levelId/archive` (auth required)
+- `tests/helpers/createLevelCatalogTestApp.ts`: Supertest helper with FakeTokenService support
+- `tests/api/level-catalog/getLevels.test.ts`: 4 tests for `GET /levels`
+- `tests/api/level-catalog/getLevel.test.ts`: 5 tests for `GET /levels/:levelId`
+- `tests/api/level-catalog/createLevel.test.ts`: 6 tests for `POST /levels`
+
+**Modified files:**
+- `src/framework/app.ts`: wired `PgLevelRepository`, `LevelSolvabilityPolicy`, all 6 use cases (reads without TransactionDecorator, writes with), `LevelCatalogController`, and `createLevelCatalogRouter`
+- `src/framework/swagger/openApiSpec.ts`: added 6 Level Catalog paths and 8 new schemas (CellInput, CreateLevelRequest, UpdateLevelDefinitionRequest, CreateLevelResponse, LevelIdResponse, LevelSummary, LevelsListResponse, LevelDetail, LevelDetailResponse)
+
+**Test count:** 297 → 312 (15 new tests, 58 suites)
+
+## Team modifications pending human review
+
+- Admin role check is inline in the controller (`role !== 'ADMIN'` → `ForbiddenError`). If the team wants a reusable role-guard middleware, that decision should be made explicitly and applied consistently across all bounded contexts.
+- `GET /levels` returns all published levels without pagination. If the catalog grows, pagination should be added at the use case level first.
+- Swagger `SubmitScoreRequest` still has `userId` in its required fields — this is a pre-existing leftover from before Fix #8 and is out of AM-012 scope.
+
+## Lessons / limitations
+
+- `exactOptionalPropertyTypes: true` in tsconfig requires conditional spread (`...(x !== undefined && { key: x })`) instead of `key: x ?? undefined` for optional fields — plain `undefined` assignment fails type checking.
+- `req.params.levelId` needs explicit `String()` cast because Express types it as `string | string[] | undefined`.
+
+
+---
+
 # AI Log - AM-037 - Model Player Progress domain
 
 ## Task / problem
