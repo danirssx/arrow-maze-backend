@@ -1,13 +1,13 @@
 import { Entity } from '../shared/Entity.js';
-import { EntryId } from './value-objects/EntryId.js';
-import { LevelId } from './value-objects/LevelId.js';
-import { MoveCount } from './value-objects/MoveCount.js';
-import { Rank } from './value-objects/Rank.js';
-import { Score } from './value-objects/Score.js';
-import { SubmittedAt } from './value-objects/SubmittedAt.js';
-import { TimeSeconds } from './value-objects/TimeSeconds.js';
-import { UserId } from './value-objects/UserId.js';
-import { UsernameSnapshot } from './value-objects/UsernameSnapshot.js';
+import type { EntryId } from './value-objects/EntryId.js';
+import type { LevelId } from './value-objects/LevelId.js';
+import type { MoveCount } from './value-objects/MoveCount.js';
+import type { Rank } from './value-objects/Rank.js';
+import type { Score } from './value-objects/Score.js';
+import type { SubmittedAt } from './value-objects/SubmittedAt.js';
+import type { TimeSeconds } from './value-objects/TimeSeconds.js';
+import type { UserId } from './value-objects/UserId.js';
+import type { UsernameSnapshot } from './value-objects/UsernameSnapshot.js';
 
 export interface ScoreEntryProps {
   id: EntryId;
