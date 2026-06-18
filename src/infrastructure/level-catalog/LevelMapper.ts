@@ -9,11 +9,12 @@ import { LevelVersion } from '../../domain/level-catalog/value-objects/LevelVers
 import { MoveCount } from '../../domain/level-catalog/value-objects/MoveCount.js';
 import { Position } from '../../domain/level-catalog/value-objects/Position.js';
 import { TimeLimit } from '../../domain/level-catalog/value-objects/TimeLimit.js';
-import type { Difficulty } from '../../domain/level-catalog/enums/Difficulty.js';
-import type { LevelStatus } from '../../domain/level-catalog/enums/LevelStatus.js';
-import type { CellType } from '../../domain/level-catalog/enums/CellType.js';
-import type { Direction } from '../../domain/level-catalog/enums/Direction.js';
+import { Difficulty } from '../../domain/level-catalog/enums/Difficulty.js';
+import { LevelStatus } from '../../domain/level-catalog/enums/LevelStatus.js';
+import { CellType } from '../../domain/level-catalog/enums/CellType.js';
+import { Direction } from '../../domain/level-catalog/enums/Direction.js';
 import { LevelId } from '../../domain/shared/LevelId.js';
+import { parseEnumFromDb } from '../../shared/parseEnum.js';
 
 export type LevelRow = {
   id: string;
@@ -40,21 +41,21 @@ export type CellRow = {
 export function rowToLevel(levelRow: LevelRow, cellRows: CellRow[]): Level {
   const boardSize = BoardSize.create(levelRow.board_rows, levelRow.board_cols);
 
-  const cells = cellRows.map((c) =>
-    CellSpec.create(
-      Position.create(c.row, c.col),
-      c.type as CellType,
-      (c.direction ?? undefined) as Direction | undefined,
-    ),
-  );
+  const cells = cellRows.map((c) => {
+    const cellType = parseEnumFromDb(CellType, c.type, 'cell type');
+    const direction = c.direction !== null
+      ? parseEnumFromDb(Direction, c.direction, 'direction')
+      : undefined;
+    return CellSpec.create(Position.create(c.row, c.col), cellType, direction);
+  });
 
   return Level.reconstitute(
     LevelId.create(levelRow.id),
     LevelName.create(levelRow.name),
     LevelDescription.create(levelRow.description),
     LevelDefinition.create(boardSize, cells),
-    levelRow.difficulty as Difficulty,
-    levelRow.status as LevelStatus,
+    parseEnumFromDb(Difficulty, levelRow.difficulty, 'difficulty'),
+    parseEnumFromDb(LevelStatus, levelRow.status, 'status'),
     LevelVersion.create(levelRow.version),
     levelRow.time_limit_seconds !== null
       ? TimeLimit.create(levelRow.time_limit_seconds)
