@@ -1,7 +1,7 @@
 // Pattern: Aggregate Root
 import { BusinessRuleViolationError } from "../errors/DomainError.js";
 import { Entity } from "../shared/Entity.js";
-import { LevelId } from "../shared/LevelId.js";
+import type { LevelId } from "../shared/LevelId.js";
 import type { Difficulty } from "./enums/Difficulty.js";
 import { LevelStatus } from "./enums/LevelStatus.js";
 import { LevelPublished } from "./events/LevelPublished.js";

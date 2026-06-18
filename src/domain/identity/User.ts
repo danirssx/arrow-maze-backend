@@ -1,7 +1,7 @@
 // Pattern: Aggregate Root
 import { BusinessRuleViolationError } from "../errors/DomainError.js";
 import { Entity } from "../shared/Entity.js";
-import { UserId } from "../shared/UserId.js";
+import type { UserId } from "../shared/UserId.js";
 import { UserRole } from "./enums/UserRole.js";
 import { UserStatus } from "./enums/UserStatus.js";
 import { UserPasswordChanged } from "./events/UserPasswordChanged.js";
