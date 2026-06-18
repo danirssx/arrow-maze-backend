@@ -2,14 +2,15 @@
 import type { Pool } from "pg";
 import type { UserRepository } from "../../application/identity/ports/UserRepository.js";
 import { User } from "../../domain/identity/User.js";
-import type { UserRole } from "../../domain/identity/enums/UserRole.js";
-import type { UserStatus } from "../../domain/identity/enums/UserStatus.js";
+import { UserRole } from "../../domain/identity/enums/UserRole.js";
+import { UserStatus } from "../../domain/identity/enums/UserStatus.js";
 import { Email } from "../../domain/identity/value-objects/Email.js";
 import { PasswordHash } from "../../domain/identity/value-objects/PasswordHash.js";
 import { Username } from "../../domain/identity/value-objects/Username.js";
 import { UserId } from "../../domain/shared/UserId.js";
 import { InfrastructureError } from "../../shared/errors/InfrastructureError.js";
 import { getQueryRunner } from "../../infrastructure/database/transactionContext.js";
+import { parseEnumFromDb } from "../../shared/parseEnum.js";
 import type { Email as EmailType } from "../../domain/identity/value-objects/Email.js";
 import type { Username as UsernameType } from "../../domain/identity/value-objects/Username.js";
 
@@ -30,8 +31,8 @@ function rowToUser(row: UserRow): User {
     Email.create(row.email),
     Username.create(row.username),
     PasswordHash.fromHash(row.password_hash),
-    row.role as UserRole,
-    row.status as UserStatus,
+    parseEnumFromDb(UserRole, row.role, 'user role'),
+    parseEnumFromDb(UserStatus, row.status, 'user status'),
     row.created_at,
     row.updated_at
   );

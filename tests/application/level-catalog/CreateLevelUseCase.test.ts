@@ -1,5 +1,6 @@
 import { CreateLevelUseCase } from "../../../src/application/level-catalog/use-cases/CreateLevelUseCase";
 import { LevelStatus } from "../../../src/domain/level-catalog/enums/LevelStatus";
+import { ValidationError } from "../../../src/shared/errors/ApplicationError";
 import { FakeLevelRepository } from "./helpers/levelFixtures";
 
 // Subject to human review — application use case test
@@ -59,5 +60,50 @@ describe("CreateLevelUseCase", () => {
         ],
       })
     ).rejects.toThrow();
+  });
+
+  it("should_throw_validation_error_when_difficulty_is_invalid", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    const useCase = new CreateLevelUseCase(repo);
+
+    // Act / Assert
+    await expect(
+      useCase.execute({ ...VALID_INPUT, difficulty: "IMPOSSIBLE" })
+    ).rejects.toThrow(ValidationError);
+  });
+
+  it("should_throw_validation_error_when_cell_type_is_invalid", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    const useCase = new CreateLevelUseCase(repo);
+
+    // Act / Assert
+    await expect(
+      useCase.execute({
+        ...VALID_INPUT,
+        cells: [
+          { position: { row: 0, col: 0 }, type: "INVALID_CELL", direction: "RIGHT" },
+          { position: { row: 1, col: 1 }, type: "EXIT" },
+        ],
+      })
+    ).rejects.toThrow(ValidationError);
+  });
+
+  it("should_throw_validation_error_when_direction_is_invalid", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    const useCase = new CreateLevelUseCase(repo);
+
+    // Act / Assert
+    await expect(
+      useCase.execute({
+        ...VALID_INPUT,
+        cells: [
+          { position: { row: 0, col: 0 }, type: "START", direction: "DIAGONAL" },
+          { position: { row: 1, col: 1 }, type: "EXIT" },
+        ],
+      })
+    ).rejects.toThrow(ValidationError);
   });
 });
