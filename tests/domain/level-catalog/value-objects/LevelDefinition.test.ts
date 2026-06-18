@@ -63,4 +63,9 @@ describe("LevelDefinition", () => {
     const cells = [start(0, 0), exit(0, 1), arrow(5, 5, Direction.UP)];
     expect(() => LevelDefinition.create(size(), cells)).toThrow("out of bounds");
   });
+
+  it("should_throw_when_two_cells_share_the_same_position", () => {
+    const cells = [start(0, 0), arrow(0, 1, Direction.DOWN), exit(0, 1)];
+    expect(() => LevelDefinition.create(size(), cells)).toThrow("Duplicate cell");
+  });
 });
