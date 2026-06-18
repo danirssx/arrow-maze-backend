@@ -34,15 +34,16 @@ INSERT INTO level_cells (level_id, row, col, type, direction) VALUES
 ON CONFLICT (level_id, row, col) DO NOTHING;
 
 -- Level 2: Crossroads (4x4, EASY)
--- S→  ↓  ←  ←
--- ↑   ↓  ↑  ↑
--- ↑   →  →  ↑
--- →   ↑  ←  E
+-- Path: (0,0)→R→(0,1)→D→(1,1)→R→(1,2)→D→(2,2)→R→(2,3)→D→(3,3) EXIT
+-- S→  ↓  ↓  ←
+-- ↑   →  ↓  ↓
+-- →   →  →  ↓
+-- ↑   ↑  ←  E
 INSERT INTO levels (id, name, description, difficulty, status, version, board_rows, board_cols, time_limit_seconds, move_count, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440011',
   'Crossroads',
-  'A bit more complex. Watch for loops.',
+  'A bit more complex. Watch for dead ends.',
   'EASY',
   'PUBLISHED',
   1,
@@ -57,17 +58,17 @@ VALUES (
 INSERT INTO level_cells (level_id, row, col, type, direction) VALUES
   ('550e8400-e29b-41d4-a716-446655440011', 0, 0, 'START', 'RIGHT'),
   ('550e8400-e29b-41d4-a716-446655440011', 0, 1, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440011', 0, 2, 'ARROW', 'LEFT'),
+  ('550e8400-e29b-41d4-a716-446655440011', 0, 2, 'ARROW', 'DOWN'),
   ('550e8400-e29b-41d4-a716-446655440011', 0, 3, 'ARROW', 'LEFT'),
   ('550e8400-e29b-41d4-a716-446655440011', 1, 0, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440011', 1, 1, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440011', 1, 2, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440011', 1, 3, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440011', 2, 0, 'ARROW', 'UP'),
+  ('550e8400-e29b-41d4-a716-446655440011', 1, 1, 'ARROW', 'RIGHT'),
+  ('550e8400-e29b-41d4-a716-446655440011', 1, 2, 'ARROW', 'DOWN'),
+  ('550e8400-e29b-41d4-a716-446655440011', 1, 3, 'ARROW', 'DOWN'),
+  ('550e8400-e29b-41d4-a716-446655440011', 2, 0, 'ARROW', 'RIGHT'),
   ('550e8400-e29b-41d4-a716-446655440011', 2, 1, 'ARROW', 'RIGHT'),
   ('550e8400-e29b-41d4-a716-446655440011', 2, 2, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440011', 2, 3, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440011', 3, 0, 'ARROW', 'RIGHT'),
+  ('550e8400-e29b-41d4-a716-446655440011', 2, 3, 'ARROW', 'DOWN'),
+  ('550e8400-e29b-41d4-a716-446655440011', 3, 0, 'ARROW', 'UP'),
   ('550e8400-e29b-41d4-a716-446655440011', 3, 1, 'ARROW', 'UP'),
   ('550e8400-e29b-41d4-a716-446655440011', 3, 2, 'ARROW', 'LEFT'),
   ('550e8400-e29b-41d4-a716-446655440011', 3, 3, 'EXIT',  NULL)
