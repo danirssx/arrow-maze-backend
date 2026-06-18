@@ -1,9 +1,7 @@
 import { Level } from "../../../domain/level-catalog/Level.js";
-import { CellType } from "../../../domain/level-catalog/enums/CellType.js";
 import { Difficulty } from "../../../domain/level-catalog/enums/Difficulty.js";
 import { Direction } from "../../../domain/level-catalog/enums/Direction.js";
-import { BoardSize } from "../../../domain/level-catalog/value-objects/BoardSize.js";
-import { CellSpec } from "../../../domain/level-catalog/value-objects/CellSpec.js";
+import { ArrowSpec } from "../../../domain/level-catalog/value-objects/ArrowSpec.js";
 import { LevelDefinition } from "../../../domain/level-catalog/value-objects/LevelDefinition.js";
 import { LevelDescription } from "../../../domain/level-catalog/value-objects/LevelDescription.js";
 import { LevelName } from "../../../domain/level-catalog/value-objects/LevelName.js";
@@ -15,10 +13,14 @@ import { LevelId } from "../../../domain/shared/LevelId.js";
 import type { UseCase } from "../../aspects/UseCase.js";
 import type { LevelRepository } from "../ports/LevelRepository.js";
 import { parseEnumFromInput } from "../../../shared/parseEnum.js";
+import { ValidationError } from "../../../shared/errors/ApplicationError.js";
 
-export type CellInput = {
-  position: { row: number; col: number };
-  type: string;
+export type PositionInput = { row: number; col: number };
+
+export type ArrowInput = {
+  id: string;
+  color: string;
+  path: PositionInput[];
   direction?: string;
 };
 
@@ -26,8 +28,8 @@ export type CreateLevelInput = {
   name: string;
   description: string;
   difficulty: string;
-  boardSize: { rows: number; cols: number };
-  cells: CellInput[];
+  arrows: ArrowInput[];
+  attempts?: number;
   timeLimit?: number;
   moveCount?: number;
 };
@@ -39,20 +41,13 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
 
   async execute(input: CreateLevelInput): Promise<CreateLevelOutput> {
     const id = LevelId.generate();
-    const boardSize = BoardSize.create(input.boardSize.rows, input.boardSize.cols);
     const difficulty = parseEnumFromInput(Difficulty, input.difficulty, 'difficulty');
-    const cells = input.cells.map((c) => {
-      const cellType = parseEnumFromInput(CellType, c.type, 'cell type');
-      const direction = c.direction !== undefined
-        ? parseEnumFromInput(Direction, c.direction, 'direction')
-        : undefined;
-      return CellSpec.create(Position.create(c.position.row, c.position.col), cellType, direction);
-    });
+    const arrows = input.arrows.map((arrow) => mapArrowInput(arrow));
     const level = Level.draft(
       id,
       LevelName.create(input.name),
       LevelDescription.create(input.description),
-      LevelDefinition.create(boardSize, cells),
+      LevelDefinition.create(arrows, input.attempts),
       difficulty,
       LevelVersion.initial(),
       input.timeLimit ? TimeLimit.create(input.timeLimit) : undefined,
@@ -62,4 +57,17 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
     await this.repo.save(level);
     return { levelId: id.value };
   }
+}
+
+export function mapArrowInput(input: ArrowInput): ArrowSpec {
+  if (input.direction === undefined) {
+    throw new ValidationError("Arrow direction is required");
+  }
+  const direction = parseEnumFromInput(Direction, input.direction, "direction");
+  return ArrowSpec.create(
+    input.id,
+    input.color,
+    input.path.map((position) => Position.create(position.row, position.col)),
+    direction
+  );
 }

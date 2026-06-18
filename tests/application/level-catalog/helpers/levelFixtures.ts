@@ -1,11 +1,9 @@
 import { Level } from "../../../../src/domain/level-catalog/Level";
 import { LevelSolvabilityPolicy } from "../../../../src/domain/level-catalog/LevelSolvabilityPolicy";
-import { CellType } from "../../../../src/domain/level-catalog/enums/CellType";
 import { Difficulty } from "../../../../src/domain/level-catalog/enums/Difficulty";
 import { Direction } from "../../../../src/domain/level-catalog/enums/Direction";
 import { LevelStatus } from "../../../../src/domain/level-catalog/enums/LevelStatus";
-import { BoardSize } from "../../../../src/domain/level-catalog/value-objects/BoardSize";
-import { CellSpec } from "../../../../src/domain/level-catalog/value-objects/CellSpec";
+import { ArrowSpec } from "../../../../src/domain/level-catalog/value-objects/ArrowSpec";
 import { LevelDefinition } from "../../../../src/domain/level-catalog/value-objects/LevelDefinition";
 import { LevelDescription } from "../../../../src/domain/level-catalog/value-objects/LevelDescription";
 import { LevelId } from "../../../../src/domain/shared/LevelId.js";
@@ -17,10 +15,8 @@ import type { LevelRepository } from "../../../../src/application/level-catalog/
 export const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
 
 export function makeSolvableDefinition(): LevelDefinition {
-  return LevelDefinition.create(BoardSize.create(3, 3), [
-    CellSpec.create(Position.create(0, 0), CellType.START, Direction.RIGHT),
-    CellSpec.create(Position.create(0, 1), CellType.ARROW, Direction.DOWN),
-    CellSpec.create(Position.create(1, 1), CellType.EXIT),
+  return LevelDefinition.create([
+    ArrowSpec.create("a", "#5262FB", [Position.create(0, 0)], Direction.UP),
   ]);
 }
 

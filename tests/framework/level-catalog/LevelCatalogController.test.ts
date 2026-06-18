@@ -24,10 +24,25 @@ function fakeUseCase<I, O>(resolved: O): jest.Mocked<UseCase<I, O>> {
   return { execute: jest.fn().mockResolvedValue(resolved) } as unknown as jest.Mocked<UseCase<I, O>>;
 }
 
+const LEVEL_DETAIL: GetLevelOutput['level'] = {
+  levelId: 'l-1',
+  name: 'n',
+  description: 'd',
+  difficulty: 'EASY',
+  status: 'PUBLISHED',
+  version: 1,
+  definition: {
+    attempts: 5,
+    arrows: [{ id: 'a', color: '#5262FB', path: [{ row: 0, col: 0 }], direction: 'UP' }],
+  },
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
 function makeController() {
   return new LevelCatalogController(
     fakeUseCase<GetLevelsInput, GetLevelsOutput>({ levels: [] }),
-    fakeUseCase<GetLevelInput, GetLevelOutput>({ level: { levelId: 'l-1', name: 'n', description: 'd', difficulty: 'EASY', status: 'PUBLISHED', version: 1, createdAt: new Date(), updatedAt: new Date() } }),
+    fakeUseCase<GetLevelInput, GetLevelOutput>({ level: LEVEL_DETAIL }),
     fakeUseCase<CreateLevelInput, CreateLevelOutput>({ levelId: 'new-id' }),
     fakeUseCase<UpdateLevelDefinitionInput, UpdateLevelDefinitionOutput>({ levelId: 'l-1' }),
     fakeUseCase<PublishLevelInput, PublishLevelOutput>({ levelId: 'l-1' }),
@@ -70,7 +85,7 @@ describe('LevelCatalogController', () => {
 
     it('should_call_next_with_not_found_when_level_does_not_exist', async () => {
       // Arrange
-      const getLevelUseCase = fakeUseCase<GetLevelInput, GetLevelOutput>({ level: { levelId: 'l-1', name: 'n', description: 'd', difficulty: 'EASY', status: 'PUBLISHED', version: 1, createdAt: new Date(), updatedAt: new Date() } });
+      const getLevelUseCase = fakeUseCase<GetLevelInput, GetLevelOutput>({ level: LEVEL_DETAIL });
       (getLevelUseCase.execute as jest.Mock).mockRejectedValue(new NotFoundError('not found'));
       const controller = new LevelCatalogController(
         fakeUseCase<GetLevelsInput, GetLevelsOutput>({ levels: [] }),
@@ -96,7 +111,7 @@ describe('LevelCatalogController', () => {
     it('should_return_403_when_user_is_not_admin', async () => {
       // Arrange
       const controller = makeController();
-      const req = { ...USER_REQ, params: { levelId: 'l-1' }, body: { boardSize: { rows: 3, cols: 3 }, cells: [] } } as unknown as Request;
+      const req = { ...USER_REQ, params: { levelId: 'l-1' }, body: { arrows: [] } } as unknown as Request;
       const res = makeRes();
       const next = makeNext();
 
@@ -107,10 +122,10 @@ describe('LevelCatalogController', () => {
       expect(next).toHaveBeenCalledWith(expect.any(ForbiddenError));
     });
 
-    it('should_return_400_when_boardSize_is_missing', async () => {
+    it('should_return_400_when_arrows_are_missing', async () => {
       // Arrange
       const controller = makeController();
-      const req = { ...ADMIN_REQ, params: { levelId: 'l-1' }, body: { cells: [] } } as unknown as Request;
+      const req = { ...ADMIN_REQ, params: { levelId: 'l-1' }, body: {} } as unknown as Request;
       const res = makeRes();
       const next = makeNext();
 
@@ -124,7 +139,11 @@ describe('LevelCatalogController', () => {
     it('should_return_200_when_admin_updates_definition_successfully', async () => {
       // Arrange
       const controller = makeController();
-      const req = { ...ADMIN_REQ, params: { levelId: 'l-1' }, body: { boardSize: { rows: 3, cols: 3 }, cells: [] } } as unknown as Request;
+      const req = {
+        ...ADMIN_REQ,
+        params: { levelId: 'l-1' },
+        body: { arrows: [{ id: 'a', color: '#5262FB', path: [{ row: 0, col: 0 }], direction: 'UP' }], attempts: 5 },
+      } as unknown as Request;
       const res = makeRes();
       const next = makeNext();
 

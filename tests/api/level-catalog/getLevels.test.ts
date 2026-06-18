@@ -23,7 +23,19 @@ class FakeGetLevelsUseCase implements UseCase<GetLevelsInput, GetLevelsOutput> {
 
 class FakeGetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
   async execute(_input: GetLevelInput): Promise<GetLevelOutput> {
-    return { level: { levelId: 'l-1', name: 'n', description: 'd', difficulty: 'EASY', status: 'PUBLISHED', version: 1, createdAt: new Date(), updatedAt: new Date() } };
+    return {
+      level: {
+        levelId: 'l-1',
+        name: 'n',
+        description: 'd',
+        difficulty: 'EASY',
+        status: 'PUBLISHED',
+        version: 1,
+        definition: { attempts: 5, arrows: [] },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    };
   }
 }
 

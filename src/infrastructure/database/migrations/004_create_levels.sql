@@ -6,23 +6,22 @@ CREATE TABLE IF NOT EXISTS levels (
   difficulty          VARCHAR(10)  NOT NULL,
   status              VARCHAR(10)  NOT NULL DEFAULT 'DRAFT',
   version             INT          NOT NULL DEFAULT 1,
-  board_rows          INT          NOT NULL,
-  board_cols          INT          NOT NULL,
+  arrows              JSONB        NOT NULL DEFAULT '[]'::jsonb,
+  attempts            INT          NOT NULL DEFAULT 5 CHECK (attempts >= 1),
   time_limit_seconds  INT,
   move_count          INT,
   created_at          TIMESTAMPTZ  NOT NULL,
   updated_at          TIMESTAMPTZ  NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS level_cells (
-  id        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  level_id  UUID        NOT NULL REFERENCES levels(id) ON DELETE CASCADE,
-  row       INT         NOT NULL,
-  col       INT         NOT NULL,
-  type      VARCHAR(10) NOT NULL,
-  direction VARCHAR(15),
-  UNIQUE (level_id, row, col)
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'chk_levels_arrows_array'
+  ) THEN
+    ALTER TABLE levels
+      ADD CONSTRAINT chk_levels_arrows_array CHECK (jsonb_typeof(arrows) = 'array');
+  END IF;
+END $$;
 
-CREATE INDEX IF NOT EXISTS idx_level_cells_level_id ON level_cells(level_id);
 CREATE INDEX IF NOT EXISTS idx_levels_status ON levels(status);

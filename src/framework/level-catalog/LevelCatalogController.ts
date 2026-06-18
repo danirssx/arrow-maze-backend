@@ -46,19 +46,19 @@ export class LevelCatalogController {
         throw new ForbiddenError('Admin access required');
       }
 
-      const { name, description, difficulty, boardSize, cells, timeLimit, moveCount } =
+      const { name, description, difficulty, arrows, attempts, timeLimit, moveCount } =
         req.body as Record<string, unknown>;
 
-      if (!name || !description || !difficulty || !boardSize || !cells) {
-        throw new BadRequestError('name, description, difficulty, boardSize and cells are required');
+      if (!name || !description || !difficulty || !arrows) {
+        throw new BadRequestError('name, description, difficulty and arrows are required');
       }
 
       const result = await this.createLevelUseCase.execute({
         name: String(name),
         description: String(description),
         difficulty: String(difficulty),
-        boardSize: boardSize as CreateLevelInput['boardSize'],
-        cells: cells as CreateLevelInput['cells'],
+        arrows: arrows as CreateLevelInput['arrows'],
+        ...(attempts !== undefined && { attempts: Number(attempts) }),
         ...(timeLimit !== undefined && { timeLimit: Number(timeLimit) }),
         ...(moveCount !== undefined && { moveCount: Number(moveCount) }),
       });
@@ -76,16 +76,16 @@ export class LevelCatalogController {
       }
 
       const levelId = String(req.params['levelId']);
-      const { boardSize, cells } = req.body as Record<string, unknown>;
+      const { arrows, attempts } = req.body as Record<string, unknown>;
 
-      if (!boardSize || !cells) {
-        throw new BadRequestError('boardSize and cells are required');
+      if (!arrows) {
+        throw new BadRequestError('arrows are required');
       }
 
       const result = await this.updateDefinitionUseCase.execute({
         levelId,
-        boardSize: boardSize as UpdateLevelDefinitionInput['boardSize'],
-        cells: cells as UpdateLevelDefinitionInput['cells'],
+        arrows: arrows as UpdateLevelDefinitionInput['arrows'],
+        ...(attempts !== undefined && { attempts: Number(attempts) }),
       });
 
       res.status(200).json(ApiResponsePresenter.success(result));

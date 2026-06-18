@@ -90,7 +90,7 @@ export class Level extends Entity<LevelId> {
     }
     if (!policy.isSolvable(this._definition)) {
       throw new BusinessRuleViolationError(
-        "Level has no valid path from start to exit"
+        "Level definition contains a circular arrow blocking dependency"
       );
     }
     this._status = LevelStatus.PUBLISHED;
