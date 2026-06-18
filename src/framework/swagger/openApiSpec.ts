@@ -99,6 +99,59 @@ export const openApiSpec = {
         },
       },
     },
+    '/progress/me': {
+      get: {
+        summary: 'Load authenticated user progress',
+        tags: ['Progress'],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': { description: 'Progress loaded', content: { 'application/json': { schema: { $ref: '#/components/schemas/ProgressResponse' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+        },
+      },
+    },
+    '/progress/levels/{levelId}/complete': {
+      post: {
+        summary: 'Record a level completion for the authenticated user',
+        tags: ['Progress'],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'levelId', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CompleteLevelRequest' },
+              example: { score: 1500, timeSeconds: 45, movesCount: 30, completedAt: '2026-06-18T00:00:00Z' },
+            },
+          },
+        },
+        responses: {
+          '201': { description: 'Level completion recorded', content: { 'application/json': { schema: { $ref: '#/components/schemas/SuccessResponse' } } } },
+          '400': { description: 'Missing fields', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+        },
+      },
+    },
+    '/progress/sync': {
+      put: {
+        summary: 'Sync offline progress with server (offline-first merge)',
+        tags: ['Progress'],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/SyncProgressRequest' },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Merged progress', content: { 'application/json': { schema: { $ref: '#/components/schemas/ProgressResponse' } } } },
+          '400': { description: 'Invalid body', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+        },
+      },
+    },
     '/leaderboard/{levelId}': {
       get: {
         summary: 'Get leaderboard for a level',
@@ -112,6 +165,9 @@ export const openApiSpec = {
     },
   },
   components: {
+    securitySchemes: {
+      bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    },
     schemas: {
       ErrorResponse: {
         type: 'object',
@@ -191,6 +247,66 @@ export const openApiSpec = {
           score: { type: 'integer', minimum: 0 },
           timeSeconds: { type: 'number', minimum: 0.001 },
           movesCount: { type: 'integer', minimum: 1 },
+        },
+      },
+      CompleteLevelRequest: {
+        type: 'object',
+        required: ['score', 'timeSeconds', 'movesCount', 'completedAt'],
+        properties: {
+          score: { type: 'integer', minimum: 0 },
+          timeSeconds: { type: 'number', minimum: 0.001 },
+          movesCount: { type: 'integer', minimum: 1 },
+          completedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      SyncProgressRequest: {
+        type: 'object',
+        required: ['completedLevels'],
+        properties: {
+          completedLevels: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['levelId', 'score', 'timeSeconds', 'movesCount', 'completedAt'],
+              properties: {
+                levelId: { type: 'string' },
+                score: { type: 'integer', minimum: 0 },
+                timeSeconds: { type: 'number', minimum: 0.001 },
+                movesCount: { type: 'integer', minimum: 1 },
+                completedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+          },
+        },
+      },
+      ProgressResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: {
+            type: 'object',
+            required: ['progressId', 'userId', 'completedLevels', 'version', 'updatedAt'],
+            properties: {
+              progressId: { type: 'string' },
+              userId: { type: 'string', format: 'uuid' },
+              version: { type: 'integer' },
+              updatedAt: { type: 'string', format: 'date-time' },
+              completedLevels: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    levelId: { type: 'string' },
+                    score: { type: 'integer' },
+                    timeSeconds: { type: 'number' },
+                    movesCount: { type: 'integer' },
+                    completedAt: { type: 'string', format: 'date-time' },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       LeaderboardResponse: {
