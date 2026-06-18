@@ -1,4 +1,4 @@
-﻿const SENSITIVE_KEY_PATTERN = /password|token|secret|authorization|credential/i;
+const SENSITIVE_KEY_PATTERN = /password|token|secret|authorization|credential/i;
 
 type PrimitiveLogValue = string | number | boolean | null;
 type SanitizedLogValue = PrimitiveLogValue | SanitizedLogValue[] | { [key: string]: SanitizedLogValue };

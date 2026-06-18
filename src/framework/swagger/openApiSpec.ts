@@ -5,7 +5,27 @@ export const openApiSpec = {
     '/health': {
       get: {
         summary: 'Check API health',
-        responses: { '200': { description: 'API is running' } },
+        responses: {
+          '200': { description: 'API is running' },
+          '404': {
+            description: 'Route not found',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'NOT_FOUND', message: 'Route not found: GET /unknown' } },
+              },
+            },
+          },
+          '500': {
+            description: 'Unexpected server error',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'INTERNAL_SERVER_ERROR', message: 'Internal server error' } },
+              },
+            },
+          },
+        },
       },
     },
     '/auth/register': {
@@ -25,6 +45,7 @@ export const openApiSpec = {
           '201': { description: 'User registered', content: { 'application/json': { schema: { $ref: '#/components/schemas/RegisterResponse' } } } },
           '400': { description: 'Missing fields', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
           '409': { description: 'Email or username taken', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '422': { description: 'Domain validation failed', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
         },
       },
     },
@@ -45,6 +66,7 @@ export const openApiSpec = {
           '200': { description: 'Login successful', content: { 'application/json': { schema: { $ref: '#/components/schemas/LoginResponse' } } } },
           '400': { description: 'Missing fields', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
           '401': { description: 'Invalid credentials', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '403': { description: 'Account suspended', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
         },
       },
     },

@@ -1,4 +1,4 @@
-﻿export { AppError, type ErrorDetails } from "./AppError.js";
+export { AppError, type ErrorDetails } from "./AppError.js";
 export {
   ApplicationError,
   BadRequestError,

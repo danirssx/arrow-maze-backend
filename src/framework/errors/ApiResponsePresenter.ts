@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ApiResponsePresenter builds the single, consistent response envelope used by
  * every controller in the API.
  *

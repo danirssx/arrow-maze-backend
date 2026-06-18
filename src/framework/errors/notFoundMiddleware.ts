@@ -1,4 +1,4 @@
-﻿import type { RequestHandler } from "express";
+import type { RequestHandler } from "express";
 
 import { NotFoundError } from "../../shared/errors/index.js";
 
