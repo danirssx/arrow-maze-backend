@@ -1,4 +1,5 @@
 import { PgUnitOfWork } from "../../../src/infrastructure/database/PgUnitOfWork";
+import { transactionContext } from "../../../src/infrastructure/database/transactionContext";
 
 // Subject to human review — infrastructure adapter test
 
@@ -74,5 +75,23 @@ describe("PgUnitOfWork", () => {
 
     // Assert
     expect(client.released).toBe(true);
+  });
+
+  it("should_expose_transactional_client_via_context_during_operation", async () => {
+    // Arrange
+    const client = new FakeClient();
+    const pool = new FakePool(client);
+    const uow = new PgUnitOfWork(pool as never);
+    let capturedClient: unknown = null;
+
+    // Act
+    await uow.runInTransaction(async () => {
+      capturedClient = transactionContext.getStore();
+    });
+
+    // Assert — repositories can read the active client from the context
+    expect(capturedClient).toBe(client);
+    // Context is cleared after the transaction ends
+    expect(transactionContext.getStore()).toBeUndefined();
   });
 });

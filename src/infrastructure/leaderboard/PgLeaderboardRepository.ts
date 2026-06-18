@@ -16,6 +16,7 @@ import { UsernameSnapshot } from '../../domain/leaderboard/value-objects/Usernam
 import { LevelId } from '../../domain/shared/LevelId.js';
 import { UserId } from '../../domain/shared/UserId.js';
 import { InfrastructureError } from '../../shared/errors/InfrastructureError.js';
+import { getQueryRunner, withTransactionalClient } from '../../infrastructure/database/transactionContext.js';
 
 type LeaderboardRow = {
   id: string;
@@ -56,7 +57,8 @@ export class PgLeaderboardRepository implements LeaderboardRepository {
 
   async findByLevelId(levelId: LevelId): Promise<Leaderboard | null> {
     try {
-      const lbResult = await this.pool.query<LeaderboardRow>(
+      const runner = getQueryRunner(this.pool);
+      const lbResult = await runner.query<LeaderboardRow>(
         'SELECT * FROM leaderboards WHERE level_id = $1',
         [levelId.value],
       );
@@ -64,7 +66,7 @@ export class PgLeaderboardRepository implements LeaderboardRepository {
       const lbRow = lbResult.rows[0];
       if (!lbRow) return null;
 
-      const entriesResult = await this.pool.query<EntryRow>(
+      const entriesResult = await runner.query<EntryRow>(
         'SELECT * FROM leaderboard_entries WHERE leaderboard_id = $1 ORDER BY rank ASC NULLS LAST',
         [lbRow.id],
       );
@@ -82,56 +84,51 @@ export class PgLeaderboardRepository implements LeaderboardRepository {
   }
 
   async save(leaderboard: Leaderboard): Promise<void> {
-    const client = await this.pool.connect();
     try {
-      await client.query('BEGIN');
-
-      await client.query(
-        `INSERT INTO leaderboards (id, level_id, max_entries, updated_at)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (id) DO UPDATE
-           SET max_entries = EXCLUDED.max_entries,
-               updated_at  = EXCLUDED.updated_at`,
-        [
-          leaderboard.id.value,
-          leaderboard.levelId.value,
-          leaderboard.maxEntries.value,
-          leaderboard.updatedAt.value,
-        ],
-      );
-
-      await client.query(
-        'DELETE FROM leaderboard_entries WHERE leaderboard_id = $1',
-        [leaderboard.id.value],
-      );
-
-      for (const entry of leaderboard.entries) {
+      await withTransactionalClient(this.pool, async (client) => {
         await client.query(
-          `INSERT INTO leaderboard_entries
-             (id, leaderboard_id, user_id, level_id, username_snapshot,
-              score, time_seconds, moves_count, rank, submitted_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          `INSERT INTO leaderboards (id, level_id, max_entries, updated_at)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (id) DO UPDATE
+             SET max_entries = EXCLUDED.max_entries,
+                 updated_at  = EXCLUDED.updated_at`,
           [
-            entry.id.value,
             leaderboard.id.value,
-            entry.userId.value,
-            entry.levelId.value,
-            entry.usernameSnapshot.value,
-            entry.score.value,
-            entry.timeSeconds.value,
-            entry.movesCount.value,
-            entry.rank?.value ?? null,
-            entry.submittedAt.value,
+            leaderboard.levelId.value,
+            leaderboard.maxEntries.value,
+            leaderboard.updatedAt.value,
           ],
         );
-      }
 
-      await client.query('COMMIT');
+        await client.query(
+          'DELETE FROM leaderboard_entries WHERE leaderboard_id = $1',
+          [leaderboard.id.value],
+        );
+
+        for (const entry of leaderboard.entries) {
+          await client.query(
+            `INSERT INTO leaderboard_entries
+               (id, leaderboard_id, user_id, level_id, username_snapshot,
+                score, time_seconds, moves_count, rank, submitted_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+            [
+              entry.id.value,
+              leaderboard.id.value,
+              entry.userId.value,
+              entry.levelId.value,
+              entry.usernameSnapshot.value,
+              entry.score.value,
+              entry.timeSeconds.value,
+              entry.movesCount.value,
+              entry.rank?.value ?? null,
+              entry.submittedAt.value,
+            ],
+          );
+        }
+      });
     } catch (err) {
-      await client.query('ROLLBACK');
+      if (err instanceof InfrastructureError) throw err;
       throw new InfrastructureError('Failed to save leaderboard', { cause: String(err) });
-    } finally {
-      client.release();
     }
   }
 }

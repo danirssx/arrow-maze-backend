@@ -9,6 +9,7 @@ import { PasswordHash } from "../../domain/identity/value-objects/PasswordHash.j
 import { Username } from "../../domain/identity/value-objects/Username.js";
 import { UserId } from "../../domain/shared/UserId.js";
 import { InfrastructureError } from "../../shared/errors/InfrastructureError.js";
+import { getQueryRunner } from "../../infrastructure/database/transactionContext.js";
 import { parseEnumFromDb } from "../../shared/parseEnum.js";
 import type { Email as EmailType } from "../../domain/identity/value-objects/Email.js";
 import type { Username as UsernameType } from "../../domain/identity/value-objects/Username.js";
@@ -41,7 +42,7 @@ export class PgUserRepository implements UserRepository {
   constructor(private readonly pool: Pool) {}
 
   async save(user: User): Promise<void> {
-    const query = `
+    const sql = `
       INSERT INTO users (id, email, username, password_hash, role, status, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       ON CONFLICT (id) DO UPDATE
@@ -53,7 +54,7 @@ export class PgUserRepository implements UserRepository {
             updated_at    = EXCLUDED.updated_at
     `;
     try {
-      await this.pool.query(query, [
+      await getQueryRunner(this.pool).query(sql, [
         user.id.value,
         user.email.value,
         user.username.value,

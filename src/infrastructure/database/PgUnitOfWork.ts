@@ -2,6 +2,7 @@
 import type { Pool } from "pg";
 import type { UnitOfWork } from "../../application/ports/UnitOfWork.js";
 import { InfrastructureError } from "../../shared/errors/InfrastructureError.js";
+import { transactionContext } from "./transactionContext.js";
 
 export class PgUnitOfWork implements UnitOfWork {
   constructor(private readonly pool: Pool) {}
@@ -10,7 +11,7 @@ export class PgUnitOfWork implements UnitOfWork {
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
-      const result = await operation();
+      const result = await transactionContext.run(client, operation);
       await client.query("COMMIT");
       return result;
     } catch (err) {
