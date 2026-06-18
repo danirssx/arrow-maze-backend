@@ -3,7 +3,8 @@ import request from 'supertest';
 import type { UseCase } from '../../../src/application/aspects/UseCase.js';
 import type { GetLeaderboardInput, GetLeaderboardOutput } from '../../../src/application/leaderboard/use-cases/GetLeaderboardService.js';
 import type { SubmitScoreInput } from '../../../src/application/leaderboard/use-cases/SubmitScoreService.js';
-import { ValidationError, NotFoundError } from '../../../src/shared/errors/ApplicationError.js';
+import type { TokenPayload, TokenService } from '../../../src/application/identity/ports/TokenService.js';
+import { ValidationError, UnauthorizedError } from '../../../src/shared/errors/ApplicationError.js';
 import { createLeaderboardTestApp } from '../../helpers/createLeaderboardTestApp.js';
 
 class FakeSubmitUseCase implements UseCase<SubmitScoreInput, void> {
@@ -19,10 +20,17 @@ class FakeGetUseCase implements UseCase<GetLeaderboardInput, GetLeaderboardOutpu
   }
 }
 
+class FakeTokenService implements TokenService {
+  generate(_payload: TokenPayload): string { return 'fake-token'; }
+  verify(token: string): TokenPayload {
+    if (token === 'valid-token') return { userId: 'user-1', role: 'USER' as never };
+    throw new UnauthorizedError('Invalid token');
+  }
+}
+
 const VALID_BODY = {
   leaderboardId: 'lb-1',
   entryId: 'entry-1',
-  userId: 'user-1',
   levelId: 'level-1',
   usernameSnapshot: 'Player1',
   score: 100,
@@ -31,12 +39,35 @@ const VALID_BODY = {
 };
 
 describe('POST /leaderboard/scores', () => {
-  it('should_return_201_when_score_submitted_successfully', async () => {
+  it('should_return_401_when_no_token_provided', async () => {
     // Arrange
-    const app = createLeaderboardTestApp(new FakeSubmitUseCase(), new FakeGetUseCase());
+    const app = createLeaderboardTestApp(new FakeSubmitUseCase(), new FakeGetUseCase(), new FakeTokenService());
 
     // Act
     const res = await request(app).post('/leaderboard/scores').send(VALID_BODY);
+
+    // Assert
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('should_return_401_when_token_is_invalid', async () => {
+    // Arrange
+    const app = createLeaderboardTestApp(new FakeSubmitUseCase(), new FakeGetUseCase(), new FakeTokenService());
+
+    // Act
+    const res = await request(app).post('/leaderboard/scores').set('Authorization', 'Bearer bad-token').send(VALID_BODY);
+
+    // Assert
+    expect(res.status).toBe(401);
+  });
+
+  it('should_return_201_when_score_submitted_successfully', async () => {
+    // Arrange
+    const app = createLeaderboardTestApp(new FakeSubmitUseCase(), new FakeGetUseCase(), new FakeTokenService());
+
+    // Act
+    const res = await request(app).post('/leaderboard/scores').set('Authorization', 'Bearer valid-token').send(VALID_BODY);
 
     // Assert
     expect(res.status).toBe(201);
@@ -45,10 +76,10 @@ describe('POST /leaderboard/scores', () => {
 
   it('should_return_400_when_required_field_missing', async () => {
     // Arrange
-    const app = createLeaderboardTestApp(new FakeSubmitUseCase(), new FakeGetUseCase());
+    const app = createLeaderboardTestApp(new FakeSubmitUseCase(), new FakeGetUseCase(), new FakeTokenService());
 
     // Act
-    const res = await request(app).post('/leaderboard/scores').send({ score: 100 });
+    const res = await request(app).post('/leaderboard/scores').set('Authorization', 'Bearer valid-token').send({ score: 100 });
 
     // Assert
     expect(res.status).toBe(400);
@@ -60,10 +91,10 @@ describe('POST /leaderboard/scores', () => {
     // Arrange
     const submitUseCase = new FakeSubmitUseCase();
     submitUseCase.error = new ValidationError('Score must be a non-negative integer');
-    const app = createLeaderboardTestApp(submitUseCase, new FakeGetUseCase());
+    const app = createLeaderboardTestApp(submitUseCase, new FakeGetUseCase(), new FakeTokenService());
 
     // Act
-    const res = await request(app).post('/leaderboard/scores').send(VALID_BODY);
+    const res = await request(app).post('/leaderboard/scores').set('Authorization', 'Bearer valid-token').send(VALID_BODY);
 
     // Assert
     expect(res.status).toBe(422);
