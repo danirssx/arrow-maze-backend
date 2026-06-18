@@ -10,6 +10,12 @@ import { LoadProgressService } from "../application/progress/use-cases/LoadProgr
 import { SyncProgressService } from "../application/progress/use-cases/SyncProgressService.js";
 import { GetLeaderboardService } from "../application/leaderboard/use-cases/GetLeaderboardService.js";
 import { SubmitScoreService } from "../application/leaderboard/use-cases/SubmitScoreService.js";
+import { GetLevelsUseCase } from "../application/level-catalog/use-cases/GetLevelsUseCase.js";
+import { GetLevelUseCase } from "../application/level-catalog/use-cases/GetLevelUseCase.js";
+import { CreateLevelUseCase } from "../application/level-catalog/use-cases/CreateLevelUseCase.js";
+import { UpdateLevelDefinitionUseCase } from "../application/level-catalog/use-cases/UpdateLevelDefinitionUseCase.js";
+import { PublishLevelUseCase } from "../application/level-catalog/use-cases/PublishLevelUseCase.js";
+import { ArchiveLevelUseCase } from "../application/level-catalog/use-cases/ArchiveLevelUseCase.js";
 import { TransactionDecorator } from "../application/aspects/TransactionDecorator.js";
 import { UseCaseLoggingDecorator } from "../application/aspects/UseCaseLoggingDecorator.js";
 import { BcryptPasswordHasher } from "../infrastructure/identity/BcryptPasswordHasher.js";
@@ -18,6 +24,8 @@ import { PgUnitOfWork } from "../infrastructure/database/PgUnitOfWork.js";
 import { PgUserRepository } from "../infrastructure/identity/PgUserRepository.js";
 import { PgProgressRepository } from "../infrastructure/progress/PgProgressRepository.js";
 import { PgLeaderboardRepository } from "../infrastructure/leaderboard/PgLeaderboardRepository.js";
+import { PgLevelRepository } from "../infrastructure/level-catalog/PgLevelRepository.js";
+import { LevelSolvabilityPolicy } from "../domain/level-catalog/LevelSolvabilityPolicy.js";
 import { InMemoryEventBus } from "../infrastructure/events/InMemoryEventBus.js";
 import { createPool } from "../infrastructure/database/PgPool.js";
 import { ConsoleLogger } from "../infrastructure/logging/ConsoleLogger.js";
@@ -28,9 +36,11 @@ import { notFoundMiddleware } from "./errors/notFoundMiddleware.js";
 import { IdentityController } from "./identity/IdentityController.js";
 import { ProgressController } from "./progress/ProgressController.js";
 import { LeaderboardController } from "./leaderboard/LeaderboardController.js";
+import { LevelCatalogController } from "./level-catalog/LevelCatalogController.js";
 import { createIdentityRouter } from "./identity/identityRoutes.js";
 import { createProgressRouter } from "./progress/progressRoutes.js";
 import { createLeaderboardRouter } from "./leaderboard/leaderboardRoutes.js";
+import { createLevelCatalogRouter } from "./level-catalog/levelCatalogRoutes.js";
 import { createHealthRouter } from "./routes/healthRoutes.js";
 import { openApiSpec } from "./swagger/openApiSpec.js";
 
@@ -47,6 +57,8 @@ export function createApp() {
 
   const progressRepository = new PgProgressRepository(pool);
   const leaderboardRepository = new PgLeaderboardRepository(pool);
+  const levelRepository = new PgLevelRepository(pool);
+  const solvabilityPolicy = new LevelSolvabilityPolicy();
 
   const registerUseCase = new TransactionDecorator(
     new UseCaseLoggingDecorator("RegisterUserUseCase", new RegisterUserUseCase(userRepository, passwordHasher), logger),
@@ -85,9 +97,44 @@ export function createApp() {
     logger
   );
 
+  const getLevelsUseCase = new UseCaseLoggingDecorator(
+    "GetLevelsUseCase",
+    new GetLevelsUseCase(levelRepository),
+    logger
+  );
+  const getLevelUseCase = new UseCaseLoggingDecorator(
+    "GetLevelUseCase",
+    new GetLevelUseCase(levelRepository),
+    logger
+  );
+  const createLevelUseCase = new TransactionDecorator(
+    new UseCaseLoggingDecorator("CreateLevelUseCase", new CreateLevelUseCase(levelRepository), logger),
+    unitOfWork
+  );
+  const updateDefinitionUseCase = new TransactionDecorator(
+    new UseCaseLoggingDecorator("UpdateLevelDefinitionUseCase", new UpdateLevelDefinitionUseCase(levelRepository), logger),
+    unitOfWork
+  );
+  const publishLevelUseCase = new TransactionDecorator(
+    new UseCaseLoggingDecorator("PublishLevelUseCase", new PublishLevelUseCase(levelRepository, solvabilityPolicy), logger),
+    unitOfWork
+  );
+  const archiveLevelUseCase = new TransactionDecorator(
+    new UseCaseLoggingDecorator("ArchiveLevelUseCase", new ArchiveLevelUseCase(levelRepository), logger),
+    unitOfWork
+  );
+
   const identityController = new IdentityController(registerUseCase, loginUseCase);
   const progressController = new ProgressController(loadProgressUseCase, completeLevelUseCase, syncProgressUseCase);
   const leaderboardController = new LeaderboardController(submitScoreUseCase, getLeaderboardUseCase);
+  const levelCatalogController = new LevelCatalogController(
+    getLevelsUseCase,
+    getLevelUseCase,
+    createLevelUseCase,
+    updateDefinitionUseCase,
+    publishLevelUseCase,
+    archiveLevelUseCase,
+  );
 
   const authMiddleware = createAuthMiddleware(tokenService);
 
@@ -100,6 +147,7 @@ export function createApp() {
   app.use(createIdentityRouter(identityController));
   app.use(createProgressRouter(progressController, authMiddleware));
   app.use(createLeaderboardRouter(leaderboardController, authMiddleware));
+  app.use(createLevelCatalogRouter(levelCatalogController, authMiddleware));
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
   app.use(notFoundMiddleware);
   app.use(createErrorMiddleware(logger));
