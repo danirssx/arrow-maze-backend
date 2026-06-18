@@ -34,21 +34,22 @@ function makeController() {
 }
 
 const validBody = {
-  leaderboardId: 'lb-1', entryId: 'e-1', userId: 'u-1', levelId: 'level-1',
+  leaderboardId: 'lb-1', entryId: 'e-1', levelId: 'level-1',
   usernameSnapshot: 'Player1', score: 100, timeSeconds: 30, movesCount: 15,
 };
+
+const authenticatedReq = { body: validBody, user: { userId: 'u-1', role: 'USER' } } as unknown as Request;
 
 describe('LeaderboardController', () => {
   describe('submitScore', () => {
     it('should_return_201_when_score_submitted_successfully', async () => {
       // Arrange
       const controller = makeController();
-      const req = { body: validBody } as Request;
       const res = makeRes();
       const next = makeNext();
 
       // Act
-      await controller.submitScore(req, res, next);
+      await controller.submitScore(authenticatedReq, res, next);
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(201);
@@ -73,12 +74,11 @@ describe('LeaderboardController', () => {
       // Arrange
       const submitUseCase = makeSubmitUseCase(() => Promise.reject(new Error('unexpected')));
       const controller = new LeaderboardController(submitUseCase, makeGetUseCase());
-      const req = { body: validBody } as Request;
       const res = makeRes();
       const next = makeNext();
 
       // Act
-      await controller.submitScore(req, res, next);
+      await controller.submitScore(authenticatedReq, res, next);
 
       // Assert
       expect(next).toHaveBeenCalledWith(expect.any(Error));

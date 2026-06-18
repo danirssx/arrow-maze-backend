@@ -99,7 +99,7 @@ export function createApp() {
   app.use(createHealthRouter());
   app.use(createIdentityRouter(identityController));
   app.use(createProgressRouter(progressController, authMiddleware));
-  app.use(createLeaderboardRouter(leaderboardController));
+  app.use(createLeaderboardRouter(leaderboardController, authMiddleware));
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
   app.use(notFoundMiddleware);
   app.use(createErrorMiddleware(logger));

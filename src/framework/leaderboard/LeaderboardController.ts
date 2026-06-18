@@ -5,6 +5,7 @@ import type { GetLeaderboardInput, GetLeaderboardOutput } from '../../applicatio
 import type { SubmitScoreInput } from '../../application/leaderboard/use-cases/SubmitScoreService.js';
 import { BadRequestError } from '../../shared/errors/ApplicationError.js';
 import { ApiResponsePresenter } from '../errors/ApiResponsePresenter.js';
+import type { AuthenticatedRequest } from '../middleware/authMiddleware.js';
 
 export class LeaderboardController {
   constructor(
@@ -14,20 +15,22 @@ export class LeaderboardController {
 
   async submitScore(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { leaderboardId, entryId, userId, levelId, usernameSnapshot, score, timeSeconds, movesCount } =
+      const { leaderboardId, entryId, levelId, usernameSnapshot, score, timeSeconds, movesCount } =
         req.body as Record<string, unknown>;
 
-      if (!leaderboardId || !entryId || !userId || !levelId || !usernameSnapshot ||
+      if (!leaderboardId || !entryId || !levelId || !usernameSnapshot ||
           score === undefined || timeSeconds === undefined || movesCount === undefined) {
         throw new BadRequestError(
-          'leaderboardId, entryId, userId, levelId, usernameSnapshot, score, timeSeconds and movesCount are required',
+          'leaderboardId, entryId, levelId, usernameSnapshot, score, timeSeconds and movesCount are required',
         );
       }
+
+      const userId = (req as AuthenticatedRequest).user.userId;
 
       await this.submitScoreUseCase.execute({
         leaderboardId: String(leaderboardId),
         entryId: String(entryId),
-        userId: String(userId),
+        userId,
         levelId: String(levelId),
         usernameSnapshot: String(usernameSnapshot),
         score: Number(score),
