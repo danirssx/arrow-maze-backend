@@ -1,115 +1,73 @@
--- Seed 001: published levels for initial game catalog
--- Board layout notation: S=START, E=EXIT, arrows indicate direction
+-- Seed 001: published Arrow Untangle levels
+-- Arrows are stored tail -> head. Direction is the head ray direction.
 
--- Level 1: Tutorial (3x3, EASY)
--- S→ →↓
--- ↑  →→ E
--- ↑  ←←
-INSERT INTO levels (id, name, description, difficulty, status, version, board_rows, board_cols, time_limit_seconds, move_count, created_at, updated_at)
-VALUES (
+INSERT INTO levels (
+  id, name, description, difficulty, status, version,
+  arrows, attempts, time_limit_seconds, move_count, created_at, updated_at
+)
+VALUES
+(
   '550e8400-e29b-41d4-a716-446655440010',
-  'Tutorial',
-  'Your first arrow maze. Follow the arrows to find the exit.',
+  'Tutorial Knot',
+  'Clear the free arrows first and watch the knot disappear.',
   'EASY',
   'PUBLISHED',
   1,
-  3,
-  3,
+  '[
+    {"id":"a","color":"#5262FB","path":[{"row":0,"col":0},{"row":0,"col":1}],"direction":"RIGHT"},
+    {"id":"b","color":"#56D879","path":[{"row":1,"col":0}],"direction":"UP"}
+  ]'::jsonb,
+  5,
   NULL,
   NULL,
   NOW(),
   NOW()
-) ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO level_cells (level_id, row, col, type, direction) VALUES
-  ('550e8400-e29b-41d4-a716-446655440010', 0, 0, 'START', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440010', 0, 1, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440010', 0, 2, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440010', 1, 0, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440010', 1, 1, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440010', 1, 2, 'EXIT',  NULL),
-  ('550e8400-e29b-41d4-a716-446655440010', 2, 0, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440010', 2, 1, 'ARROW', 'LEFT'),
-  ('550e8400-e29b-41d4-a716-446655440010', 2, 2, 'ARROW', 'LEFT')
-ON CONFLICT (level_id, row, col) DO NOTHING;
-
--- Level 2: Crossroads (4x4, EASY)
--- Path: (0,0)→R→(0,1)→D→(1,1)→R→(1,2)→D→(2,2)→R→(2,3)→D→(3,3) EXIT
--- S→  ↓  ↓  ←
--- ↑   →  ↓  ↓
--- →   →  →  ↓
--- ↑   ↑  ←  E
-INSERT INTO levels (id, name, description, difficulty, status, version, board_rows, board_cols, time_limit_seconds, move_count, created_at, updated_at)
-VALUES (
+),
+(
   '550e8400-e29b-41d4-a716-446655440011',
-  'Crossroads',
-  'A bit more complex. Watch for dead ends.',
+  'First Block',
+  'One vertical arrow blocks a horizontal arrow until it is removed.',
   'EASY',
   'PUBLISHED',
   1,
-  4,
-  4,
+  '[
+    {"id":"a","color":"#5262FB","path":[{"row":0,"col":0},{"row":0,"col":1}],"direction":"RIGHT"},
+    {"id":"b","color":"#FFC83D","path":[{"row":-1,"col":2},{"row":0,"col":2},{"row":1,"col":2}],"direction":"DOWN"},
+    {"id":"c","color":"#56D879","path":[{"row":2,"col":-1},{"row":2,"col":0}],"direction":"LEFT"}
+  ]'::jsonb,
+  5,
   NULL,
   NULL,
   NOW(),
   NOW()
-) ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO level_cells (level_id, row, col, type, direction) VALUES
-  ('550e8400-e29b-41d4-a716-446655440011', 0, 0, 'START', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440011', 0, 1, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440011', 0, 2, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440011', 0, 3, 'ARROW', 'LEFT'),
-  ('550e8400-e29b-41d4-a716-446655440011', 1, 0, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440011', 1, 1, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440011', 1, 2, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440011', 1, 3, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440011', 2, 0, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440011', 2, 1, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440011', 2, 2, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440011', 2, 3, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440011', 3, 0, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440011', 3, 1, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440011', 3, 2, 'ARROW', 'LEFT'),
-  ('550e8400-e29b-41d4-a716-446655440011', 3, 3, 'EXIT',  NULL)
-ON CONFLICT (level_id, row, col) DO NOTHING;
-
--- Level 3: Spiral (4x4, MEDIUM)
--- S→  →  →  ↓
--- ↑   →  ↓  ↓
--- ↑   ↑  ←  ↓
--- ↑   ←  ←  E
-INSERT INTO levels (id, name, description, difficulty, status, version, board_rows, board_cols, time_limit_seconds, move_count, created_at, updated_at)
-VALUES (
+),
+(
   '550e8400-e29b-41d4-a716-446655440012',
-  'Spiral',
-  'Follow the spiral path to reach the exit.',
+  'Layered Knot',
+  'A larger acyclic knot using overlaps and negative coordinates.',
   'MEDIUM',
   'PUBLISHED',
   1,
+  '[
+    {"id":"a","color":"#5262FB","path":[{"row":0,"col":-2},{"row":0,"col":-1},{"row":0,"col":0}],"direction":"RIGHT"},
+    {"id":"b","color":"#9DA6FB","path":[{"row":-2,"col":1},{"row":-1,"col":1},{"row":0,"col":1}],"direction":"DOWN"},
+    {"id":"c","color":"#FFC83D","path":[{"row":1,"col":1},{"row":1,"col":2},{"row":1,"col":3}],"direction":"RIGHT"},
+    {"id":"d","color":"#56D879","path":[{"row":2,"col":-1},{"row":2,"col":0},{"row":2,"col":1}],"direction":"UP"}
+  ]'::jsonb,
   4,
-  4,
-  120,
+  NULL,
   NULL,
   NOW(),
   NOW()
-) ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO level_cells (level_id, row, col, type, direction) VALUES
-  ('550e8400-e29b-41d4-a716-446655440012', 0, 0, 'START', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440012', 0, 1, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440012', 0, 2, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440012', 0, 3, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440012', 1, 0, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440012', 1, 1, 'ARROW', 'RIGHT'),
-  ('550e8400-e29b-41d4-a716-446655440012', 1, 2, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440012', 1, 3, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440012', 2, 0, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440012', 2, 1, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440012', 2, 2, 'ARROW', 'LEFT'),
-  ('550e8400-e29b-41d4-a716-446655440012', 2, 3, 'ARROW', 'DOWN'),
-  ('550e8400-e29b-41d4-a716-446655440012', 3, 0, 'ARROW', 'UP'),
-  ('550e8400-e29b-41d4-a716-446655440012', 3, 1, 'ARROW', 'LEFT'),
-  ('550e8400-e29b-41d4-a716-446655440012', 3, 2, 'ARROW', 'LEFT'),
-  ('550e8400-e29b-41d4-a716-446655440012', 3, 3, 'EXIT',  NULL)
-ON CONFLICT (level_id, row, col) DO NOTHING;
+)
+ON CONFLICT (id) DO UPDATE
+  SET name = EXCLUDED.name,
+      description = EXCLUDED.description,
+      difficulty = EXCLUDED.difficulty,
+      status = EXCLUDED.status,
+      version = EXCLUDED.version,
+      arrows = EXCLUDED.arrows,
+      attempts = EXCLUDED.attempts,
+      time_limit_seconds = EXCLUDED.time_limit_seconds,
+      move_count = EXCLUDED.move_count,
+      updated_at = EXCLUDED.updated_at;

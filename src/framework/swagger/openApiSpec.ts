@@ -400,14 +400,17 @@ export const openApiSpec = {
             'application/json': {
               schema: { $ref: '#/components/schemas/CreateLevelRequest' },
               example: {
-                name: 'Arrow Maze 1',
-                description: 'A beginner maze',
+                name: 'Tutorial Knot',
+                description: 'A beginner arrow untangle level',
                 difficulty: 'EASY',
-                boardSize: { rows: 3, cols: 3 },
-                cells: [
-                  { position: { row: 0, col: 0 }, type: 'START' },
-                  { position: { row: 0, col: 1 }, type: 'ARROW', direction: 'RIGHT' },
-                  { position: { row: 0, col: 2 }, type: 'END' },
+                attempts: 5,
+                arrows: [
+                  {
+                    id: 'a',
+                    color: '#5262FB',
+                    path: [{ row: 0, col: 0 }, { row: 0, col: 1 }],
+                    direction: 'RIGHT',
+                  },
                 ],
               },
             },
@@ -514,7 +517,7 @@ export const openApiSpec = {
     },
     '/levels/{levelId}/definition': {
       put: {
-        summary: 'Update level grid definition (admin only)',
+        summary: 'Update level arrow definition (admin only)',
         tags: ['Level Catalog'],
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'levelId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
@@ -877,55 +880,55 @@ export const openApiSpec = {
           },
         },
       },
-      CellInput: {
+      PositionInput: {
         type: 'object',
-        required: ['position', 'type'],
+        required: ['row', 'col'],
         properties: {
-          position: {
-            type: 'object',
-            required: ['row', 'col'],
-            properties: {
-              row: { type: 'integer', minimum: 0 },
-              col: { type: 'integer', minimum: 0 },
-            },
+          row: { type: 'integer' },
+          col: { type: 'integer' },
+        },
+      },
+      ArrowSpec: {
+        type: 'object',
+        required: ['id', 'color', 'path', 'direction'],
+        properties: {
+          id: { type: 'string', minLength: 1 },
+          color: { type: 'string', minLength: 1 },
+          path: {
+            type: 'array',
+            minItems: 1,
+            items: { $ref: '#/components/schemas/PositionInput' },
           },
-          type: { type: 'string', enum: ['START', 'END', 'ARROW', 'EMPTY'] },
-          direction: { type: 'string', enum: ['UP', 'DOWN', 'LEFT', 'RIGHT', 'UP_LEFT', 'UP_RIGHT', 'DOWN_LEFT', 'DOWN_RIGHT'] },
+          direction: { type: 'string', enum: ['UP', 'DOWN', 'LEFT', 'RIGHT'] },
+        },
+      },
+      LevelDefinitionDto: {
+        type: 'object',
+        required: ['arrows', 'attempts'],
+        properties: {
+          arrows: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ArrowSpec' } },
+          attempts: { type: 'integer', minimum: 1 },
         },
       },
       CreateLevelRequest: {
         type: 'object',
-        required: ['name', 'description', 'difficulty', 'boardSize', 'cells'],
+        required: ['name', 'description', 'difficulty', 'arrows'],
         properties: {
           name: { type: 'string', minLength: 1, maxLength: 100 },
           description: { type: 'string', maxLength: 500 },
           difficulty: { type: 'string', enum: ['EASY', 'MEDIUM', 'HARD'] },
-          boardSize: {
-            type: 'object',
-            required: ['rows', 'cols'],
-            properties: {
-              rows: { type: 'integer', minimum: 2 },
-              cols: { type: 'integer', minimum: 2 },
-            },
-          },
-          cells: { type: 'array', items: { $ref: '#/components/schemas/CellInput' } },
+          arrows: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ArrowSpec' } },
+          attempts: { type: 'integer', minimum: 1, nullable: true },
           timeLimit: { type: 'integer', minimum: 1, nullable: true },
           moveCount: { type: 'integer', minimum: 1, nullable: true },
         },
       },
       UpdateLevelDefinitionRequest: {
         type: 'object',
-        required: ['boardSize', 'cells'],
+        required: ['arrows'],
         properties: {
-          boardSize: {
-            type: 'object',
-            required: ['rows', 'cols'],
-            properties: {
-              rows: { type: 'integer', minimum: 2 },
-              cols: { type: 'integer', minimum: 2 },
-            },
-          },
-          cells: { type: 'array', items: { $ref: '#/components/schemas/CellInput' } },
+          arrows: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ArrowSpec' } },
+          attempts: { type: 'integer', minimum: 1, nullable: true },
         },
       },
       CreateLevelResponse: {
@@ -968,7 +971,7 @@ export const openApiSpec = {
       },
       LevelDetail: {
         type: 'object',
-        required: ['levelId', 'name', 'description', 'difficulty', 'status', 'version', 'createdAt', 'updatedAt'],
+        required: ['levelId', 'name', 'description', 'difficulty', 'status', 'version', 'definition', 'createdAt', 'updatedAt'],
         properties: {
           levelId: { type: 'string', format: 'uuid' },
           name: { type: 'string' },
@@ -976,6 +979,7 @@ export const openApiSpec = {
           difficulty: { type: 'string', enum: ['EASY', 'MEDIUM', 'HARD'] },
           status: { type: 'string', enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED'] },
           version: { type: 'integer' },
+          definition: { $ref: '#/components/schemas/LevelDefinitionDto' },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
         },

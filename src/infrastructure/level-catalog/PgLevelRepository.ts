@@ -5,7 +5,7 @@ import type { Level } from '../../domain/level-catalog/Level.js';
 import type { LevelId } from '../../domain/shared/LevelId.js';
 import { InfrastructureError } from '../../shared/errors/InfrastructureError.js';
 import { getQueryRunner, withTransactionalClient } from '../../infrastructure/database/transactionContext.js';
-import { type CellRow, type LevelRow, rowToLevel } from './LevelMapper.js';
+import { arrowsToRecord, type LevelRow, rowToLevel } from './LevelMapper.js';
 
 export class PgLevelRepository implements LevelRepository {
   constructor(private readonly pool: Pool) {}
@@ -21,12 +21,7 @@ export class PgLevelRepository implements LevelRepository {
       const levelRow = levelResult.rows[0];
       if (!levelRow) return null;
 
-      const cellResult = await runner.query<CellRow>(
-        'SELECT row, col, type, direction FROM level_cells WHERE level_id = $1 ORDER BY row, col',
-        [levelRow.id],
-      );
-
-      return rowToLevel(levelRow, cellResult.rows);
+      return rowToLevel(levelRow);
     } catch (err) {
       throw new InfrastructureError('Failed to find level by id', { cause: String(err) });
     }
@@ -41,16 +36,7 @@ export class PgLevelRepository implements LevelRepository {
 
       if (levelResult.rows.length === 0) return [];
 
-      const levels: Level[] = [];
-      for (const levelRow of levelResult.rows) {
-        const cellResult = await runner.query<CellRow>(
-          'SELECT row, col, type, direction FROM level_cells WHERE level_id = $1 ORDER BY row, col',
-          [levelRow.id],
-        );
-        levels.push(rowToLevel(levelRow, cellResult.rows));
-      }
-
-      return levels;
+      return levelResult.rows.map((levelRow) => rowToLevel(levelRow));
     } catch (err) {
       throw new InfrastructureError('Failed to find published levels', { cause: String(err) });
     }
@@ -60,16 +46,16 @@ export class PgLevelRepository implements LevelRepository {
     try {
       await withTransactionalClient(this.pool, async (client) => {
         await client.query(
-          `INSERT INTO levels (id, name, description, difficulty, status, version, board_rows, board_cols, time_limit_seconds, move_count, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          `INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, $12)
            ON CONFLICT (id) DO UPDATE
              SET name               = EXCLUDED.name,
                  description        = EXCLUDED.description,
                  difficulty         = EXCLUDED.difficulty,
                  status             = EXCLUDED.status,
                  version            = EXCLUDED.version,
-                 board_rows         = EXCLUDED.board_rows,
-                 board_cols         = EXCLUDED.board_cols,
+                 arrows             = EXCLUDED.arrows,
+                 attempts           = EXCLUDED.attempts,
                  time_limit_seconds = EXCLUDED.time_limit_seconds,
                  move_count         = EXCLUDED.move_count,
                  updated_at         = EXCLUDED.updated_at`,
@@ -80,8 +66,8 @@ export class PgLevelRepository implements LevelRepository {
             level.difficulty,
             level.status,
             level.version.value,
-            level.definition.boardSize.rows,
-            level.definition.boardSize.cols,
+            JSON.stringify(arrowsToRecord(level)),
+            level.definition.attempts,
             level.timeLimit?.value ?? null,
             level.moveCount?.value ?? null,
             level.createdAt,
@@ -89,24 +75,6 @@ export class PgLevelRepository implements LevelRepository {
           ],
         );
 
-        await client.query(
-          'DELETE FROM level_cells WHERE level_id = $1',
-          [level.id.value],
-        );
-
-        for (const cell of level.definition.cells) {
-          await client.query(
-            `INSERT INTO level_cells (level_id, row, col, type, direction)
-             VALUES ($1, $2, $3, $4, $5)`,
-            [
-              level.id.value,
-              cell.position.row,
-              cell.position.col,
-              cell.type,
-              cell.direction ?? null,
-            ],
-          );
-        }
       });
     } catch (err) {
       if (err instanceof InfrastructureError) throw err;

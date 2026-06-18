@@ -1,63 +1,77 @@
-import { CellType } from "./enums/CellType.js";
 import { Direction } from "./enums/Direction.js";
+import type { ArrowSpec } from "./value-objects/ArrowSpec.js";
 import type { LevelDefinition } from "./value-objects/LevelDefinition.js";
-import { Position } from "./value-objects/Position.js";
-
-const DIRECTION_DELTAS: Record<Direction, [number, number]> = {
-  [Direction.UP]: [-1, 0],
-  [Direction.DOWN]: [1, 0],
-  [Direction.LEFT]: [0, -1],
-  [Direction.RIGHT]: [0, 1],
-  [Direction.UP_LEFT]: [-1, -1],
-  [Direction.UP_RIGHT]: [-1, 1],
-  [Direction.DOWN_LEFT]: [1, -1],
-  [Direction.DOWN_RIGHT]: [1, 1],
-};
-
-function positionKey(pos: Position): string {
-  return `${pos.row},${pos.col}`;
-}
-
-function step(
-  pos: Position,
-  dir: Direction,
-  rows: number,
-  cols: number
-): Position | null {
-  const [dr, dc] = DIRECTION_DELTAS[dir];
-  const newRow = pos.row + dr;
-  const newCol = pos.col + dc;
-  if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
-    return null;
-  }
-  return Position.create(newRow, newCol);
-}
+import type { Position } from "./value-objects/Position.js";
 
 export class LevelSolvabilityPolicy {
   isSolvable(definition: LevelDefinition): boolean {
-    const { cells, boardSize } = definition;
-    const cellMap = new Map(cells.map((c) => [positionKey(c.position), c]));
+    const blockingGraph = this.buildBlockingGraph(definition.arrows);
+    return this.isAcyclic(blockingGraph);
+  }
 
-    const startCell = cells.find((c) => c.type === CellType.START);
-    if (!startCell) return false;
+  private buildBlockingGraph(arrows: readonly ArrowSpec[]): Map<string, Set<string>> {
+    const graph = new Map<string, Set<string>>();
+    for (const arrow of arrows) {
+      graph.set(arrow.id, new Set<string>());
+    }
 
-    const visited = new Set<string>();
-    let current: Position = startCell.position;
+    for (const blocked of arrows) {
+      for (const blocker of arrows) {
+        if (blocked.id === blocker.id) continue;
+        if (this.blocks(blocked, blocker)) {
+          graph.get(blocker.id)!.add(blocked.id);
+        }
+      }
+    }
 
-    while (true) {
-      const key = positionKey(current);
-      if (visited.has(key)) return false;
-      visited.add(key);
+    return graph;
+  }
 
-      const cell = cellMap.get(key);
-      if (!cell) return false;
-      if (cell.type === CellType.EXIT) return true;
-      if (!cell.direction) return false;
+  private blocks(blocked: ArrowSpec, blocker: ArrowSpec): boolean {
+    return blocker.path.some((cell) =>
+      LevelSolvabilityPolicy.isStrictlyAhead(blocked.head, blocked.direction, cell)
+    );
+  }
 
-      const next = step(current, cell.direction, boardSize.rows, boardSize.cols);
-      if (!next) return false;
+  private isAcyclic(graph: Map<string, Set<string>>): boolean {
+    const indegree = new Map<string, number>();
+    for (const node of graph.keys()) {
+      indegree.set(node, 0);
+    }
+    for (const neighbors of graph.values()) {
+      for (const neighbor of neighbors) {
+        indegree.set(neighbor, (indegree.get(neighbor) ?? 0) + 1);
+      }
+    }
 
-      current = next;
+    const queue = [...indegree.entries()]
+      .filter(([, degree]) => degree === 0)
+      .map(([node]) => node);
+    let visited = 0;
+
+    while (queue.length > 0) {
+      const node = queue.shift()!;
+      visited += 1;
+      for (const neighbor of graph.get(node) ?? []) {
+        const nextDegree = (indegree.get(neighbor) ?? 0) - 1;
+        indegree.set(neighbor, nextDegree);
+        if (nextDegree === 0) queue.push(neighbor);
+      }
+    }
+
+    return visited === graph.size;
+  }
+
+  private static isStrictlyAhead(head: Position, direction: Direction, cell: Position): boolean {
+    switch (direction) {
+      case Direction.UP:
+        return cell.col === head.col && cell.row < head.row;
+      case Direction.DOWN:
+        return cell.col === head.col && cell.row > head.row;
+      case Direction.LEFT:
+        return cell.row === head.row && cell.col < head.col;
+      case Direction.RIGHT:
+        return cell.row === head.row && cell.col > head.col;
     }
   }
 }

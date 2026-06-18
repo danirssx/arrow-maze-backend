@@ -1,14 +1,12 @@
 import { Level } from "../../../src/domain/level-catalog/Level";
 import { LevelSolvabilityPolicy } from "../../../src/domain/level-catalog/LevelSolvabilityPolicy";
 import { LevelDefinition } from "../../../src/domain/level-catalog/value-objects/LevelDefinition";
-import { BoardSize } from "../../../src/domain/level-catalog/value-objects/BoardSize";
 import { Position } from "../../../src/domain/level-catalog/value-objects/Position";
-import { CellSpec } from "../../../src/domain/level-catalog/value-objects/CellSpec";
+import { ArrowSpec } from "../../../src/domain/level-catalog/value-objects/ArrowSpec";
 import { LevelId } from "../../../src/domain/shared/LevelId.js";
 import { LevelName } from "../../../src/domain/level-catalog/value-objects/LevelName";
 import { LevelDescription } from "../../../src/domain/level-catalog/value-objects/LevelDescription";
 import { LevelVersion } from "../../../src/domain/level-catalog/value-objects/LevelVersion";
-import { CellType } from "../../../src/domain/level-catalog/enums/CellType";
 import { Direction } from "../../../src/domain/level-catalog/enums/Direction";
 import { Difficulty } from "../../../src/domain/level-catalog/enums/Difficulty";
 import { LevelStatus } from "../../../src/domain/level-catalog/enums/LevelStatus";
@@ -30,10 +28,8 @@ class NeverSolvablePolicy extends LevelSolvabilityPolicy {
 }
 
 const makeSolvableDefinition = () =>
-  LevelDefinition.create(BoardSize.create(3, 3), [
-    CellSpec.create(Position.create(0, 0), CellType.START, Direction.RIGHT),
-    CellSpec.create(Position.create(0, 1), CellType.ARROW, Direction.DOWN),
-    CellSpec.create(Position.create(1, 1), CellType.EXIT),
+  LevelDefinition.create([
+    ArrowSpec.create("a", "#5262FB", [Position.create(0, 0)], Direction.UP),
   ]);
 
 const makeDraftLevel = (def = makeSolvableDefinition()) =>

@@ -13,8 +13,10 @@ describe("Position", () => {
     expect(pos.col).toBe(0);
   });
 
-  it("should_throw_when_row_is_negative", () => {
-    expect(() => Position.create(-1, 0)).toThrow();
+  it("should_accept_negative_coordinates", () => {
+    const pos = Position.create(-1, -2);
+    expect(pos.row).toBe(-1);
+    expect(pos.col).toBe(-2);
   });
 
   it("should_throw_when_col_is_not_integer", () => {

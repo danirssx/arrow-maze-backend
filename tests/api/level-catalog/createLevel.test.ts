@@ -14,11 +14,9 @@ const VALID_BODY: CreateLevelInput = {
   name: 'Test Level',
   description: 'A test level',
   difficulty: 'EASY',
-  boardSize: { rows: 3, cols: 3 },
-  cells: [
-    { position: { row: 0, col: 0 }, type: 'START' },
-    { position: { row: 0, col: 1 }, type: 'ARROW', direction: 'RIGHT' },
-    { position: { row: 0, col: 2 }, type: 'END' },
+  attempts: 5,
+  arrows: [
+    { id: 'a', color: '#5262FB', path: [{ row: 0, col: 0 }], direction: 'UP' },
   ],
 };
 
@@ -28,7 +26,19 @@ class FakeGetLevelsUseCase implements UseCase<GetLevelsInput, GetLevelsOutput> {
 
 class FakeGetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
   async execute(_input: GetLevelInput): Promise<GetLevelOutput> {
-    return { level: { levelId: 'l-1', name: 'n', description: 'd', difficulty: 'EASY', status: 'PUBLISHED', version: 1, createdAt: new Date(), updatedAt: new Date() } };
+    return {
+      level: {
+        levelId: 'l-1',
+        name: 'n',
+        description: 'd',
+        difficulty: 'EASY',
+        status: 'PUBLISHED',
+        version: 1,
+        definition: { attempts: 5, arrows: [] },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    };
   }
 }
 
@@ -140,7 +150,7 @@ describe('POST /levels', () => {
     const res = await request(app)
       .post('/levels')
       .set('Authorization', 'Bearer admin-token')
-      .send({ name: 'Level without cells' });
+      .send({ name: 'Level without arrows' });
 
     // Assert
     expect(res.status).toBe(400);

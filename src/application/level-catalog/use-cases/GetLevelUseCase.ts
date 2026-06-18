@@ -12,8 +12,19 @@ export type LevelDto = {
   difficulty: string;
   status: string;
   version: number;
+  definition: LevelDefinitionDto;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type LevelDefinitionDto = {
+  attempts: number;
+  arrows: {
+    id: string;
+    color: string;
+    path: { row: number; col: number }[];
+    direction: string;
+  }[];
 };
 
 export type GetLevelOutput = { level: LevelDto };
@@ -34,6 +45,15 @@ export class GetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
         difficulty: level.difficulty,
         status: level.status,
         version: level.version.value,
+        definition: {
+          attempts: level.definition.attempts,
+          arrows: level.definition.arrows.map((arrow) => ({
+            id: arrow.id,
+            color: arrow.color,
+            path: arrow.path.map((position) => ({ row: position.row, col: position.col })),
+            direction: arrow.direction,
+          })),
+        },
         createdAt: level.createdAt,
         updatedAt: level.updatedAt,
       },

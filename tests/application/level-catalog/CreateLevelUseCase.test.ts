@@ -9,11 +9,9 @@ const VALID_INPUT = {
   name: "Arrow Level 1",
   description: "A simple level",
   difficulty: "EASY",
-  boardSize: { rows: 3, cols: 3 },
-  cells: [
-    { position: { row: 0, col: 0 }, type: "START", direction: "RIGHT" },
-    { position: { row: 0, col: 1 }, type: "ARROW", direction: "DOWN" },
-    { position: { row: 1, col: 1 }, type: "EXIT" },
+  attempts: 4,
+  arrows: [
+    { id: "a", color: "#5262FB", path: [{ row: 0, col: 0 }], direction: "UP" },
   ],
 };
 
@@ -44,9 +42,10 @@ describe("CreateLevelUseCase", () => {
     expect(repo.savedLevels).toHaveLength(1);
     expect(repo.savedLevels[0].status).toBe(LevelStatus.DRAFT);
     expect(repo.savedLevels[0].name.value).toBe("Arrow Level 1");
+    expect(repo.savedLevels[0].definition.attempts).toBe(4);
   });
 
-  it("should_throw_when_definition_has_no_exit", async () => {
+  it("should_throw_when_definition_has_no_arrows", async () => {
     // Arrange
     const repo = new FakeLevelRepository();
     const useCase = new CreateLevelUseCase(repo);
@@ -55,9 +54,7 @@ describe("CreateLevelUseCase", () => {
     await expect(
       useCase.execute({
         ...VALID_INPUT,
-        cells: [
-          { position: { row: 0, col: 0 }, type: "START", direction: "RIGHT" },
-        ],
+        arrows: [],
       })
     ).rejects.toThrow();
   });
@@ -73,21 +70,15 @@ describe("CreateLevelUseCase", () => {
     ).rejects.toThrow(ValidationError);
   });
 
-  it("should_throw_validation_error_when_cell_type_is_invalid", async () => {
+  it("should_throw_when_attempts_are_invalid", async () => {
     // Arrange
     const repo = new FakeLevelRepository();
     const useCase = new CreateLevelUseCase(repo);
 
     // Act / Assert
     await expect(
-      useCase.execute({
-        ...VALID_INPUT,
-        cells: [
-          { position: { row: 0, col: 0 }, type: "INVALID_CELL", direction: "RIGHT" },
-          { position: { row: 1, col: 1 }, type: "EXIT" },
-        ],
-      })
-    ).rejects.toThrow(ValidationError);
+      useCase.execute({ ...VALID_INPUT, attempts: 0 })
+    ).rejects.toThrow();
   });
 
   it("should_throw_validation_error_when_direction_is_invalid", async () => {
@@ -99,9 +90,8 @@ describe("CreateLevelUseCase", () => {
     await expect(
       useCase.execute({
         ...VALID_INPUT,
-        cells: [
-          { position: { row: 0, col: 0 }, type: "START", direction: "DIAGONAL" },
-          { position: { row: 1, col: 1 }, type: "EXIT" },
+        arrows: [
+          { id: "a", color: "#5262FB", path: [{ row: 0, col: 0 }], direction: "DIAGONAL" },
         ],
       })
     ).rejects.toThrow(ValidationError);

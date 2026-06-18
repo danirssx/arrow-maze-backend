@@ -6,11 +6,9 @@ import { FakeLevelRepository, makeDraftLevel, makePublishedLevel, VALID_UUID } f
 // Subject to human review — application use case test
 
 const NEW_DEFINITION = {
-  boardSize: { rows: 3, cols: 3 },
-  cells: [
-    { position: { row: 0, col: 0 }, type: "START", direction: "DOWN" },
-    { position: { row: 1, col: 0 }, type: "ARROW", direction: "RIGHT" },
-    { position: { row: 1, col: 1 }, type: "EXIT" },
+  attempts: 3,
+  arrows: [
+    { id: "b", color: "#56D879", path: [{ row: -1, col: 0 }, { row: 0, col: 0 }], direction: "DOWN" },
   ],
 };
 
@@ -26,7 +24,8 @@ describe("UpdateLevelDefinitionUseCase", () => {
 
     // Assert
     expect(result.levelId).toBe(VALID_UUID);
-    expect(repo.savedLevels[0].definition.boardSize.rows).toBe(3);
+    expect(repo.savedLevels[0].definition.attempts).toBe(3);
+    expect(repo.savedLevels[0].definition.arrows[0]!.id).toBe("b");
   });
 
   it("should_throw_not_found_when_level_does_not_exist", async () => {

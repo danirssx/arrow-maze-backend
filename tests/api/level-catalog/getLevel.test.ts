@@ -18,6 +18,10 @@ const LEVEL_DTO: GetLevelOutput['level'] = {
   difficulty: 'EASY',
   status: 'PUBLISHED',
   version: 1,
+  definition: {
+    attempts: 5,
+    arrows: [{ id: 'a', color: '#5262FB', path: [{ row: 0, col: 0 }], direction: 'UP' }],
+  },
   createdAt: new Date('2026-01-01'),
   updatedAt: new Date('2026-01-01'),
 };
@@ -99,6 +103,7 @@ describe('GET /levels/:levelId', () => {
     expect(level).toHaveProperty('difficulty');
     expect(level).toHaveProperty('status');
     expect(level).toHaveProperty('version');
+    expect(level).toHaveProperty('definition');
     expect(level).toHaveProperty('createdAt');
     expect(level).toHaveProperty('updatedAt');
   });

@@ -7,11 +7,11 @@ export class Position {
   ) {}
 
   static create(row: number, col: number): Position {
-    if (!Number.isInteger(row) || row < 0) {
-      throw new InvalidArgumentError("Position row must be a non-negative integer");
+    if (!Number.isInteger(row)) {
+      throw new InvalidArgumentError("Position row must be an integer");
     }
-    if (!Number.isInteger(col) || col < 0) {
-      throw new InvalidArgumentError("Position column must be a non-negative integer");
+    if (!Number.isInteger(col)) {
+      throw new InvalidArgumentError("Position column must be an integer");
     }
     return new Position(row, col);
   }
@@ -26,5 +26,13 @@ export class Position {
 
   equals(other: Position): boolean {
     return this._row === other._row && this._col === other._col;
+  }
+
+  translate(rowDelta: number, colDelta: number): Position {
+    return Position.create(this._row + rowDelta, this._col + colDelta);
+  }
+
+  toKey(): string {
+    return `${this._row},${this._col}`;
   }
 }
