@@ -24,6 +24,7 @@ export class LevelDefinition {
       );
     }
 
+    const seen = new Set<string>();
     for (const cell of cells) {
       if (
         cell.position.row >= boardSize.rows ||
@@ -34,6 +35,13 @@ export class LevelDefinition {
             `for board ${boardSize.rows}x${boardSize.cols}`
         );
       }
+      const key = `${cell.position.row},${cell.position.col}`;
+      if (seen.has(key)) {
+        throw new InvalidArgumentError(
+          `Duplicate cell at position (${cell.position.row}, ${cell.position.col})`
+        );
+      }
+      seen.add(key);
     }
 
     return new LevelDefinition(boardSize, [...cells]);
