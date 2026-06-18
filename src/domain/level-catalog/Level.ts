@@ -20,7 +20,7 @@ export class Level {
     private readonly _id: LevelId,
     private readonly _name: LevelName,
     private readonly _description: LevelDescription,
-    private readonly _definition: LevelDefinition,
+    private _definition: LevelDefinition,
     private readonly _difficulty: Difficulty,
     private _status: LevelStatus,
     private readonly _version: LevelVersion,
@@ -98,6 +98,24 @@ export class Level {
     this._domainEvents.push(
       new LevelPublished(this._id.getValue(), this._name.getValue(), this._difficulty)
     );
+  }
+
+  updateDefinition(definition: LevelDefinition): void {
+    if (this._status !== LevelStatus.DRAFT) {
+      throw new BusinessRuleViolationError(
+        "Only draft levels can have their definition updated"
+      );
+    }
+    this._definition = definition;
+    this._updatedAt = new Date();
+  }
+
+  archive(): void {
+    if (this._status !== LevelStatus.PUBLISHED) {
+      throw new BusinessRuleViolationError("Only published levels can be archived");
+    }
+    this._status = LevelStatus.ARCHIVED;
+    this._updatedAt = new Date();
   }
 
   pullDomainEvents(): DomainEvent[] {

@@ -613,6 +613,242 @@ Generated 18 source files and 8 test files:
 - `MoveCount` and `TimeLimit` have 0% coverage because `Level.draft()` makes them optional and no test exercises those paths yet. Coverage will improve in AM-010 (application services).
 
 
+---
+
+# AI Log — AM-010 — Level Catalog application services
+
+**Date:** 2026-06-17
+**Ticket:** MAZ-81 (AM-010)
+**Branch:** feat/level-application-AM-010
+
+## Task / problem
+
+Implement the application layer for the Level Catalog bounded context: repository port, six use cases (GetLevels, GetLevel, CreateLevel, PublishLevel, ArchiveLevel, UpdateLevelDefinition), and their corresponding unit tests. Also extend the Level aggregate with `archive()` and `updateDefinition()` methods required by those use cases.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+User instructed to continue with AM-010 following the same established workflow (read AGENTS.md, implement, ai-log, compile-ai-usage, commit, PR, Linear).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Acceptance criteria from MAZ-81 used to define use case boundaries and which transitions are valid (DRAFT→PUBLISHED, PUBLISHED→ARCHIVED) | MAZ-81 description |
+| Planner/Slicer | Referenced | Application structured as port → use cases → tests; one use case file per operation following Identity layer conventions | src/application/level-catalog/ layout |
+| TDD Implementer | Used | All tests written alongside use cases; hand-rolled FakeLevelRepository and factory helpers used instead of jest.fn() due to ESM constraints | tests/application/level-catalog/ |
+| Judge | Not used | N/A |
+| Mutation Tester | Not used | N/A |
+
+## Result obtained
+
+Extended `src/domain/level-catalog/Level.ts` with:
+- `_definition` made mutable (was `readonly`)
+- `updateDefinition(definition)`: validates DRAFT status before replacing definition
+- `archive()`: validates PUBLISHED status before transitioning to ARCHIVED
+
+Created `src/application/level-catalog/ports/LevelRepository.ts`:
+- `save(level)`, `findById(id)`, `findAllPublished()`
+
+Created six use cases:
+- `GetLevelsUseCase` — returns all published levels as `LevelSummaryDto[]`
+- `GetLevelUseCase` — returns a single level by ID as `LevelDto`; throws `NotFoundError` if absent
+- `CreateLevelUseCase` — constructs all value objects from raw input and persists a new DRAFT level
+- `PublishLevelUseCase` — calls `level.publish(policy)`, saves, returns level ID
+- `ArchiveLevelUseCase` — calls `level.archive()`, saves, returns level ID
+- `UpdateLevelDefinitionUseCase` — reconstructs `LevelDefinition` from raw input and calls `level.updateDefinition()`
+
+Created `tests/application/level-catalog/helpers/levelFixtures.ts`:
+- `FakeLevelRepository` (in-memory Map with `seed()` helper and `savedLevels` inspection array)
+- `makeDraftLevel()`, `makePublishedLevel()`, `makeArchivedLevel()`, `makeSolvableDefinition()`
+- `VALID_UUID` constant
+
+Created 6 test files covering 19 test cases total.
+
+`npm run verify` passes: lint ✅ typecheck ✅ 223 tests ✅ build ✅ (+51 tests from 172 baseline)
+
+## Team modifications pending human review
+
+- `GetLevelsUseCase` filters by `findAllPublished()`. If the team needs a separate admin view (e.g., list draft levels), a new use case and port method will be required.
+- `UpdateLevelDefinitionUseCase` rebuilds the full `LevelDefinition` from scratch. There is no partial-update concept — all cells must be provided on every update.
+- `PublishLevelUseCase` receives `LevelSolvabilityPolicy` as a constructor dependency. The concrete implementation will be wired in the framework layer (AM-011+). Team should confirm the DI approach.
+- `LevelDto` and `LevelSummaryDto` are defined inline in their respective use case files. If reuse grows, they may need to be moved to a shared DTOs file.
+
+## Lessons / limitations
+
+- ESM + ts-jest does not allow `jest.fn()` as a global or class mock. All test doubles were hand-rolled as concrete classes or in-memory implementations, which avoids the ESM mock hoisting problem entirely.
+- `LevelSolvabilityPolicy` is an abstract class, not an interface, because TypeScript interfaces cannot be subclassed in test doubles with `override` type safety. Extending the class in tests (`AlwaysSolvablePolicy`, `NeverSolvablePolicy`) keeps the type contract while enabling simple stubs.
+- `import type` is required for `LevelSolvabilityPolicy` in `PublishLevelUseCase` because it is only used as a type annotation. The ESLint `consistent-type-imports` rule enforces this.
+
+
+---
+
+# AI Log - AM-033 - Model Leaderboard domain
+
+## Task / problem
+Implement the Leaderboard aggregate root and ScoreEntry entity in `src/domain` following Clean Architecture. The domain was intentionally empty pending team approval.
+
+## Tool and model
+Claude Code - claude-sonnet-4-6
+
+## Prompt used
+User provided the approved entity structure:
+- Leaderboard: id, levelId, entries, maxEntries, updatedAt, domainEvents
+- ScoreEntry: id, userId, levelId, usernameSnapshot, score, timeSeconds, movesCount, rank?, submittedAt
+
+## Result obtained
+Created:
+- `src/domain/shared/DomainEvent.ts` — abstract base class
+- `src/domain/shared/Entity.ts` — abstract base class with domain event support
+- `src/domain/leaderboard/value-objects/` — 12 value objects (LeaderboardId, LevelId, EntryId, UserId, UsernameSnapshot, Score, TimeSeconds, MoveCount, Rank, MaxLeaderboardEntries, UpdatedAt, SubmittedAt)
+- `src/domain/leaderboard/ScoreEntry.ts` — entity
+- `src/domain/leaderboard/Leaderboard.ts` — aggregate root with submitEntry, ranking, and capacity logic
+- `src/domain/leaderboard/events/LeaderboardUpdatedEvent.ts`
+- `src/domain/leaderboard/errors/LeaderboardErrors.ts`
+- `tests/domain/leaderboard/Leaderboard.test.ts` — 13 tests, all passing
+
+All tests pass. Typecheck clean.
+
+## Ranking rule assumed
+Higher score wins; ties broken by faster time. Requires team confirmation.
+
+## Team modifications pending human review
+- Confirm ranking rule (score desc, time asc).
+- Confirm MaxLeaderboardEntries default value (currently 10).
+- Confirm whether a user can update their entry (currently throws DuplicateEntryError).
+
+## Lessons / limitations
+- `exactOptionalPropertyTypes: true` in tsconfig requires explicit undefined exclusion for optional props in spread/copy patterns.
+- Project uses ESM (`"type": "module"`); `require()` is unavailable in tests.
+
+
+---
+
+# AI Log - AM-034 - Implement Leaderboard application services
+
+## Task / problem
+Implement SubmitScoreService and GetLeaderboardService use cases in `src/application`
+following the team's Clean Architecture pattern, using approved service structure.
+
+## Tool and model
+Claude Code - claude-sonnet-4-6
+
+## Prompt used
+User provided the approved service structure:
+- SubmitScoreService: leaderboardRepository, rankingService, validationService, eventBus
+- GetLeaderboardService: repo (ILeaderboardRepository)
+
+## Result obtained
+Created:
+- `src/application/aspects/UseCase.ts` — UseCase<Input, Output> interface
+- `src/application/leaderboard/ports/ILeaderboardRepository.ts`
+- `src/application/leaderboard/ports/IDomainEventBus.ts`
+- `src/application/leaderboard/services/RankingService.ts`
+- `src/application/leaderboard/services/ScoreValidationService.ts`
+- `src/application/leaderboard/use-cases/SubmitScoreService.ts`
+- `src/application/leaderboard/use-cases/GetLeaderboardService.ts`
+- `src/shared/errors/AppError.ts` and `ApplicationError.ts` (aligned with identity branch)
+- `tests/application/leaderboard/SubmitScoreService.test.ts` — 6 tests passing
+- `tests/application/leaderboard/GetLeaderboardService.test.ts` — 3 tests passing
+
+All 9 tests pass. Typecheck clean.
+
+## Team modifications pending human review
+- SubmitScoreService creates a new Leaderboard if none exists for the level.
+  Confirm whether this is correct or if missing leaderboard should throw NotFoundError.
+- IDomainEventBus references shared DomainEvent base — confirm alignment with
+  identity branch's `src/domain/events/DomainEvent.ts` interface.
+
+## Lessons / limitations
+- ESM + ts-jest requires explicit `import { jest } from '@jest/globals'` in test files.
+- Domain files from feat/leaderboard-domain-AM-033 were merged locally since that
+  branch is not yet in main. This branch depends on AM-033 being merged first.
+
+
+---
+
+# AI Log - AM-035 - Implement Leaderboard infrastructure
+
+## Task / problem
+Implement PgLeaderboardRepository adapting ILeaderboardRepository to PostgreSQL,
+following the Repository + Adapter pattern used by identity infrastructure.
+
+## Tool and model
+Claude Code - claude-sonnet-4-6
+
+## Prompt used
+Derived from identity branch pattern (PgUserRepository, PgPool, migrations).
+User confirmed service structure in AM-033 and AM-034.
+
+## Result obtained
+Created:
+- `src/infrastructure/database/PgPool.ts` — pg Pool factory
+- `src/infrastructure/database/migrations/002_create_leaderboards.sql`
+- `src/infrastructure/leaderboard/PgLeaderboardRepository.ts` — implements ILeaderboardRepository
+- `src/shared/errors/InfrastructureError.ts`
+- `tests/infrastructure/leaderboard/PgLeaderboardRepository.test.ts` — 5 tests passing
+
+All tests pass. Typecheck clean.
+
+## Design decisions
+- save() uses DELETE + INSERT for entries (full replace) inside a transaction.
+  Alternative: upsert per entry. Confirm with team if partial updates are needed.
+- pg is added as a runtime dependency (was missing from package.json).
+
+## Team modifications pending human review
+- Confirm migration numbering (002) does not conflict with other branches.
+- Confirm save strategy (delete+insert vs upsert per entry).
+
+## Lessons / limitations
+- This branch depends on feat/leaderboard-domain-AM-033 and
+  feat/leaderboard-services-AM-034 being merged first.
+
+
+---
+
+# AI Log - AM-036 - Expose Leaderboard HTTP API and Swagger
+
+## Task / problem
+Expose LeaderboardController (POST /leaderboard/scores, GET /leaderboard/:levelId),
+leaderboardRoutes, and Swagger spec following the identity HTTP pattern.
+
+## Tool and model
+Claude Code - claude-sonnet-4-6
+
+## Prompt used
+Derived from identity HTTP branch pattern (IdentityController, identityRoutes,
+openApiSpec). Pre-checks: AGENTS.md both repos, MEMORY.md created, Linear tickets
+AM-033/034/035 confirmed complete.
+
+## Result obtained
+Created:
+- `src/framework/leaderboard/LeaderboardController.ts`
+- `src/framework/leaderboard/leaderboardRoutes.ts`
+- `src/framework/swagger/openApiSpec.ts` — extended with Leaderboard paths and schemas
+- `src/application/aspects/sanitizeLogContext.ts` — copied from identity branch
+- `src/shared/errors/index.ts` — copied from identity branch
+- `src/framework/errors/ApiResponsePresenter.ts`, `errorMiddleware.ts`, `notFoundMiddleware.ts`
+- `tests/framework/leaderboard/LeaderboardController.test.ts` — 5 tests passing
+- MEMORY.md initialized with project context, user profile, and workflow feedback
+
+All tests pass. Typecheck clean.
+
+## Team modifications pending human review
+- app.ts errorMiddleware fix uses inline no-op logger — wire real ConsoleLogger
+  once identity branch is merged.
+- Confirm route prefix convention: /leaderboard vs /api/leaderboard.
+
+## Lessons / limitations
+- Express 5 req.params type is `string | string[]`, requires explicit narrowing.
+- app.ts was outdated vs identity branch — minimal fix applied, team should
+  reconcile when merging both branches.
+- This branch depends on AM-033, AM-034, AM-035 being merged first.
+
+
 <!-- AI_LOG_ENTRIES_END -->
 
 ## Critical Evaluation
