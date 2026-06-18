@@ -71,7 +71,7 @@ export class PgUserRepository implements UserRepository {
 
   async findById(id: UserId): Promise<User | null> {
     try {
-      const result = await this.pool.query<UserRow>(
+      const result = await getQueryRunner(this.pool).query<UserRow>(
         "SELECT * FROM users WHERE id = $1",
         [id.value]
       );
@@ -83,7 +83,7 @@ export class PgUserRepository implements UserRepository {
 
   async findByEmail(email: EmailType): Promise<User | null> {
     try {
-      const result = await this.pool.query<UserRow>(
+      const result = await getQueryRunner(this.pool).query<UserRow>(
         "SELECT * FROM users WHERE email = $1",
         [email.value]
       );
@@ -95,7 +95,7 @@ export class PgUserRepository implements UserRepository {
 
   async existsByEmail(email: EmailType): Promise<boolean> {
     try {
-      const result = await this.pool.query<{ exists: boolean }>(
+      const result = await getQueryRunner(this.pool).query<{ exists: boolean }>(
         "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1) AS exists",
         [email.value]
       );
@@ -107,7 +107,7 @@ export class PgUserRepository implements UserRepository {
 
   async existsByUsername(username: UsernameType): Promise<boolean> {
     try {
-      const result = await this.pool.query<{ exists: boolean }>(
+      const result = await getQueryRunner(this.pool).query<{ exists: boolean }>(
         "SELECT EXISTS(SELECT 1 FROM users WHERE username = $1) AS exists",
         [username.value]
       );
