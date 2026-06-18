@@ -13,9 +13,11 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@types/pg": "^8.20.0",
     "cors": "^2.8.5",
     "express": "^5.0.0",
     "helmet": "^8.0.0",
+    "pg": "^8.21.0",
     "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
