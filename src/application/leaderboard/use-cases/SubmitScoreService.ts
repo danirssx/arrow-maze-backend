@@ -51,14 +51,14 @@ export class SubmitScoreService implements UseCase<SubmitScoreInput, SubmitScore
 
     if (leaderboard === null) {
       leaderboard = Leaderboard.empty(
-        new LeaderboardId(input.leaderboardId),
+        LeaderboardId.create(input.leaderboardId),
         levelId,
         MaxLeaderboardEntries.DEFAULT,
       );
     }
 
     const entry = ScoreEntry.create({
-      id: new EntryId(input.entryId),
+      id: EntryId.create(input.entryId),
       userId: UserId.create(input.userId),
       levelId,
       usernameSnapshot: new UsernameSnapshot(input.usernameSnapshot),

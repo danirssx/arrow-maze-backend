@@ -8,6 +8,7 @@ import { LevelId } from '../../../src/domain/shared/LevelId.js';
 import type { Pool, PoolClient } from 'pg';
 
 const LEVEL_1 = '550e8400-e29b-41d4-a716-446655440010';
+const LB_1 = '550e8400-e29b-41d4-a716-446655440020';
 
 function makePool(queryResponses: unknown[]): jest.Mocked<Pool> {
   let callCount = 0;
@@ -27,7 +28,7 @@ function makePool(queryResponses: unknown[]): jest.Mocked<Pool> {
 
 function makeEmptyLeaderboard(): Leaderboard {
   return Leaderboard.empty(
-    new LeaderboardId('lb-1'),
+    LeaderboardId.create(LB_1),
     LevelId.create(LEVEL_1),
     new MaxLeaderboardEntries(10),
   );
@@ -46,7 +47,7 @@ describe('PgLeaderboardRepository', () => {
 
     it('should_return_leaderboard_when_found', async () => {
       const lbRow = {
-        id: 'lb-1',
+        id: LB_1,
         level_id: LEVEL_1,
         max_entries: 10,
         updated_at: new Date(),
@@ -57,7 +58,7 @@ describe('PgLeaderboardRepository', () => {
       const result = await repo.findByLevelId(LevelId.create(LEVEL_1));
 
       expect(result).not.toBeNull();
-      expect(result?.id.value).toBe('lb-1');
+      expect(result?.id.value).toBe(LB_1);
       expect(result?.levelId.value).toBe(LEVEL_1);
     });
 

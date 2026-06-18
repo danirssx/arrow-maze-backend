@@ -10,11 +10,13 @@ import { LevelId } from '../../../src/domain/shared/LevelId.js';
 
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const LEVEL_1 = '550e8400-e29b-41d4-a716-446655440010';
+const LB_1 = '550e8400-e29b-41d4-a716-446655440020';
+const ENTRY_1 = '550e8400-e29b-41d4-a716-446655440030';
 
 function makeInput(overrides?: Partial<SubmitScoreInput>): SubmitScoreInput {
   return {
-    leaderboardId: 'lb-1',
-    entryId: 'entry-1',
+    leaderboardId: LB_1,
+    entryId: ENTRY_1,
     userId: USER_1,
     levelId: LEVEL_1,
     usernameSnapshot: 'Player1',
@@ -63,7 +65,7 @@ describe('SubmitScoreService', () => {
 
     it('should_add_entry_to_existing_leaderboard_when_leaderboard_exists', async () => {
       const existing = Leaderboard.empty(
-        new LeaderboardId('lb-1'),
+        LeaderboardId.create(LB_1),
         LevelId.create(LEVEL_1),
         new MaxLeaderboardEntries(10),
       );

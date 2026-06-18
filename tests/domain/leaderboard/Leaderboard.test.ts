@@ -19,8 +19,10 @@ const USER_2 = '550e8400-e29b-41d4-a716-446655440002';
 const USER_3 = '550e8400-e29b-41d4-a716-446655440003';
 const LEVEL_1 = '550e8400-e29b-41d4-a716-446655440010';
 const LEVEL_99 = '550e8400-e29b-41d4-a716-446655440099';
-
-let entryCounter = 1;
+const LB_1 = '550e8400-e29b-41d4-a716-446655440020';
+const ENTRY_1 = '550e8400-e29b-41d4-a716-446655440030';
+const ENTRY_2 = '550e8400-e29b-41d4-a716-446655440031';
+const ENTRY_3 = '550e8400-e29b-41d4-a716-446655440032';
 
 function makeEntry(overrides?: {
   entryId?: string;
@@ -30,7 +32,7 @@ function makeEntry(overrides?: {
   timeSeconds?: number;
 }): ScoreEntry {
   return ScoreEntry.create({
-    id: new EntryId(overrides?.entryId ?? `entry-${entryCounter++}`),
+    id: EntryId.create(overrides?.entryId ?? ENTRY_1),
     userId: UserId.create(overrides?.userId ?? USER_1),
     levelId: LevelId.create(overrides?.levelId ?? LEVEL_1),
     usernameSnapshot: new UsernameSnapshot('PlayerOne'),
@@ -43,15 +45,13 @@ function makeEntry(overrides?: {
 
 function makeLeaderboard(maxEntries = 10): Leaderboard {
   return Leaderboard.empty(
-    new LeaderboardId('lb-1'),
+    LeaderboardId.create(LB_1),
     LevelId.create(LEVEL_1),
     new MaxLeaderboardEntries(maxEntries),
   );
 }
 
 describe('Leaderboard', () => {
-  beforeEach(() => { entryCounter = 1; });
-
   describe('submitEntry', () => {
     it('should_add_entry_when_valid_entry_submitted', () => {
       const leaderboard = makeLeaderboard();
@@ -83,8 +83,8 @@ describe('Leaderboard', () => {
 
     it('should_rank_higher_score_first_when_two_entries_submitted', () => {
       const leaderboard = makeLeaderboard();
-      const lowScore = makeEntry({ entryId: 'e1', userId: USER_1, score: 50 });
-      const highScore = makeEntry({ entryId: 'e2', userId: USER_2, score: 200 });
+      const lowScore = makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 50 });
+      const highScore = makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 200 });
 
       leaderboard.submitEntry(lowScore);
       leaderboard.submitEntry(highScore);
@@ -95,8 +95,8 @@ describe('Leaderboard', () => {
 
     it('should_break_tie_by_faster_time_when_scores_are_equal', () => {
       const leaderboard = makeLeaderboard();
-      const slower = makeEntry({ entryId: 'e1', userId: USER_1, score: 100, timeSeconds: 60 });
-      const faster = makeEntry({ entryId: 'e2', userId: USER_2, score: 100, timeSeconds: 20 });
+      const slower = makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 });
+      const faster = makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 100, timeSeconds: 20 });
 
       leaderboard.submitEntry(slower);
       leaderboard.submitEntry(faster);
@@ -107,9 +107,9 @@ describe('Leaderboard', () => {
 
     it('should_limit_entries_when_max_capacity_reached', () => {
       const leaderboard = makeLeaderboard(2);
-      leaderboard.submitEntry(makeEntry({ entryId: 'e1', userId: USER_1, score: 50 }));
-      leaderboard.submitEntry(makeEntry({ entryId: 'e2', userId: USER_2, score: 80 }));
-      leaderboard.submitEntry(makeEntry({ entryId: 'e3', userId: USER_3, score: 200 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 50 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 80 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_3, userId: USER_3, score: 200 }));
 
       expect(leaderboard.entries).toHaveLength(2);
       expect(leaderboard.entries[0]?.score.value).toBe(200);
@@ -124,17 +124,17 @@ describe('Leaderboard', () => {
 
     it('should_throw_when_user_already_has_entry', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: 'e1', userId: USER_1 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1 }));
 
       expect(() =>
-        leaderboard.submitEntry(makeEntry({ entryId: 'e2', userId: USER_1 })),
+        leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1 })),
       ).toThrow(DuplicateEntryError);
     });
   });
 
   describe('value objects', () => {
     it('should_throw_when_leaderboard_id_is_empty', () => {
-      expect(() => new LeaderboardId('')).toThrow();
+      expect(() => LeaderboardId.create('')).toThrow();
     });
 
     it('should_throw_when_score_is_negative', () => {

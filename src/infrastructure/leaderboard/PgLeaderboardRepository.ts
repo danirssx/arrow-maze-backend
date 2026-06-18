@@ -38,7 +38,7 @@ type EntryRow = {
 
 function rowToEntry(row: EntryRow): ScoreEntry {
   const props = {
-    id: new EntryId(row.id),
+    id: EntryId.create(row.id),
     userId: UserId.create(row.user_id),
     levelId: LevelId.create(row.level_id),
     usernameSnapshot: new UsernameSnapshot(row.username_snapshot),
@@ -70,7 +70,7 @@ export class PgLeaderboardRepository implements LeaderboardRepository {
       );
 
       return Leaderboard.create({
-        id: new LeaderboardId(lbRow.id),
+        id: LeaderboardId.create(lbRow.id),
         levelId: LevelId.create(lbRow.level_id),
         maxEntries: new MaxLeaderboardEntries(lbRow.max_entries),
         updatedAt: new UpdatedAt(lbRow.updated_at),
