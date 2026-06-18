@@ -132,6 +132,18 @@ describe("LoginUseCase", () => {
     await expect(useCase.execute(VALID_INPUT)).rejects.toBeInstanceOf(ForbiddenError);
   });
 
+  it("should_throw_forbidden_error_when_account_is_suspended_even_if_password_is_wrong", async () => {
+    // isActive must be checked before bcrypt — suspended account must never reach bcrypt
+    const useCase = new LoginUseCase(
+      new FakeUserRepository(makeSuspendedUser()),
+      new FakePasswordHasher(false),
+      new FakeTokenService()
+    );
+
+    // Act / Assert
+    await expect(useCase.execute(VALID_INPUT)).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
   it("should_throw_unauthorized_error_when_email_format_is_invalid", async () => {
     // Arrange
     const useCase = new LoginUseCase(
