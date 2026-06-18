@@ -12,6 +12,7 @@ import { UpdatedAt } from '../../domain/progress/value-objects/UpdatedAt.js';
 import { LevelId } from '../../domain/shared/LevelId.js';
 import { UserId } from '../../domain/shared/UserId.js';
 import { InfrastructureError } from '../../shared/errors/InfrastructureError.js';
+import { getQueryRunner, withTransactionalClient } from '../../infrastructure/database/transactionContext.js';
 
 type ProgressRow = {
   id: string;
@@ -55,7 +56,8 @@ export class PgProgressRepository implements ProgressRepository {
 
   async findByUserId(userId: UserId): Promise<PlayerProgress | null> {
     try {
-      const progressResult = await this.pool.query<ProgressRow>(
+      const runner = getQueryRunner(this.pool);
+      const progressResult = await runner.query<ProgressRow>(
         'SELECT * FROM player_progress WHERE user_id = $1',
         [userId.value],
       );
@@ -63,7 +65,7 @@ export class PgProgressRepository implements ProgressRepository {
       const progressRow = progressResult.rows[0];
       if (!progressRow) return null;
 
-      const levelsResult = await this.pool.query<CompletedLevelRow>(
+      const levelsResult = await runner.query<CompletedLevelRow>(
         'SELECT * FROM completed_levels WHERE progress_id = $1',
         [progressRow.id],
       );
@@ -75,54 +77,49 @@ export class PgProgressRepository implements ProgressRepository {
   }
 
   async save(progress: PlayerProgress): Promise<void> {
-    const client = await this.pool.connect();
     try {
-      await client.query('BEGIN');
-
-      await client.query(
-        `INSERT INTO player_progress (id, user_id, version, updated_at)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (id) DO UPDATE
-           SET version    = EXCLUDED.version,
-               updated_at = EXCLUDED.updated_at`,
-        [
-          progress.id.value,
-          progress.userId.value,
-          progress.version.value,
-          progress.updatedAt.value,
-        ],
-      );
-
-      await client.query(
-        'DELETE FROM completed_levels WHERE progress_id = $1',
-        [progress.id.value],
-      );
-
-      for (const level of progress.completedLevels) {
+      await withTransactionalClient(this.pool, async (client) => {
         await client.query(
-          `INSERT INTO completed_levels
-             (id, progress_id, level_id, best_score, best_time_seconds,
-              best_moves_count, completed_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          `INSERT INTO player_progress (id, user_id, version, updated_at)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (id) DO UPDATE
+             SET version    = EXCLUDED.version,
+                 updated_at = EXCLUDED.updated_at`,
           [
-            level.id.value,
             progress.id.value,
-            level.levelId.value,
-            level.bestScore.score,
-            level.bestScore.timeSeconds,
-            level.bestScore.movesCount,
-            level.completedAt.value,
-            level.updatedAt.value,
+            progress.userId.value,
+            progress.version.value,
+            progress.updatedAt.value,
           ],
         );
-      }
 
-      await client.query('COMMIT');
+        await client.query(
+          'DELETE FROM completed_levels WHERE progress_id = $1',
+          [progress.id.value],
+        );
+
+        for (const level of progress.completedLevels) {
+          await client.query(
+            `INSERT INTO completed_levels
+               (id, progress_id, level_id, best_score, best_time_seconds,
+                best_moves_count, completed_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [
+              level.id.value,
+              progress.id.value,
+              level.levelId.value,
+              level.bestScore.score,
+              level.bestScore.timeSeconds,
+              level.bestScore.movesCount,
+              level.completedAt.value,
+              level.updatedAt.value,
+            ],
+          );
+        }
+      });
     } catch (err) {
-      await client.query('ROLLBACK');
+      if (err instanceof InfrastructureError) throw err;
       throw new InfrastructureError('Failed to save player progress', { cause: String(err) });
-    } finally {
-      client.release();
     }
   }
 }
