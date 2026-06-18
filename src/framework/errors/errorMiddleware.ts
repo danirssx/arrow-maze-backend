@@ -1,4 +1,4 @@
-import type { ErrorRequestHandler } from "express";
+﻿import type { ErrorRequestHandler } from "express";
 
 import { sanitizeLogContext } from "../../application/aspects/sanitizeLogContext.js";
 import type { Logger } from "../../application/ports/Logger.js";
