@@ -1,8 +1,8 @@
 import type { UseCase } from '../../aspects/UseCase.js';
-import type { IProgressRepository } from '../ports/IProgressRepository.js';
+import type { ProgressRepository } from '../ports/IProgressRepository.js';
 import { PlayerProgress } from '../../../domain/progress/PlayerProgress.js';
 import { ProgressId } from '../../../domain/progress/value-objects/ProgressId.js';
-import { UserId } from '../../../domain/progress/value-objects/UserId.js';
+import { UserId } from '../../../domain/shared/UserId.js';
 
 export interface LoadProgressInput {
   userId: string;
@@ -26,10 +26,10 @@ export interface LoadProgressOutput {
 }
 
 export class LoadProgressService implements UseCase<LoadProgressInput, LoadProgressOutput> {
-  constructor(private readonly repo: IProgressRepository) {}
+  constructor(private readonly repo: ProgressRepository) {}
 
   async execute(input: LoadProgressInput): Promise<LoadProgressOutput> {
-    const userId = new UserId(input.userId);
+    const userId = UserId.create(input.userId);
     let progress = await this.repo.findByUserId(userId);
 
     if (progress === null) {

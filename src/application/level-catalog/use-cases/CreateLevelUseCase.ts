@@ -6,12 +6,12 @@ import { BoardSize } from "../../../domain/level-catalog/value-objects/BoardSize
 import { CellSpec } from "../../../domain/level-catalog/value-objects/CellSpec.js";
 import { LevelDefinition } from "../../../domain/level-catalog/value-objects/LevelDefinition.js";
 import { LevelDescription } from "../../../domain/level-catalog/value-objects/LevelDescription.js";
-import { LevelId } from "../../../domain/level-catalog/value-objects/LevelId.js";
 import { LevelName } from "../../../domain/level-catalog/value-objects/LevelName.js";
 import { LevelVersion } from "../../../domain/level-catalog/value-objects/LevelVersion.js";
 import { MoveCount } from "../../../domain/level-catalog/value-objects/MoveCount.js";
 import { Position } from "../../../domain/level-catalog/value-objects/Position.js";
 import { TimeLimit } from "../../../domain/level-catalog/value-objects/TimeLimit.js";
+import { LevelId } from "../../../domain/shared/LevelId.js";
 import type { UseCase } from "../../aspects/UseCase.js";
 import type { LevelRepository } from "../ports/LevelRepository.js";
 
@@ -58,6 +58,6 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
     );
 
     await this.repo.save(level);
-    return { levelId: id.getValue() };
+    return { levelId: id.value };
   }
 }

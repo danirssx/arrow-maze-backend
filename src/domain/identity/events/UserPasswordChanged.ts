@@ -1,9 +1,7 @@
-import type { DomainEvent } from "../../events/DomainEvent.js";
+import { DomainEvent } from "../../shared/DomainEvent.js";
 
-export class UserPasswordChanged implements DomainEvent {
-  readonly occurredAt: Date;
-
+export class UserPasswordChanged extends DomainEvent {
   constructor(public readonly userId: string) {
-    this.occurredAt = new Date();
+    super(userId);
   }
 }

@@ -3,7 +3,11 @@ import { InvalidArgumentError } from "../../errors/DomainError.js";
 const MIN_LENGTH = 8;
 
 export class RawPassword {
-  private constructor(private readonly value: string) {}
+  readonly value: string;
+
+  private constructor(value: string) {
+    this.value = value;
+  }
 
   static create(raw: string): RawPassword {
     if (!raw || raw.length < MIN_LENGTH) {
@@ -12,9 +16,5 @@ export class RawPassword {
       );
     }
     return new RawPassword(raw);
-  }
-
-  getValue(): string {
-    return this.value;
   }
 }

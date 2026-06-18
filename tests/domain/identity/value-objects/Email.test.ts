@@ -5,17 +5,17 @@ describe("Email", () => {
   describe("create", () => {
     it("should_create_email_when_format_is_valid", () => {
       const email = Email.create("user@example.com");
-      expect(email.getValue()).toBe("user@example.com");
+      expect(email.value).toBe("user@example.com");
     });
 
     it("should_normalize_email_to_lowercase_when_created", () => {
       const email = Email.create("USER@EXAMPLE.COM");
-      expect(email.getValue()).toBe("user@example.com");
+      expect(email.value).toBe("user@example.com");
     });
 
     it("should_trim_whitespace_when_email_has_surrounding_spaces", () => {
       const email = Email.create("  user@example.com  ");
-      expect(email.getValue()).toBe("user@example.com");
+      expect(email.value).toBe("user@example.com");
     });
 
     it("should_throw_domain_error_when_email_is_empty", () => {

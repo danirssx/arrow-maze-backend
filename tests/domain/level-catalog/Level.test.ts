@@ -4,7 +4,7 @@ import { LevelDefinition } from "../../../src/domain/level-catalog/value-objects
 import { BoardSize } from "../../../src/domain/level-catalog/value-objects/BoardSize";
 import { Position } from "../../../src/domain/level-catalog/value-objects/Position";
 import { CellSpec } from "../../../src/domain/level-catalog/value-objects/CellSpec";
-import { LevelId } from "../../../src/domain/level-catalog/value-objects/LevelId";
+import { LevelId } from "../../../src/domain/shared/LevelId.js";
 import { LevelName } from "../../../src/domain/level-catalog/value-objects/LevelName";
 import { LevelDescription } from "../../../src/domain/level-catalog/value-objects/LevelDescription";
 import { LevelVersion } from "../../../src/domain/level-catalog/value-objects/LevelVersion";

@@ -4,11 +4,11 @@ import { LevelBestScoreUpdatedEvent } from './events/LevelBestScoreUpdatedEvent.
 import { LevelCompletedEvent } from './events/LevelCompletedEvent.js';
 import type { LevelCompletionResult } from './LevelCompletionResult.js';
 import { CompletedLevelId } from './value-objects/CompletedLevelId.js';
-import type { LevelId } from './value-objects/LevelId.js';
+import type { LevelId } from '../shared/LevelId.js';
 import type { ProgressId } from './value-objects/ProgressId.js';
 import { ProgressVersion } from './value-objects/ProgressVersion.js';
 import { UpdatedAt } from './value-objects/UpdatedAt.js';
-import type { UserId } from './value-objects/UserId.js';
+import type { UserId } from '../shared/UserId.js';
 
 export interface PlayerProgressProps {
   id: ProgressId;

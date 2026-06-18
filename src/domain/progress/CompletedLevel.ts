@@ -1,7 +1,7 @@
 import { Entity } from '../shared/Entity.js';
 import type { CompletedAt } from './value-objects/CompletedAt.js';
 import type { CompletedLevelId } from './value-objects/CompletedLevelId.js';
-import type { LevelId } from './value-objects/LevelId.js';
+import type { LevelId } from '../shared/LevelId.js';
 import type { LevelScore } from './value-objects/LevelScore.js';
 import { UpdatedAt } from './value-objects/UpdatedAt.js';
 

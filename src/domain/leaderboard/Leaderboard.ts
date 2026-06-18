@@ -3,7 +3,7 @@ import { LeaderboardUpdatedEvent } from './events/LeaderboardUpdatedEvent.js';
 import { DuplicateEntryError, LeaderboardLevelMismatchError } from './errors/LeaderboardErrors.js';
 import type { ScoreEntry } from './ScoreEntry.js';
 import type { LeaderboardId } from './value-objects/LeaderboardId.js';
-import type { LevelId } from './value-objects/LevelId.js';
+import type { LevelId } from '../shared/LevelId.js';
 import type { MaxLeaderboardEntries } from './value-objects/MaxLeaderboardEntries.js';
 import { Rank } from './value-objects/Rank.js';
 import { UpdatedAt } from './value-objects/UpdatedAt.js';

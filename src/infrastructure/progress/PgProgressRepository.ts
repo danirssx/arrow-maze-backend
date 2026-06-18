@@ -1,16 +1,16 @@
 // Pattern: Repository, Adapter
 import type { Pool } from 'pg';
-import type { IProgressRepository } from '../../application/progress/ports/IProgressRepository.js';
+import type { ProgressRepository } from '../../application/progress/ports/IProgressRepository.js';
 import { CompletedLevel } from '../../domain/progress/CompletedLevel.js';
 import { PlayerProgress } from '../../domain/progress/PlayerProgress.js';
 import { CompletedAt } from '../../domain/progress/value-objects/CompletedAt.js';
 import { CompletedLevelId } from '../../domain/progress/value-objects/CompletedLevelId.js';
-import { LevelId } from '../../domain/progress/value-objects/LevelId.js';
 import { LevelScore } from '../../domain/progress/value-objects/LevelScore.js';
 import { ProgressId } from '../../domain/progress/value-objects/ProgressId.js';
 import { ProgressVersion } from '../../domain/progress/value-objects/ProgressVersion.js';
 import { UpdatedAt } from '../../domain/progress/value-objects/UpdatedAt.js';
-import { UserId } from '../../domain/progress/value-objects/UserId.js';
+import { LevelId } from '../../domain/shared/LevelId.js';
+import { UserId } from '../../domain/shared/UserId.js';
 import { InfrastructureError } from '../../shared/errors/InfrastructureError.js';
 
 type ProgressRow = {
@@ -33,7 +33,7 @@ type CompletedLevelRow = {
 function rowToCompletedLevel(row: CompletedLevelRow): CompletedLevel {
   return CompletedLevel.create({
     id: new CompletedLevelId(row.id),
-    levelId: new LevelId(row.level_id),
+    levelId: LevelId.create(row.level_id),
     bestScore: new LevelScore(row.best_score, Number(row.best_time_seconds), row.best_moves_count),
     completedAt: new CompletedAt(row.completed_at),
     updatedAt: new UpdatedAt(row.updated_at),
@@ -43,14 +43,14 @@ function rowToCompletedLevel(row: CompletedLevelRow): CompletedLevel {
 function rowsToProgress(progressRow: ProgressRow, levelRows: CompletedLevelRow[]): PlayerProgress {
   return PlayerProgress.create({
     id: new ProgressId(progressRow.id),
-    userId: new UserId(progressRow.user_id),
+    userId: UserId.create(progressRow.user_id),
     version: new ProgressVersion(progressRow.version),
     updatedAt: new UpdatedAt(progressRow.updated_at),
     completedLevels: levelRows.map(rowToCompletedLevel),
   });
 }
 
-export class PgProgressRepository implements IProgressRepository {
+export class PgProgressRepository implements ProgressRepository {
   constructor(private readonly pool: Pool) {}
 
   async findByUserId(userId: UserId): Promise<PlayerProgress | null> {

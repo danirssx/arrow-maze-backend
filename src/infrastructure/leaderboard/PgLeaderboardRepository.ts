@@ -1,11 +1,10 @@
 // Pattern: Repository, Adapter
 import type { Pool } from 'pg';
-import type { ILeaderboardRepository } from '../../application/leaderboard/ports/ILeaderboardRepository.js';
+import type { LeaderboardRepository } from '../../application/leaderboard/ports/ILeaderboardRepository.js';
 import { Leaderboard } from '../../domain/leaderboard/Leaderboard.js';
 import { ScoreEntry } from '../../domain/leaderboard/ScoreEntry.js';
 import { EntryId } from '../../domain/leaderboard/value-objects/EntryId.js';
 import { LeaderboardId } from '../../domain/leaderboard/value-objects/LeaderboardId.js';
-import { LevelId } from '../../domain/leaderboard/value-objects/LevelId.js';
 import { MaxLeaderboardEntries } from '../../domain/leaderboard/value-objects/MaxLeaderboardEntries.js';
 import { MoveCount } from '../../domain/leaderboard/value-objects/MoveCount.js';
 import { Rank } from '../../domain/leaderboard/value-objects/Rank.js';
@@ -13,8 +12,9 @@ import { Score } from '../../domain/leaderboard/value-objects/Score.js';
 import { SubmittedAt } from '../../domain/leaderboard/value-objects/SubmittedAt.js';
 import { TimeSeconds } from '../../domain/leaderboard/value-objects/TimeSeconds.js';
 import { UpdatedAt } from '../../domain/leaderboard/value-objects/UpdatedAt.js';
-import { UserId } from '../../domain/leaderboard/value-objects/UserId.js';
 import { UsernameSnapshot } from '../../domain/leaderboard/value-objects/UsernameSnapshot.js';
+import { LevelId } from '../../domain/shared/LevelId.js';
+import { UserId } from '../../domain/shared/UserId.js';
 import { InfrastructureError } from '../../shared/errors/InfrastructureError.js';
 
 type LeaderboardRow = {
@@ -39,8 +39,8 @@ type EntryRow = {
 function rowToEntry(row: EntryRow): ScoreEntry {
   const props = {
     id: new EntryId(row.id),
-    userId: new UserId(row.user_id),
-    levelId: new LevelId(row.level_id),
+    userId: UserId.create(row.user_id),
+    levelId: LevelId.create(row.level_id),
     usernameSnapshot: new UsernameSnapshot(row.username_snapshot),
     score: new Score(row.score),
     timeSeconds: new TimeSeconds(row.time_seconds),
@@ -51,7 +51,7 @@ function rowToEntry(row: EntryRow): ScoreEntry {
   return row.rank !== null ? entry.withRank(new Rank(row.rank)) : entry;
 }
 
-export class PgLeaderboardRepository implements ILeaderboardRepository {
+export class PgLeaderboardRepository implements LeaderboardRepository {
   constructor(private readonly pool: Pool) {}
 
   async findByLevelId(levelId: LevelId): Promise<Leaderboard | null> {
@@ -71,7 +71,7 @@ export class PgLeaderboardRepository implements ILeaderboardRepository {
 
       return Leaderboard.create({
         id: new LeaderboardId(lbRow.id),
-        levelId: new LevelId(lbRow.level_id),
+        levelId: LevelId.create(lbRow.level_id),
         maxEntries: new MaxLeaderboardEntries(lbRow.max_entries),
         updatedAt: new UpdatedAt(lbRow.updated_at),
         entries: entriesResult.rows.map(rowToEntry),

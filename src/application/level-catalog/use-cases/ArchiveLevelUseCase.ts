@@ -1,4 +1,4 @@
-import { LevelId } from "../../../domain/level-catalog/value-objects/LevelId.js";
+import { LevelId } from "../../../domain/shared/LevelId.js";
 import { NotFoundError } from "../../../shared/errors/ApplicationError.js";
 import type { UseCase } from "../../aspects/UseCase.js";
 import type { LevelRepository } from "../ports/LevelRepository.js";
@@ -17,6 +17,6 @@ export class ArchiveLevelUseCase implements UseCase<ArchiveLevelInput, ArchiveLe
     level.archive();
     await this.repo.save(level);
 
-    return { levelId: level.id.getValue() };
+    return { levelId: level.id.value };
   }
 }

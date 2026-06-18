@@ -17,8 +17,8 @@ describe("BcryptPasswordHasher", () => {
 
       // Assert
       expect(result).toBeInstanceOf(PasswordHash);
-      expect(result.getValue()).not.toBe("ValidPass1!");
-      expect(result.getValue().startsWith("$2")).toBe(true);
+      expect(result.value).not.toBe("ValidPass1!");
+      expect(result.value.startsWith("$2")).toBe(true);
     });
 
     it("should_produce_different_hashes_when_called_twice_with_same_password", async () => {
@@ -30,7 +30,7 @@ describe("BcryptPasswordHasher", () => {
       const hash2 = await hasher.hash(raw);
 
       // Assert
-      expect(hash1.getValue()).not.toBe(hash2.getValue());
+      expect(hash1.value).not.toBe(hash2.value);
     });
   });
 

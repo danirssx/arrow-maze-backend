@@ -5,7 +5,7 @@ describe("RawPassword", () => {
   describe("create", () => {
     it("should_create_raw_password_when_length_meets_minimum", () => {
       const password = RawPassword.create("secureP@ss");
-      expect(password.getValue()).toBe("secureP@ss");
+      expect(password.value).toBe("secureP@ss");
     });
 
     it("should_throw_domain_error_when_password_is_empty", () => {
@@ -22,7 +22,7 @@ describe("RawPassword", () => {
 
     it("should_allow_password_at_exact_minimum_length", () => {
       const password = RawPassword.create("12345678");
-      expect(password.getValue()).toBe("12345678");
+      expect(password.value).toBe("12345678");
     });
   });
 });

@@ -8,7 +8,7 @@ import { BoardSize } from "../../../../src/domain/level-catalog/value-objects/Bo
 import { CellSpec } from "../../../../src/domain/level-catalog/value-objects/CellSpec";
 import { LevelDefinition } from "../../../../src/domain/level-catalog/value-objects/LevelDefinition";
 import { LevelDescription } from "../../../../src/domain/level-catalog/value-objects/LevelDescription";
-import { LevelId } from "../../../../src/domain/level-catalog/value-objects/LevelId";
+import { LevelId } from "../../../../src/domain/shared/LevelId.js";
 import { LevelName } from "../../../../src/domain/level-catalog/value-objects/LevelName";
 import { LevelVersion } from "../../../../src/domain/level-catalog/value-objects/LevelVersion";
 import { Position } from "../../../../src/domain/level-catalog/value-objects/Position";
@@ -53,16 +53,16 @@ export class FakeLevelRepository implements LevelRepository {
   savedLevels: Level[] = [];
 
   seed(...levels: Level[]): void {
-    for (const l of levels) this.store.set(l.id.getValue(), l);
+    for (const l of levels) this.store.set(l.id.value, l);
   }
 
   async save(level: Level): Promise<void> {
-    this.store.set(level.id.getValue(), level);
+    this.store.set(level.id.value, level);
     this.savedLevels.push(level);
   }
 
   async findById(id: LevelId): Promise<Level | null> {
-    return this.store.get(id.getValue()) ?? null;
+    return this.store.get(id.value) ?? null;
   }
 
   async findAllPublished(): Promise<Level[]> {

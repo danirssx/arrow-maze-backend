@@ -41,6 +41,6 @@ export class RegisterUserUseCase implements UseCase<RegisterUserInput, RegisterU
 
     await this.userRepository.save(user);
 
-    return { userId: user.id.getValue() };
+    return { userId: user.id.value };
   }
 }

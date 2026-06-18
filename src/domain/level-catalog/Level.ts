@@ -1,23 +1,21 @@
 // Pattern: Aggregate Root
 import { BusinessRuleViolationError } from "../errors/DomainError.js";
-import type { DomainEvent } from "../events/DomainEvent.js";
+import { Entity } from "../shared/Entity.js";
+import type { LevelId } from "../shared/LevelId.js";
 import type { Difficulty } from "./enums/Difficulty.js";
 import { LevelStatus } from "./enums/LevelStatus.js";
 import { LevelPublished } from "./events/LevelPublished.js";
 import type { LevelSolvabilityPolicy } from "./LevelSolvabilityPolicy.js";
 import type { LevelDefinition } from "./value-objects/LevelDefinition.js";
 import type { LevelDescription } from "./value-objects/LevelDescription.js";
-import type { LevelId } from "./value-objects/LevelId.js";
 import type { LevelName } from "./value-objects/LevelName.js";
 import type { LevelVersion } from "./value-objects/LevelVersion.js";
 import type { MoveCount } from "./value-objects/MoveCount.js";
 import type { TimeLimit } from "./value-objects/TimeLimit.js";
 
-export class Level {
-  private readonly _domainEvents: DomainEvent[] = [];
-
+export class Level extends Entity<LevelId> {
   private constructor(
-    private readonly _id: LevelId,
+    id: LevelId,
     private readonly _name: LevelName,
     private readonly _description: LevelDescription,
     private _definition: LevelDefinition,
@@ -28,7 +26,9 @@ export class Level {
     private readonly _moveCount: MoveCount | undefined,
     private readonly _createdAt: Date,
     private _updatedAt: Date
-  ) {}
+  ) {
+    super(id);
+  }
 
   static draft(
     id: LevelId,
@@ -95,8 +95,8 @@ export class Level {
     }
     this._status = LevelStatus.PUBLISHED;
     this._updatedAt = new Date();
-    this._domainEvents.push(
-      new LevelPublished(this._id.getValue(), this._name.getValue(), this._difficulty)
+    this.record(
+      new LevelPublished(this.id.value, this._name.value, this._difficulty)
     );
   }
 
@@ -118,13 +118,6 @@ export class Level {
     this._updatedAt = new Date();
   }
 
-  pullDomainEvents(): DomainEvent[] {
-    const events = [...this._domainEvents];
-    this._domainEvents.length = 0;
-    return events;
-  }
-
-  get id(): LevelId { return this._id; }
   get name(): LevelName { return this._name; }
   get description(): LevelDescription { return this._description; }
   get definition(): LevelDefinition { return this._definition; }

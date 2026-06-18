@@ -3,7 +3,11 @@ import { InvalidArgumentError } from "../../errors/DomainError.js";
 const MAX_LENGTH = 500;
 
 export class LevelDescription {
-  private constructor(private readonly value: string) {}
+  readonly value: string;
+
+  private constructor(value: string) {
+    this.value = value;
+  }
 
   static create(raw: string): LevelDescription {
     const trimmed = raw.trim();
@@ -13,10 +17,6 @@ export class LevelDescription {
       );
     }
     return new LevelDescription(trimmed);
-  }
-
-  getValue(): string {
-    return this.value;
   }
 
   equals(other: LevelDescription): boolean {

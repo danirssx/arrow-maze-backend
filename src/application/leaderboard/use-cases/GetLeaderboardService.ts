@@ -1,6 +1,6 @@
 import type { UseCase } from '../../aspects/UseCase.js';
-import type { ILeaderboardRepository } from '../ports/ILeaderboardRepository.js';
-import { LevelId } from '../../../domain/leaderboard/value-objects/LevelId.js';
+import type { LeaderboardRepository } from '../ports/ILeaderboardRepository.js';
+import { LevelId } from '../../../domain/shared/LevelId.js';
 import { NotFoundError } from '../../../shared/errors/ApplicationError.js';
 
 export interface GetLeaderboardInput {
@@ -26,10 +26,10 @@ export interface GetLeaderboardOutput {
 }
 
 export class GetLeaderboardService implements UseCase<GetLeaderboardInput, GetLeaderboardOutput> {
-  constructor(private readonly repo: ILeaderboardRepository) {}
+  constructor(private readonly repo: LeaderboardRepository) {}
 
   async execute(input: GetLeaderboardInput): Promise<GetLeaderboardOutput> {
-    const levelId = new LevelId(input.levelId);
+    const levelId = LevelId.create(input.levelId);
     const leaderboard = await this.repo.findByLevelId(levelId);
 
     if (leaderboard === null) {

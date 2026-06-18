@@ -53,14 +53,14 @@ export class LoginUseCase implements UseCase<LoginInput, LoginOutput> {
     }
 
     const accessToken = this.tokenService.generate({
-      userId: user.id.getValue(),
+      userId: user.id.value,
       role: user.role
     });
 
     return {
       accessToken,
-      userId: user.id.getValue(),
-      username: user.username.getValue(),
+      userId: user.id.value,
+      username: user.username.value,
       role: user.role
     };
   }

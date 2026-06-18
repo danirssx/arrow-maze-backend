@@ -3,7 +3,7 @@ import { UserFactory } from "../../../src/domain/identity/UserFactory";
 import { Email } from "../../../src/domain/identity/value-objects/Email";
 import { PasswordHash } from "../../../src/domain/identity/value-objects/PasswordHash";
 import { Username } from "../../../src/domain/identity/value-objects/Username";
-import { UserId } from "../../../src/domain/identity/value-objects/UserId";
+import { UserId } from "../../../src/domain/shared/UserId.js";
 import { UserRole } from "../../../src/domain/identity/enums/UserRole";
 import { UserStatus } from "../../../src/domain/identity/enums/UserStatus";
 import { User } from "../../../src/domain/identity/User";
@@ -61,7 +61,7 @@ describe("PgUserRepository", () => {
       // Assert
       expect(pool.queriesCalled).toHaveLength(1);
       expect(pool.queriesCalled[0].sql).toContain("INSERT INTO users");
-      expect(pool.queriesCalled[0].params[0]).toBe(user.id.getValue());
+      expect(pool.queriesCalled[0].params[0]).toBe(user.id.value);
       expect(pool.queriesCalled[0].params[1]).toBe("alice@example.com");
     });
 
@@ -87,7 +87,7 @@ describe("PgUserRepository", () => {
 
       // Assert
       expect(result).toBeInstanceOf(User);
-      expect(result?.email.getValue()).toBe("alice@example.com");
+      expect(result?.email.value).toBe("alice@example.com");
     });
 
     it("should_return_null_when_row_does_not_exist", async () => {

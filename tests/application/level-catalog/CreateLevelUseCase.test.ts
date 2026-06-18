@@ -42,7 +42,7 @@ describe("CreateLevelUseCase", () => {
     // Assert
     expect(repo.savedLevels).toHaveLength(1);
     expect(repo.savedLevels[0].status).toBe(LevelStatus.DRAFT);
-    expect(repo.savedLevels[0].name.getValue()).toBe("Arrow Level 1");
+    expect(repo.savedLevels[0].name.value).toBe("Arrow Level 1");
   });
 
   it("should_throw_when_definition_has_no_exit", async () => {

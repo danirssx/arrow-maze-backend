@@ -4,7 +4,11 @@ const MIN_LENGTH = 1;
 const MAX_LENGTH = 100;
 
 export class LevelName {
-  private constructor(private readonly value: string) {}
+  readonly value: string;
+
+  private constructor(value: string) {
+    this.value = value;
+  }
 
   static create(raw: string): LevelName {
     const trimmed = raw.trim();
@@ -14,10 +18,6 @@ export class LevelName {
       );
     }
     return new LevelName(trimmed);
-  }
-
-  getValue(): string {
-    return this.value;
   }
 
   equals(other: LevelName): boolean {

@@ -3,7 +3,11 @@ import { InvalidArgumentError } from "../../errors/DomainError.js";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export class Email {
-  private constructor(private readonly value: string) {}
+  readonly value: string;
+
+  private constructor(value: string) {
+    this.value = value;
+  }
 
   static create(raw: string): Email {
     const normalized = raw.trim().toLowerCase();
@@ -11,10 +15,6 @@ export class Email {
       throw new InvalidArgumentError("Invalid email format");
     }
     return new Email(normalized);
-  }
-
-  getValue(): string {
-    return this.value;
   }
 
   equals(other: Email): boolean {

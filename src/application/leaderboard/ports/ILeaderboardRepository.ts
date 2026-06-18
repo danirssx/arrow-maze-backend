@@ -1,7 +1,7 @@
 import type { Leaderboard } from '../../../domain/leaderboard/Leaderboard.js';
-import type { LevelId } from '../../../domain/leaderboard/value-objects/LevelId.js';
+import type { LevelId } from '../../../domain/shared/LevelId.js';
 
-export interface ILeaderboardRepository {
+export interface LeaderboardRepository {
   findByLevelId(levelId: LevelId): Promise<Leaderboard | null>;
   save(leaderboard: Leaderboard): Promise<void>;
 }

@@ -1,7 +1,7 @@
 import type { User } from "../../../domain/identity/User.js";
 import type { Email } from "../../../domain/identity/value-objects/Email.js";
-import type { UserId } from "../../../domain/identity/value-objects/UserId.js";
 import type { Username } from "../../../domain/identity/value-objects/Username.js";
+import type { UserId } from "../../../domain/shared/UserId.js";
 
 export interface UserRepository {
   save(user: User): Promise<void>;

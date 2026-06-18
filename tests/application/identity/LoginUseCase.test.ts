@@ -9,10 +9,10 @@ import { UserStatus } from "../../../src/domain/identity/enums/UserStatus";
 import { Email } from "../../../src/domain/identity/value-objects/Email";
 import { PasswordHash } from "../../../src/domain/identity/value-objects/PasswordHash";
 import type { RawPassword } from "../../../src/domain/identity/value-objects/RawPassword";
-import { UserId } from "../../../src/domain/identity/value-objects/UserId";
+import { UserId } from "../../../src/domain/shared/UserId.js";
 import { Username } from "../../../src/domain/identity/value-objects/Username";
 import type { Email as EmailType } from "../../../src/domain/identity/value-objects/Email";
-import type { UserId as UserIdType } from "../../../src/domain/identity/value-objects/UserId";
+import type { UserId as UserIdType } from "../../../src/domain/shared/UserId.js";
 import type { Username as UsernameType } from "../../../src/domain/identity/value-objects/Username";
 import { ForbiddenError, UnauthorizedError } from "../../../src/shared/errors/ApplicationError";
 

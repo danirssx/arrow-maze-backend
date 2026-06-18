@@ -16,4 +16,10 @@ export abstract class Entity<TId> {
   clearEvents(): void {
     this._domainEvents = [];
   }
+
+  pullDomainEvents(): DomainEvent[] {
+    const events = [...this._domainEvents];
+    this._domainEvents = [];
+    return events;
+  }
 }

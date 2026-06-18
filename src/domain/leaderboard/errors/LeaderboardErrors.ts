@@ -1,15 +1,15 @@
-export class DuplicateEntryError extends Error {
+import { BusinessRuleViolationError } from "../../errors/DomainError.js";
+
+export class DuplicateEntryError extends BusinessRuleViolationError {
   constructor(userId: string) {
     super(`User ${userId} already has an entry in this leaderboard`);
-    this.name = 'DuplicateEntryError';
   }
 }
 
-export class LeaderboardLevelMismatchError extends Error {
+export class LeaderboardLevelMismatchError extends BusinessRuleViolationError {
   constructor(entryLevelId: string, leaderboardLevelId: string) {
     super(
-      `Entry levelId ${entryLevelId} does not match leaderboard levelId ${leaderboardLevelId}`,
+      `Entry levelId ${entryLevelId} does not match leaderboard levelId ${leaderboardLevelId}`
     );
-    this.name = 'LeaderboardLevelMismatchError';
   }
 }

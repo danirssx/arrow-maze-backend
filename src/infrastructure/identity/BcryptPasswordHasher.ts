@@ -8,11 +8,11 @@ export class BcryptPasswordHasher implements PasswordHasher {
   constructor(private readonly saltRounds: number = 12) {}
 
   async hash(raw: RawPassword): Promise<PasswordHash> {
-    const hash = await bcrypt.hash(raw.getValue(), this.saltRounds);
+    const hash = await bcrypt.hash(raw.value, this.saltRounds);
     return PasswordHash.fromHash(hash);
   }
 
   async verify(raw: RawPassword, stored: PasswordHash): Promise<boolean> {
-    return bcrypt.compare(raw.getValue(), stored.getValue());
+    return bcrypt.compare(raw.value, stored.value);
   }
 }

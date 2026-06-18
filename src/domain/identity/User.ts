@@ -1,6 +1,7 @@
 // Pattern: Aggregate Root
 import { BusinessRuleViolationError } from "../errors/DomainError.js";
-import type { DomainEvent } from "../events/DomainEvent.js";
+import { Entity } from "../shared/Entity.js";
+import type { UserId } from "../shared/UserId.js";
 import { UserRole } from "./enums/UserRole.js";
 import { UserStatus } from "./enums/UserStatus.js";
 import { UserPasswordChanged } from "./events/UserPasswordChanged.js";
@@ -8,14 +9,11 @@ import { UserRegistered } from "./events/UserRegistered.js";
 import { UserSuspended } from "./events/UserSuspended.js";
 import type { Email } from "./value-objects/Email.js";
 import type { PasswordHash } from "./value-objects/PasswordHash.js";
-import type { UserId } from "./value-objects/UserId.js";
 import type { Username } from "./value-objects/Username.js";
 
-export class User {
-  private readonly _domainEvents: DomainEvent[] = [];
-
+export class User extends Entity<UserId> {
   private constructor(
-    private readonly _id: UserId,
+    id: UserId,
     private readonly _email: Email,
     private readonly _username: Username,
     private _passwordHash: PasswordHash,
@@ -23,7 +21,9 @@ export class User {
     private _status: UserStatus,
     private readonly _createdAt: Date,
     private _updatedAt: Date
-  ) {}
+  ) {
+    super(id);
+  }
 
   static register(
     id: UserId,
@@ -34,8 +34,8 @@ export class User {
   ): User {
     const now = new Date();
     const user = new User(id, email, username, passwordHash, role, UserStatus.ACTIVE, now, now);
-    user._domainEvents.push(
-      new UserRegistered(id.getValue(), email.getValue(), username.getValue(), role)
+    user.record(
+      new UserRegistered(id.value, email.value, username.value, role)
     );
     return user;
   }
@@ -56,7 +56,7 @@ export class User {
   changePassword(newHash: PasswordHash): void {
     this._passwordHash = newHash;
     this._updatedAt = new Date();
-    this._domainEvents.push(new UserPasswordChanged(this._id.getValue()));
+    this.record(new UserPasswordChanged(this.id.value));
   }
 
   suspend(): void {
@@ -65,16 +65,9 @@ export class User {
     }
     this._status = UserStatus.SUSPENDED;
     this._updatedAt = new Date();
-    this._domainEvents.push(new UserSuspended(this._id.getValue()));
+    this.record(new UserSuspended(this.id.value));
   }
 
-  pullDomainEvents(): DomainEvent[] {
-    const events = [...this._domainEvents];
-    this._domainEvents.length = 0;
-    return events;
-  }
-
-  get id(): UserId { return this._id; }
   get email(): Email { return this._email; }
   get username(): Username { return this._username; }
   get passwordHash(): PasswordHash { return this._passwordHash; }

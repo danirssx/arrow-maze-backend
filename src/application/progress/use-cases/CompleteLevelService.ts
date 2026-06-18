@@ -1,13 +1,13 @@
 import type { UseCase } from '../../aspects/UseCase.js';
-import type { IProgressRepository } from '../ports/IProgressRepository.js';
-import type { IDomainEventBus } from '../ports/IDomainEventBus.js';
+import type { ProgressRepository } from '../ports/IProgressRepository.js';
+import type { DomainEventBus } from '../../ports/DomainEventBus.js';
 import { PlayerProgress } from '../../../domain/progress/PlayerProgress.js';
 import { LevelCompletionResult } from '../../../domain/progress/LevelCompletionResult.js';
 import { CompletedAt } from '../../../domain/progress/value-objects/CompletedAt.js';
-import { LevelId } from '../../../domain/progress/value-objects/LevelId.js';
+import { LevelId } from '../../../domain/shared/LevelId.js';
 import { LevelScore } from '../../../domain/progress/value-objects/LevelScore.js';
 import { ProgressId } from '../../../domain/progress/value-objects/ProgressId.js';
-import { UserId } from '../../../domain/progress/value-objects/UserId.js';
+import { UserId } from '../../../domain/shared/UserId.js';
 
 export interface CompleteLevelInput {
   userId: string;
@@ -23,12 +23,12 @@ export type CompleteLevelOutput = void;
 
 export class CompleteLevelService implements UseCase<CompleteLevelInput, CompleteLevelOutput> {
   constructor(
-    private readonly repo: IProgressRepository,
-    private readonly eventBus: IDomainEventBus,
+    private readonly repo: ProgressRepository,
+    private readonly eventBus: DomainEventBus,
   ) {}
 
   async execute(input: CompleteLevelInput): Promise<CompleteLevelOutput> {
-    const userId = new UserId(input.userId);
+    const userId = UserId.create(input.userId);
     let progress = await this.repo.findByUserId(userId);
 
     if (progress === null) {
@@ -36,7 +36,7 @@ export class CompleteLevelService implements UseCase<CompleteLevelInput, Complet
     }
 
     const result = new LevelCompletionResult(
-      new LevelId(input.levelId),
+      LevelId.create(input.levelId),
       new LevelScore(input.score, input.timeSeconds, input.movesCount),
       new CompletedAt(new Date(input.completedAt)),
     );

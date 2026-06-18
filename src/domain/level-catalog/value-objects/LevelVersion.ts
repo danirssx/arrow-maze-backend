@@ -1,7 +1,11 @@
 import { InvalidArgumentError } from "../../errors/DomainError.js";
 
 export class LevelVersion {
-  private constructor(private readonly value: number) {}
+  readonly value: number;
+
+  private constructor(value: number) {
+    this.value = value;
+  }
 
   static create(value: number): LevelVersion {
     if (!Number.isInteger(value) || value < 1) {
@@ -12,10 +16,6 @@ export class LevelVersion {
 
   static initial(): LevelVersion {
     return new LevelVersion(1);
-  }
-
-  getValue(): number {
-    return this.value;
   }
 
   equals(other: LevelVersion): boolean {

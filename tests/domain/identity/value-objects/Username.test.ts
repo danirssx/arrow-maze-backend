@@ -5,7 +5,7 @@ describe("Username", () => {
   describe("create", () => {
     it("should_create_username_when_value_is_valid", () => {
       const username = Username.create("player_1");
-      expect(username.getValue()).toBe("player_1");
+      expect(username.value).toBe("player_1");
     });
 
     it("should_throw_domain_error_when_username_is_too_short", () => {
@@ -30,13 +30,13 @@ describe("Username", () => {
 
     it("should_allow_username_at_minimum_length", () => {
       const username = Username.create("abc");
-      expect(username.getValue()).toBe("abc");
+      expect(username.value).toBe("abc");
     });
 
     it("should_allow_username_at_maximum_length", () => {
       const value = "a".repeat(30);
       const username = Username.create(value);
-      expect(username.getValue()).toBe(value);
+      expect(username.value).toBe(value);
     });
   });
 

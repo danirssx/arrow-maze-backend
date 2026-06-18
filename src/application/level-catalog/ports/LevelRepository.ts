@@ -1,5 +1,5 @@
 import type { Level } from "../../../domain/level-catalog/Level.js";
-import type { LevelId } from "../../../domain/level-catalog/value-objects/LevelId.js";
+import type { LevelId } from "../../../domain/shared/LevelId.js";
 
 export interface LevelRepository {
   save(level: Level): Promise<void>;

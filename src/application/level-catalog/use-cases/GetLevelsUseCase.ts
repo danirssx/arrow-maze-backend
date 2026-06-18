@@ -19,8 +19,8 @@ export class GetLevelsUseCase implements UseCase<GetLevelsInput, GetLevelsOutput
     const levels = await this.repo.findAllPublished();
     return {
       levels: levels.map((l) => ({
-        levelId: l.id.getValue(),
-        name: l.name.getValue(),
+        levelId: l.id.value,
+        name: l.name.value,
         difficulty: l.difficulty,
         createdAt: l.createdAt,
       })),

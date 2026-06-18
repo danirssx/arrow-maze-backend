@@ -1,7 +1,11 @@
 import { InvalidArgumentError } from "../../errors/DomainError.js";
 
 export class TimeLimit {
-  private constructor(private readonly value: number) {}
+  readonly value: number;
+
+  private constructor(value: number) {
+    this.value = value;
+  }
 
   static create(seconds: number): TimeLimit {
     if (!Number.isInteger(seconds) || seconds < 1) {
@@ -10,10 +14,6 @@ export class TimeLimit {
       );
     }
     return new TimeLimit(seconds);
-  }
-
-  getValue(): number {
-    return this.value;
   }
 
   equals(other: TimeLimit): boolean {

@@ -1,14 +1,14 @@
 import type { UseCase } from '../../aspects/UseCase.js';
-import type { IProgressRepository } from '../ports/IProgressRepository.js';
-import type { IDomainEventBus } from '../ports/IDomainEventBus.js';
+import type { ProgressRepository } from '../ports/IProgressRepository.js';
+import type { DomainEventBus } from '../../ports/DomainEventBus.js';
 import { PlayerProgress } from '../../../domain/progress/PlayerProgress.js';
 import { LevelCompletionResult } from '../../../domain/progress/LevelCompletionResult.js';
 import { ProgressMergePolicy } from '../../../domain/progress/policies/ProgressMergePolicy.js';
 import { CompletedAt } from '../../../domain/progress/value-objects/CompletedAt.js';
-import { LevelId } from '../../../domain/progress/value-objects/LevelId.js';
+import { LevelId } from '../../../domain/shared/LevelId.js';
 import { LevelScore } from '../../../domain/progress/value-objects/LevelScore.js';
 import { ProgressId } from '../../../domain/progress/value-objects/ProgressId.js';
-import { UserId } from '../../../domain/progress/value-objects/UserId.js';
+import { UserId } from '../../../domain/shared/UserId.js';
 import { type LoadProgressOutput, toProgressOutput } from './LoadProgressService.js';
 
 export interface LocalCompletedLevelDto {
@@ -31,12 +31,12 @@ export class SyncProgressService implements UseCase<SyncProgressInput, SyncProgr
   private readonly mergePolicy = new ProgressMergePolicy();
 
   constructor(
-    private readonly repo: IProgressRepository,
-    private readonly eventBus: IDomainEventBus,
+    private readonly repo: ProgressRepository,
+    private readonly eventBus: DomainEventBus,
   ) {}
 
   async execute(input: SyncProgressInput): Promise<SyncProgressOutput> {
-    const userId = new UserId(input.userId);
+    const userId = UserId.create(input.userId);
     let remote = await this.repo.findByUserId(userId);
 
     if (remote === null) {
@@ -47,7 +47,7 @@ export class SyncProgressService implements UseCase<SyncProgressInput, SyncProgr
     for (const dto of input.completedLevels) {
       local.recordCompletion(
         new LevelCompletionResult(
-          new LevelId(dto.levelId),
+          LevelId.create(dto.levelId),
           new LevelScore(dto.score, dto.timeSeconds, dto.movesCount),
           new CompletedAt(new Date(dto.completedAt)),
         ),

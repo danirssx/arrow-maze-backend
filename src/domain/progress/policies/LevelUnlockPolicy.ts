@@ -1,4 +1,4 @@
-import type { LevelId } from '../value-objects/LevelId.js';
+import type { LevelId } from '../../shared/LevelId.js';
 import type { PlayerProgress } from '../PlayerProgress.js';
 
 export class LevelUnlockPolicy {

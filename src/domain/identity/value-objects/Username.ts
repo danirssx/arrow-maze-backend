@@ -5,7 +5,11 @@ const MIN_LENGTH = 3;
 const MAX_LENGTH = 30;
 
 export class Username {
-  private constructor(private readonly value: string) {}
+  readonly value: string;
+
+  private constructor(value: string) {
+    this.value = value;
+  }
 
   static create(raw: string): Username {
     const trimmed = raw.trim();
@@ -20,10 +24,6 @@ export class Username {
       );
     }
     return new Username(trimmed);
-  }
-
-  getValue(): string {
-    return this.value;
   }
 
   equals(other: Username): boolean {

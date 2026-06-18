@@ -6,11 +6,11 @@ import type { UserRole } from "../../domain/identity/enums/UserRole.js";
 import type { UserStatus } from "../../domain/identity/enums/UserStatus.js";
 import { Email } from "../../domain/identity/value-objects/Email.js";
 import { PasswordHash } from "../../domain/identity/value-objects/PasswordHash.js";
-import type { UserId } from "../../domain/identity/value-objects/UserId.js";
-import { UserId as UserIdVO } from "../../domain/identity/value-objects/UserId.js";
-import type { Username } from "../../domain/identity/value-objects/Username.js";
-import { Username as UsernameVO } from "../../domain/identity/value-objects/Username.js";
+import { Username } from "../../domain/identity/value-objects/Username.js";
+import { UserId } from "../../domain/shared/UserId.js";
 import { InfrastructureError } from "../../shared/errors/InfrastructureError.js";
+import type { Email as EmailType } from "../../domain/identity/value-objects/Email.js";
+import type { Username as UsernameType } from "../../domain/identity/value-objects/Username.js";
 
 type UserRow = {
   id: string;
@@ -25,9 +25,9 @@ type UserRow = {
 
 function rowToUser(row: UserRow): User {
   return User.reconstitute(
-    UserIdVO.create(row.id),
+    UserId.create(row.id),
     Email.create(row.email),
-    UsernameVO.create(row.username),
+    Username.create(row.username),
     PasswordHash.fromHash(row.password_hash),
     row.role as UserRole,
     row.status as UserStatus,
@@ -53,10 +53,10 @@ export class PgUserRepository implements UserRepository {
     `;
     try {
       await this.pool.query(query, [
-        user.id.getValue(),
-        user.email.getValue(),
-        user.username.getValue(),
-        user.passwordHash.getValue(),
+        user.id.value,
+        user.email.value,
+        user.username.value,
+        user.passwordHash.value,
         user.role,
         user.status,
         user.createdAt,
@@ -71,7 +71,7 @@ export class PgUserRepository implements UserRepository {
     try {
       const result = await this.pool.query<UserRow>(
         "SELECT * FROM users WHERE id = $1",
-        [id.getValue()]
+        [id.value]
       );
       return result.rows[0] ? rowToUser(result.rows[0]) : null;
     } catch (err) {
@@ -79,11 +79,11 @@ export class PgUserRepository implements UserRepository {
     }
   }
 
-  async findByEmail(email: Email): Promise<User | null> {
+  async findByEmail(email: EmailType): Promise<User | null> {
     try {
       const result = await this.pool.query<UserRow>(
         "SELECT * FROM users WHERE email = $1",
-        [email.getValue()]
+        [email.value]
       );
       return result.rows[0] ? rowToUser(result.rows[0]) : null;
     } catch (err) {
@@ -91,11 +91,11 @@ export class PgUserRepository implements UserRepository {
     }
   }
 
-  async existsByEmail(email: Email): Promise<boolean> {
+  async existsByEmail(email: EmailType): Promise<boolean> {
     try {
       const result = await this.pool.query<{ exists: boolean }>(
         "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1) AS exists",
-        [email.getValue()]
+        [email.value]
       );
       return result.rows[0]?.exists ?? false;
     } catch (err) {
@@ -103,11 +103,11 @@ export class PgUserRepository implements UserRepository {
     }
   }
 
-  async existsByUsername(username: Username): Promise<boolean> {
+  async existsByUsername(username: UsernameType): Promise<boolean> {
     try {
       const result = await this.pool.query<{ exists: boolean }>(
         "SELECT EXISTS(SELECT 1 FROM users WHERE username = $1) AS exists",
-        [username.getValue()]
+        [username.value]
       );
       return result.rows[0]?.exists ?? false;
     } catch (err) {

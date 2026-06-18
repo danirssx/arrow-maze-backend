@@ -5,14 +5,22 @@ import { LeaderboardUpdatedEvent } from '../../../src/domain/leaderboard/events/
 import { Rank } from '../../../src/domain/leaderboard/value-objects/Rank.js';
 import { EntryId } from '../../../src/domain/leaderboard/value-objects/EntryId.js';
 import { LeaderboardId } from '../../../src/domain/leaderboard/value-objects/LeaderboardId.js';
-import { LevelId } from '../../../src/domain/leaderboard/value-objects/LevelId.js';
 import { MaxLeaderboardEntries } from '../../../src/domain/leaderboard/value-objects/MaxLeaderboardEntries.js';
 import { MoveCount } from '../../../src/domain/leaderboard/value-objects/MoveCount.js';
 import { Score } from '../../../src/domain/leaderboard/value-objects/Score.js';
 import { SubmittedAt } from '../../../src/domain/leaderboard/value-objects/SubmittedAt.js';
 import { TimeSeconds } from '../../../src/domain/leaderboard/value-objects/TimeSeconds.js';
-import { UserId } from '../../../src/domain/leaderboard/value-objects/UserId.js';
 import { UsernameSnapshot } from '../../../src/domain/leaderboard/value-objects/UsernameSnapshot.js';
+import { LevelId } from '../../../src/domain/shared/LevelId.js';
+import { UserId } from '../../../src/domain/shared/UserId.js';
+
+const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
+const USER_2 = '550e8400-e29b-41d4-a716-446655440002';
+const USER_3 = '550e8400-e29b-41d4-a716-446655440003';
+const LEVEL_1 = '550e8400-e29b-41d4-a716-446655440010';
+const LEVEL_99 = '550e8400-e29b-41d4-a716-446655440099';
+
+let entryCounter = 1;
 
 function makeEntry(overrides?: {
   entryId?: string;
@@ -22,9 +30,9 @@ function makeEntry(overrides?: {
   timeSeconds?: number;
 }): ScoreEntry {
   return ScoreEntry.create({
-    id: new EntryId(overrides?.entryId ?? 'entry-1'),
-    userId: new UserId(overrides?.userId ?? 'user-1'),
-    levelId: new LevelId(overrides?.levelId ?? 'level-1'),
+    id: new EntryId(overrides?.entryId ?? `entry-${entryCounter++}`),
+    userId: UserId.create(overrides?.userId ?? USER_1),
+    levelId: LevelId.create(overrides?.levelId ?? LEVEL_1),
     usernameSnapshot: new UsernameSnapshot('PlayerOne'),
     score: new Score(overrides?.score ?? 100),
     timeSeconds: new TimeSeconds(overrides?.timeSeconds ?? 30),
@@ -36,12 +44,14 @@ function makeEntry(overrides?: {
 function makeLeaderboard(maxEntries = 10): Leaderboard {
   return Leaderboard.empty(
     new LeaderboardId('lb-1'),
-    new LevelId('level-1'),
+    LevelId.create(LEVEL_1),
     new MaxLeaderboardEntries(maxEntries),
   );
 }
 
 describe('Leaderboard', () => {
+  beforeEach(() => { entryCounter = 1; });
+
   describe('submitEntry', () => {
     it('should_add_entry_when_valid_entry_submitted', () => {
       const leaderboard = makeLeaderboard();
@@ -73,8 +83,8 @@ describe('Leaderboard', () => {
 
     it('should_rank_higher_score_first_when_two_entries_submitted', () => {
       const leaderboard = makeLeaderboard();
-      const lowScore = makeEntry({ entryId: 'e1', userId: 'u1', score: 50 });
-      const highScore = makeEntry({ entryId: 'e2', userId: 'u2', score: 200 });
+      const lowScore = makeEntry({ entryId: 'e1', userId: USER_1, score: 50 });
+      const highScore = makeEntry({ entryId: 'e2', userId: USER_2, score: 200 });
 
       leaderboard.submitEntry(lowScore);
       leaderboard.submitEntry(highScore);
@@ -85,8 +95,8 @@ describe('Leaderboard', () => {
 
     it('should_break_tie_by_faster_time_when_scores_are_equal', () => {
       const leaderboard = makeLeaderboard();
-      const slower = makeEntry({ entryId: 'e1', userId: 'u1', score: 100, timeSeconds: 60 });
-      const faster = makeEntry({ entryId: 'e2', userId: 'u2', score: 100, timeSeconds: 20 });
+      const slower = makeEntry({ entryId: 'e1', userId: USER_1, score: 100, timeSeconds: 60 });
+      const faster = makeEntry({ entryId: 'e2', userId: USER_2, score: 100, timeSeconds: 20 });
 
       leaderboard.submitEntry(slower);
       leaderboard.submitEntry(faster);
@@ -97,9 +107,9 @@ describe('Leaderboard', () => {
 
     it('should_limit_entries_when_max_capacity_reached', () => {
       const leaderboard = makeLeaderboard(2);
-      leaderboard.submitEntry(makeEntry({ entryId: 'e1', userId: 'u1', score: 50 }));
-      leaderboard.submitEntry(makeEntry({ entryId: 'e2', userId: 'u2', score: 80 }));
-      leaderboard.submitEntry(makeEntry({ entryId: 'e3', userId: 'u3', score: 200 }));
+      leaderboard.submitEntry(makeEntry({ entryId: 'e1', userId: USER_1, score: 50 }));
+      leaderboard.submitEntry(makeEntry({ entryId: 'e2', userId: USER_2, score: 80 }));
+      leaderboard.submitEntry(makeEntry({ entryId: 'e3', userId: USER_3, score: 200 }));
 
       expect(leaderboard.entries).toHaveLength(2);
       expect(leaderboard.entries[0]?.score.value).toBe(200);
@@ -107,17 +117,17 @@ describe('Leaderboard', () => {
 
     it('should_throw_when_entry_level_does_not_match_leaderboard_level', () => {
       const leaderboard = makeLeaderboard();
-      const wrongLevel = makeEntry({ levelId: 'level-99' });
+      const wrongLevel = makeEntry({ levelId: LEVEL_99 });
 
       expect(() => leaderboard.submitEntry(wrongLevel)).toThrow(LeaderboardLevelMismatchError);
     });
 
     it('should_throw_when_user_already_has_entry', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: 'e1', userId: 'u1' }));
+      leaderboard.submitEntry(makeEntry({ entryId: 'e1', userId: USER_1 }));
 
       expect(() =>
-        leaderboard.submitEntry(makeEntry({ entryId: 'e2', userId: 'u1' })),
+        leaderboard.submitEntry(makeEntry({ entryId: 'e2', userId: USER_1 })),
       ).toThrow(DuplicateEntryError);
     });
   });

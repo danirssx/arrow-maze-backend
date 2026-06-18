@@ -6,7 +6,7 @@ import { UserPasswordChanged } from "../../../src/domain/identity/events/UserPas
 import { UserSuspended } from "../../../src/domain/identity/events/UserSuspended.js";
 import { Email } from "../../../src/domain/identity/value-objects/Email.js";
 import { PasswordHash } from "../../../src/domain/identity/value-objects/PasswordHash.js";
-import { UserId } from "../../../src/domain/identity/value-objects/UserId.js";
+import { UserId } from "../../../src/domain/shared/UserId.js";
 import { Username } from "../../../src/domain/identity/value-objects/Username.js";
 import { BusinessRuleViolationError } from "../../../src/domain/errors/DomainError.js";
 
@@ -69,7 +69,7 @@ describe("User", () => {
         Username.create("gamer"),
         PasswordHash.fromHash("hash")
       );
-      expect(user.email.getValue()).toBe("user@game.com");
+      expect(user.email.value).toBe("user@game.com");
     });
   });
 
@@ -81,7 +81,7 @@ describe("User", () => {
 
       user.changePassword(newHash);
 
-      expect(user.passwordHash.getValue()).toBe("new_hash");
+      expect(user.passwordHash.value).toBe("new_hash");
     });
 
     it("should_emit_user_password_changed_event_when_password_is_changed", () => {

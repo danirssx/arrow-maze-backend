@@ -1,9 +1,7 @@
-import type { DomainEvent } from "../../events/DomainEvent.js";
+import { DomainEvent } from "../../shared/DomainEvent.js";
 
-export class UserSuspended implements DomainEvent {
-  readonly occurredAt: Date;
-
+export class UserSuspended extends DomainEvent {
   constructor(public readonly userId: string) {
-    this.occurredAt = new Date();
+    super(userId);
   }
 }

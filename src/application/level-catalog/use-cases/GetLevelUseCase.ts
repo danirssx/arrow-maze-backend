@@ -1,4 +1,4 @@
-import { LevelId } from "../../../domain/level-catalog/value-objects/LevelId.js";
+import { LevelId } from "../../../domain/shared/LevelId.js";
 import { NotFoundError } from "../../../shared/errors/ApplicationError.js";
 import type { UseCase } from "../../aspects/UseCase.js";
 import type { LevelRepository } from "../ports/LevelRepository.js";
@@ -28,12 +28,12 @@ export class GetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
 
     return {
       level: {
-        levelId: level.id.getValue(),
-        name: level.name.getValue(),
-        description: level.description.getValue(),
+        levelId: level.id.value,
+        name: level.name.value,
+        description: level.description.value,
         difficulty: level.difficulty,
         status: level.status,
-        version: level.version.getValue(),
+        version: level.version.value,
         createdAt: level.createdAt,
         updatedAt: level.updatedAt,
       },

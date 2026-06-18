@@ -5,7 +5,7 @@ import { PasswordHash } from "../../../src/domain/identity/value-objects/Passwor
 import type { RawPassword } from "../../../src/domain/identity/value-objects/RawPassword";
 import type { User } from "../../../src/domain/identity/User";
 import type { Email } from "../../../src/domain/identity/value-objects/Email";
-import type { UserId } from "../../../src/domain/identity/value-objects/UserId";
+import type { UserId } from "../../../src/domain/shared/UserId.js";
 import type { Username } from "../../../src/domain/identity/value-objects/Username";
 import { ConflictError } from "../../../src/shared/errors/ApplicationError";
 
@@ -56,8 +56,8 @@ describe("RegisterUserUseCase", () => {
 
     // Assert
     expect(repo.savedUsers).toHaveLength(1);
-    expect(repo.savedUsers[0].email.getValue()).toBe("alice@example.com");
-    expect(repo.savedUsers[0].username.getValue()).toBe("alice");
+    expect(repo.savedUsers[0].email.value).toBe("alice@example.com");
+    expect(repo.savedUsers[0].username.value).toBe("alice");
   });
 
   it("should_store_hashed_password_not_raw_when_registration_succeeds", async () => {
@@ -69,8 +69,8 @@ describe("RegisterUserUseCase", () => {
     await useCase.execute(VALID_INPUT);
 
     // Assert
-    expect(repo.savedUsers[0].passwordHash.getValue()).toBe("$2b$12$fakehash");
-    expect(repo.savedUsers[0].passwordHash.getValue()).not.toBe(VALID_INPUT.rawPassword);
+    expect(repo.savedUsers[0].passwordHash.value).toBe("$2b$12$fakehash");
+    expect(repo.savedUsers[0].passwordHash.value).not.toBe(VALID_INPUT.rawPassword);
   });
 
   it("should_throw_conflict_error_when_email_already_exists", async () => {
