@@ -687,6 +687,82 @@ Created 6 test files covering 19 test cases total.
 
 ---
 
+# AI Log — AM-011 — Level Catalog infrastructure and seed data
+
+**Date:** 2026-06-17
+**Ticket:** MAZ-82 (AM-011)
+**Branch:** feat/level-infrastructure-AM-011
+
+## Task / problem
+
+Implement the infrastructure layer for the Level Catalog bounded context: DB migration for `levels` and `level_cells` tables, `LevelMapper`, `PgLevelRepository` (implements the `LevelRepository` port from AM-010), seed data with published levels, and full infrastructure test coverage.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+User instructed to proceed with AM-011 following the established workflow (read AGENTS.md + memory files, implement, ai-log, commit, PR).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Port interface from AM-010 (`LevelRepository`) used as implementation contract | src/application/level-catalog/ports/LevelRepository.ts |
+| TDD Implementer | Used | Test file written before implementation; all 10 tests passed on first run | tests/infrastructure/level-catalog/PgLevelRepository.test.ts |
+| Judge | Not used | N/A |
+
+## Result obtained
+
+**Migration** `src/infrastructure/database/migrations/004_create_levels.sql`:
+- `levels` table: UUID PK, name, description, difficulty, status, version, board dimensions, optional time_limit_seconds + move_count, timestamps
+- `level_cells` table: UUID PK (gen_random_uuid()), FK to levels (CASCADE DELETE), row, col, type, direction (nullable), UNIQUE(level_id, row, col)
+- Indexes on `level_cells(level_id)` and `levels(status)`
+
+**Seed** `src/infrastructure/database/seeds/001_seed_levels.sql`:
+- 3 published levels: Tutorial (3×3, EASY), Crossroads (4×4, EASY), Spiral (4×4, MEDIUM with 120s time limit)
+- All inserts use `ON CONFLICT DO NOTHING` for idempotency
+- Fixed UUIDs matching test constants pattern (`550e8400-e29b-41d4-a716-446655440010/011/012`)
+
+**Mapper** `src/infrastructure/level-catalog/LevelMapper.ts`:
+- `LevelRow` and `CellRow` types exported for reuse in repository
+- `rowToLevel(levelRow, cellRows)` reconstructs the full Level aggregate using `Level.reconstitute()` and all value object factories
+
+**Repository** `src/infrastructure/level-catalog/PgLevelRepository.ts`:
+- `findById`: two queries (levels → level_cells), returns null when not found
+- `findAllPublished`: bulk fetch published levels then per-level cell queries in order
+- `save`: transaction (BEGIN/COMMIT/ROLLBACK), upserts level via ON CONFLICT, deletes then re-inserts cells
+
+**Tests** `tests/infrastructure/level-catalog/PgLevelRepository.test.ts`:
+- 10 test cases: findById (5), findAllPublished (3), save (2)
+- Uses `makePool(queryResponses[])` pattern matching PgLeaderboardRepository and PgProgressRepository tests
+- `makeLevel()` helper builds a real `Level` aggregate from domain constructors (no `as never` casts)
+
+`npm run verify` passes: lint ✅ typecheck ✅ 277 tests ✅
+
+## Patterns followed
+
+- `Difficulty` and `LevelStatus` imported as `import type` — used only in type assertions (`as Difficulty`), not as runtime values
+- `CellSpec` and `LevelDefinition` keep regular imports — used as values for `.create()` static method calls
+- Repository wraps all DB errors in `InfrastructureError` with `cause`, matching leaderboard and progress repositories
+- Pool query mock returns responses in call order using `callCount++` index, consistent with existing infrastructure tests
+
+## Team considerations pending human review
+
+- `findAllPublished` issues N+1 queries (one per level for cells). Acceptable for the current catalog size; a JOIN-based approach can replace it if the catalog grows large.
+- Seed UUIDs are hardcoded. If the team wants dynamic seeding, an application-layer seed script using domain factories would be preferred.
+- `gen_random_uuid()` in the migration requires PostgreSQL 13+. Confirm target version before running in production.
+
+## Lessons / limitations
+
+- Seed data bypasses `level.publish()` and therefore skips `LevelSolvabilityPolicy`. The Crossroads level had a loop (no path to EXIT) that was only caught by manually tracing the path after the fact. Any future seed level must be traced manually against the policy logic before committing.
+- The fix was committed separately as `fix(level-catalog): correct Crossroads seed level layout to be solvable`.
+
+
+---
+
 # AI Log - AM-033 - Model Leaderboard domain
 
 ## Task / problem
@@ -851,156 +927,821 @@ All tests pass. Typecheck clean.
 
 ---
 
-# AI Log — AM-037 — Player Progress application ports and use cases
-
-**Date:** 2026-06-17
-**Ticket:** MAZ-105 (AM-037)
-**Branch:** feat/progress-application-AM-037
-**Developer:** Daniella Cruz (Dev C)
+# AI Log - AM-041 - Complete backend Leaderboard test matrix
 
 ## Task / problem
-
-Define `IProgressRepository` port, implement `RecordLevelCompletionUseCase`, `GetPlayerProgressUseCase`, and `SyncProgressUseCase` (offline-sync via `ProgressMergePolicy`).
+Complete the full test matrix for the Leaderboard bounded context across all
+backend layers: domain, application, infrastructure, framework, and API.
 
 ## Tool and model
+Claude Code - claude-sonnet-4-6
 
-- Tool: Claude Code (claude.ai/code)
-- Model: Claude Sonnet 4.6
+## Prompt used
+Pre-checks: AGENTS.md both repos reviewed, MEMORY.md updated, prior tickets
+AM-033/034/035/036 confirmed. Identity test matrix branch studied for API
+integration test pattern (Supertest + Fake use cases + createTestApp helper).
 
 ## Result obtained
+Created:
+- `tests/helpers/createLeaderboardTestApp.ts` — Express test app factory
+- `tests/api/leaderboard/submitScore.test.ts` — 3 API integration tests
+- `tests/api/leaderboard/getLeaderboard.test.ts` — 3 API integration tests
+- `src/infrastructure/logging/ConsoleLogger.ts` — copied from identity branch
 
-- `src/application/progress/ports/IProgressRepository.ts` — `getByUserId(userId)`, `save(progress)`.
-- `src/application/progress/use-cases/RecordLevelCompletionUseCase.ts` — auth-checked; records completion and auto-triggers leaderboard submission.
-- `src/application/progress/use-cases/GetPlayerProgressUseCase.ts` — auth-checked; returns player's aggregate.
-- `src/application/progress/use-cases/SyncProgressUseCase.ts` — receives client payload, fetches server state, applies `ProgressMergePolicy`, saves, returns merged result.
-- Application tests: 15 tests; hand-rolled fakes.
+Full matrix: 38 tests across 7 suites, all passing.
+- domain/leaderboard: 13 tests
+- application/leaderboard: 9 tests (SubmitScore + GetLeaderboard)
+- infrastructure/leaderboard: 5 tests (PgLeaderboardRepository)
+- framework/leaderboard: 5 tests (LeaderboardController)
+- api/leaderboard: 6 tests (submitScore + getLeaderboard)
 
-`npm run verify` passes.
+Typecheck clean.
+
+## Team modifications pending human review
+- API tests use in-process fake use cases — no real DB.
+  Integration tests against real DB belong in a separate test:integration suite.
+- This branch depends on AM-033 through AM-036 being merged first.
 
 ## Lessons / limitations
-
-`SyncProgressUseCase` applies the domain merge policy, ensuring offline-first conflict resolution is centralized and tested at the application boundary.
+- Supertest fake classes avoid jest.fn() complexity and are more readable.
+- All prior leaderboard test files (domain/application/infra/framework) were
+  already implemented in their respective branches — this ticket consolidates
+  the API layer and verifies the full matrix compiles and runs together.
 
 
 ---
 
-# AI Log — AM-038 — Player Progress infrastructure and HTTP
+# AI Log — Architecture Divergence Fixes
 
-**Date:** 2026-06-17
-**Ticket:** MAZ-106 (AM-038)
-**Branch:** feat/progress-infrastructure-AM-038
-**Developer:** Daniella Cruz (Dev C)
+**Date:** 2026-06-17  
+**Ticket:** pre-AM-011 (architectural alignment before level infrastructure)  
+**Tool:** Claude Sonnet 4.6 (Claude Code CLI)  
+**Author:** Fernando Liendo
 
-## Task / problem
+---
 
-Implement `PgProgressRepository`, migration SQL, `ProgressController` with `GET /progress/me`, `POST /progress/levels/:levelId/complete`, and `PUT /progress/sync`, wire DI, document in Swagger.
+## Task / Problem
 
-## Tool and model
+Eight architectural divergences existed between Fernando's (identity, level-catalog) and Daniella's (leaderboard, progress) bounded contexts. These needed resolution before starting AM-011 to avoid compounding technical debt.
 
-- Tool: Claude Code (claude.ai/code)
-- Model: Claude Sonnet 4.6
+The 8 divergences:
+- D1: `DomainEvent` — interface vs abstract class
+- D2: `Entity.pullDomainEvents()` — missing in Fernando's base
+- D3: Duplicate `UserId`/`LevelId` across 3+ contexts each
+- D4: Port naming (I-prefix in Daniella's vs none in Fernando's)
+- D5: Dead `services/` sublayer in leaderboard application
+- D6: Duplicate `IDomainEventBus` ports per context
+- D7: `getValue()` vs `.value` accessor inconsistency
+- D8: Domain errors extending plain `Error` instead of `DomainError`
 
-## Result obtained
+---
 
-- `src/infrastructure/progress/PgProgressRepository.ts` — Pattern: Adapter, Repository; JSONB column for completedLevels.
-- `src/infrastructure/database/migrations/003_create_player_progress.sql` — DDL: `player_progress` table.
-- `src/framework/progress/ProgressController.ts` — JWT auth extracted from Authorization header; all three endpoints.
-- `src/framework/swagger/openApiSpec.ts` — updated with progress paths, auth schema, and response schemas.
-- Tests: 12 controller tests + 7 repository unit tests.
+## Prompt Used
 
-`npm run verify` passes.
+> "Vamos a arreglar las divergencias primero" → "Sí, procede con este ajuste, todos los cambios que hagas documentalos en un archivo .md, ponle 'divergencia-fixes.md' y todo lo que cambies documentalo ahí, fixea todo"
 
-## Lessons / limitations
+---
 
-Versioned JSONB with an integer `version` column allows optimistic concurrency detection at the sync endpoint without row-level locking.
+## Agent Roles
+
+- Claude Code as primary agent (exploration, planning, implementation)
+- No specialized sub-agents used
+
+---
+
+## Result Obtained
+
+- All 8 divergences resolved
+- TypeScript compiles cleanly (`tsc --noEmit`: 0 errors)
+- 258/258 tests passing (0 failures)
+- Full documentation in `divergencia-fixes.md`
+
+### Key decisions made:
+
+| Decision | Rationale |
+|----------|-----------|
+| Shared kernel for `UserId`/`LevelId` | Cross-context identity; UUID validation enforced once |
+| Abstract `DomainEvent` class (not interface) | Guarantees `occurredOn` and `aggregateId` for all events |
+| No I-prefix on ports | Fernando's established style; DDD convention |
+| `pullDomainEvents()` on Entity base | Atomic drain; prevents double-processing |
+| `.value` public property | TypeScript idiomatic; removes boilerplate `getValue()` |
+| Inlined `SubmitScoreService` validation | `RankingService`/`ScoreValidationService` were dead code |
+| Single `DomainEventBus` port | Shared at `application/ports/`, not per-context |
+
+---
+
+## Files Changed
+
+**New files:** `src/domain/shared/UserId.ts`, `src/domain/shared/LevelId.ts`, `src/application/ports/DomainEventBus.ts`, `divergencia-fixes.md`
+
+**Deleted files:** 11 files (duplicate VOs, dead services, old ports)
+
+**Modified source files:** ~30 files across domain, application, infrastructure layers
+
+**Modified test files:** 17 test files updated (import paths, accessor style, UUID validation alignment)
+
+---
+
+## Team Modifications Pending Human Review
+
+- [ ] Verify `pullDomainEvents()` backward compatibility with Daniella's code that uses `domainEvents` + `clearEvents()` (both kept for compatibility)
+- [ ] Confirm `ProgressMergePolicy` still handles edge cases correctly with shared kernel `UserId`/`LevelId`
+- [ ] Review test UUID constants (all use `550e8400-e29b-41d4-*` prefix for clarity)
+- [ ] Check `BcryptPasswordHasher` — `raw.value` / `stored.value` vs old `getValue()` calls
+
+---
+
+## Lessons / Limitations
+
+- Shared kernel UUIDs required updating all test fixtures that used simple strings (`'user-1'`, `'level-1'`) to valid UUID v4 format — a ripple effect worth noting for future context additions
+- The leaderboard's internal `UserId`/`LevelId` were lightweight opaque wrappers — replacing them with shared kernel VOs adds UUID validation that didn't exist before; this is architecturally correct but test maintenance cost increased
+- Dead code detection: `RankingService` was injected but never called — removed; `ScoreValidationService` logic was duplicated in `Leaderboard.submitEntry()` domain rule
 
 
 ---
 
-# AI Log — AM-039 — Complete leaderboard and progress test matrix
-
-**Date:** 2026-06-17
-**Ticket:** MAZ-107 (AM-039)
-**Branch:** test/leaderboard-progress-matrix-AM-039
-**Developer:** Daniella Cruz (Dev C)
+# AI Log - AM-037 - Model Player Progress domain
 
 ## Task / problem
-
-Extend API integration tests for leaderboard and progress endpoints: auth validation, payload validation, happy-path responses, and error propagation.
+Model the authoritative Player Progress bounded context with offline-first
+merge semantics. Implement the aggregate root, entities, value objects,
+policies and domain events for the progress domain layer.
 
 ## Tool and model
+Claude Code - claude-sonnet-4-6
 
-- Tool: Claude Code (claude.ai/code)
-- Model: Claude Sonnet 4.6
+## Prompt used
+Pre-checks: AGENTS.md both repos reviewed, MEMORY.md reviewed, prior tickets
+AM-033 through AM-041 confirmed. Leaderboard domain studied for VO/Entity
+patterns. Branch created from origin/develop (correcting prior pattern of
+branching from main).
+
+Spec: PlayerProgress aggregate, CompletedLevel entity, LevelScore VO,
+ProgressVersion VO, ProgressMergePolicy domain service, events,
+offline-first merge acceptance criteria.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Spec from Linear ticket guided in-scope/out-of-scope | MAZ-108 |
+| Planner/Slicer | Referenced | Layered file structure planned before writing | file list |
+| TDD Implementer | Referenced | Tests written for acceptance criteria (merge, completion) | PlayerProgress.test.ts |
+| Judge | Not used | No .agents/ directory configured | N/A |
+| Mutation Tester | Not used | No .agents/ directory configured | N/A |
 
 ## Result obtained
+Created:
+- `src/domain/progress/value-objects/` — 8 VOs: ProgressId, UserId, LevelId,
+  CompletedLevelId, ProgressVersion, LevelScore, CompletedAt, UpdatedAt
+- `src/domain/progress/errors/ProgressErrors.ts` — ProgressUserMismatchError
+- `src/domain/progress/events/` — LevelCompletedEvent, LevelBestScoreUpdatedEvent
+- `src/domain/progress/LevelCompletionResult.ts` — VO for completion input
+- `src/domain/progress/CompletedLevel.ts` — Entity with withBetterScore()
+- `src/domain/progress/PlayerProgress.ts` — Aggregate root with recordCompletion()
+  and empty() factory; fires domain events
+- `src/domain/progress/policies/ProgressMergePolicy.ts` — offline-first merge:
+  union of completed levels, best score wins, version = max+1
+- `src/domain/progress/policies/LevelUnlockPolicy.ts` — optional policy (returns
+  true by default; team can override)
+- `tests/domain/progress/PlayerProgress.test.ts` — 14 tests, all passing
 
-- `tests/api/leaderboard/` — 8 supertest tests: submit score 200, missing fields 400, get top 200, level not found 404.
-- `tests/api/progress/` — 10 supertest tests: get progress 200, post completion 200, sync 200, missing auth 401, missing fields 400.
-
-`npm run verify` passes.
+## Team modifications pending human review
+- LevelUnlockPolicy always returns true; real unlock logic requires team decision
+  on which levels unlock which others.
+- ProgressMergePolicy uses local.id as the merged progress ID; team should
+  confirm this is the correct authority (server ID vs client ID).
 
 ## Lessons / limitations
-
-`createTestApp` helper (from AM-008) was extended to accept leaderboard and progress use case fakes, keeping integration tests isolated from the real DB.
+- Branch created from origin/develop (not main) per AGENTS.md section 3.
+- UserId and LevelId are duplicated across bounded contexts (leaderboard and
+  progress) — by design in DDD. Team may later extract a shared kernel if
+  alignment is confirmed.
+- Pre-existing tsc errors (bcryptjs, jsonwebtoken) are in develop's identity
+  infrastructure and unrelated to this ticket.
 
 
 ---
 
-# AI Log — AM-040 — Leaderboard and progress Swagger and contract finalization
-
-**Date:** 2026-06-17
-**Ticket:** MAZ-108 (AM-040)
-**Branch:** docs/leaderboard-progress-swagger-AM-040
-**Developer:** Daniella Cruz (Dev C)
+# AI Log - AM-038 - Implement Player Progress application services
 
 ## Task / problem
-
-Finalize the OpenAPI spec for all leaderboard and progress endpoints; ensure Swagger UI at `GET /docs` reflects the complete surface area.
+Implement the application layer for the Player Progress bounded context:
+load, complete level, and sync (offline-first merge) use cases,
+plus the domain event handler and IProgressRepository port.
 
 ## Tool and model
+Claude Code - claude-sonnet-4-6
 
-- Tool: Claude Code (claude.ai/code)
-- Model: Claude Sonnet 4.6
+## Prompt used
+Pre-checks: AGENTS.md both repos reviewed, MEMORY.md reviewed, prior tickets
+AM-037 confirmed. Leaderboard application services studied for UseCase/port
+patterns (SubmitScoreService, GetLeaderboardService).
+
+Spec: LoadProgressService, CompleteLevelService, SyncProgressService,
+OnLevelCompletedHandler, IProgressRepository port, DTOs.
+DoD: userId from auth context, not arbitrary body.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Spec from MAZ-109 guided in-scope items | MAZ-109 |
+| Planner/Slicer | Referenced | Port → use-case → handler → test order | file list |
+| TDD Implementer | Referenced | Fake repos (not jest.fn()) per leaderboard pattern | test files |
+| Judge | Not used | No .agents/ directory configured | N/A |
+| Mutation Tester | Not used | No .agents/ directory configured | N/A |
 
 ## Result obtained
+Created:
+- `src/application/progress/ports/IProgressRepository.ts`
+- `src/application/progress/ports/IDomainEventBus.ts`
+- `src/application/progress/use-cases/LoadProgressService.ts` — finds or creates
+  empty progress; exposes `toProgressOutput` helper shared by SyncProgressService
+- `src/application/progress/use-cases/CompleteLevelService.ts` — creates progress
+  if absent, calls recordCompletion, saves, publishes events
+- `src/application/progress/use-cases/SyncProgressService.ts` — reconstructs local
+  progress from DTOs, merges with remote via ProgressMergePolicy, saves
+- `src/application/progress/handlers/OnLevelCompletedHandler.ts` — stub handler
+- `tests/application/progress/` — 10 tests: 3 Load, 4 CompleteLevel, 3 Sync
 
-- Updated `src/framework/swagger/openApiSpec.ts` with complete schemas, `BearerAuth` security definition, and error examples for all leaderboard and progress paths.
-- Added `LeaderboardEntry`, `LeaderboardResponse`, `ProgressResponse`, `CompletedLevel`, `SyncRequest`, `SyncResponse` components.
-
-`npm run verify` passes.
+## Team modifications pending human review
+- OnLevelCompletedHandler is a stub; real unlock/notification logic pending team
+- SyncProgressService reconstructs local PlayerProgress from DTO by calling
+  recordCompletion() in a loop; team may prefer a dedicated factory method
+- progressId in CompleteLevelInput: client must pass a stable UUID for new users
 
 ## Lessons / limitations
-
-Keeping schemas in `openApiSpec.ts` rather than YAML keeps TypeScript compile-time checks on the spec in sync with the controller output shapes.
+- Domain progress files (AM-037) not yet merged to develop; brought in via
+  git merge --no-commit --no-ff + git reset HEAD (same pattern as leaderboard)
 
 
 ---
 
-# AI Log — AM-041 — Backend final validation and docs
+# AI Log - AM-039 - Implement Player Progress infrastructure
+
+## Task / problem
+Implement the infrastructure layer for Player Progress: PostgreSQL repository,
+row-to-domain mapper, and SQL migration for player_progress and completed_levels.
+
+## Tool and model
+Claude Code - claude-sonnet-4-6
+
+## Prompt used
+Pre-checks: AGENTS.md both repos reviewed, MEMORY.md reviewed, prior tickets
+AM-037 and AM-038 confirmed. PgLeaderboardRepository and its test studied for
+Pool mock pattern, BEGIN/DELETE/INSERT/COMMIT transaction, InfrastructureError.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Spec from MAZ-110 guided tables, constraints, version | MAZ-110 |
+| Planner/Slicer | Referenced | Migration → repository → mapper → test order | file list |
+| TDD Implementer | Referenced | Mocked Pool pattern from PgLeaderboardRepository.test | test file |
+| Judge | Not used | No .agents/ directory configured | N/A |
+| Mutation Tester | Not used | No .agents/ directory configured | N/A |
+
+## Result obtained
+Created:
+- `src/infrastructure/database/migrations/003_create_player_progress.sql`
+  Tables: player_progress (id, user_id UNIQUE, version, updated_at),
+  completed_levels (id, progress_id FK, level_id, best_score, best_time_seconds,
+  best_moves_count, completed_at, updated_at, UNIQUE progress_id+level_id)
+- `src/infrastructure/progress/PgProgressRepository.ts` — Pattern: Repository, Adapter
+  findByUserId: two queries (progress + completed_levels), rowsToProgress mapper
+  save: BEGIN / UPSERT player_progress / DELETE+INSERT completed_levels / COMMIT
+  Wraps all errors in InfrastructureError
+- `tests/infrastructure/progress/PgProgressRepository.test.ts` — 5 tests
+
+## Team modifications pending human review
+- Version conflict policy: save() does UPSERT (last write wins). Concurrent
+  conflicts are resolved at application layer via ProgressMergePolicy before
+  reaching the repository. Team may add optimistic locking (WHERE version = $n)
+  if stricter conflict detection is needed.
+- Migration runner not yet wired; team must apply 003_create_player_progress.sql
+  to the target database.
+
+## Lessons / limitations
+- best_time_seconds stored as NUMERIC; read back as string by pg driver, so
+  Number() cast is applied in rowToCompletedLevel to prevent type mismatch.
+
+
+---
+
+# AI Log - AM-040 - Expose Player Progress HTTP API and Swagger
+
+## Task / problem
+Expose three protected HTTP endpoints for player progress:
+GET /progress/me, POST /progress/levels/:levelId/complete, PUT /progress/sync.
+Auth middleware must extract userId from JWT — never from request body.
+
+## Tool and model
+Claude Code - claude-sonnet-4-6
+
+## Prompt used
+Pre-checks: AGENTS.md both repos reviewed, MEMORY.md reviewed, prior tickets
+AM-037/038/039 confirmed. IdentityController and LeaderboardController studied
+for Controller pattern. JwtTokenService.verify() studied for token payload shape.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Spec from MAZ-111 guided endpoints, auth, DoD | MAZ-111 |
+| Planner/Slicer | Referenced | authMiddleware → controller → routes → tests order | file list |
+| TDD Implementer | Referenced | Supertest + FakeTokenService + Fake use cases | test files |
+| Judge | Not used | No .agents/ directory configured | N/A |
+| Mutation Tester | Not used | No .agents/ directory configured | N/A |
+
+## Result obtained
+Created:
+- `src/framework/middleware/authMiddleware.ts` — `createAuthMiddleware(tokenService)`
+  Extracts Bearer token, calls tokenService.verify(), attaches `req.user`
+- `src/framework/progress/ProgressController.ts` — Pattern: Controller
+  All three handlers read userId from `req.user` (JWT), never from body
+- `src/framework/progress/progressRoutes.ts` — `createProgressRouter(controller, auth)`
+- `tests/helpers/createProgressTestApp.ts` — Express test app factory
+- `tests/api/progress/` — 9 tests: 3 load, 3 completeLevel, 3 sync — all passing
+- `src/framework/swagger/openApiSpec.ts` — extended with progress paths,
+  CompleteLevelRequest, SyncProgressRequest, ProgressResponse schemas,
+  bearerAuth security scheme
+
+## Team modifications pending human review
+- authMiddleware is created per-router (injected as RequestHandler); wiring in
+  app.ts for production requires team to inject the real JwtTokenService
+- progressId uses deterministic pattern `progress-{userId}`; team may prefer
+  a lookup by userId that returns the stored UUID
+- Swagger bearerAuth added but not enforced globally — applied per-route only
+
+## Lessons / limitations
+- DoD "userId from JWT, not body": verified with test
+  `should_use_userId_from_jwt_not_from_body` which sends attacker userId in body
+  and asserts use case received JWT userId instead
+
+
+---
+
+# AI Log — AM-050 — Deploy backend with cloud database connection
 
 **Date:** 2026-06-18
-**Ticket:** MAZ-109 (AM-041)
-**Branch:** docs/final-delivery-AM-048
+**Ticket:** MAZ-121 (AM-050)
+**Branch:** feat/cloud-db-deploy-AM-050
 **Developer:** Daniella Cruz (Dev C)
 
 ## Task / problem
 
-Complete backend README, RELEASE.md, and final verification for Section 6 compliance.
+Enable the backend to connect to a cloud-hosted PostgreSQL database (Neon, Supabase, Railway, Render). Cloud providers require SSL and a different connection string format. Add deployment workflow for CI/CD on main.
 
 ## Tool and model
 
 - Tool: Claude Code (claude.ai/code)
 - Model: Claude Sonnet 4.6
 
+## Prompt used
+
+User instructed to implement ticket AM-050 following the established workflow: review AGENTS.md, MEMORY.md, Linear MCP Guideline, register AI usage, validate, commit, push, PR, Linear comment.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used |
+| --- | --- | --- |
+| Spec Partner | Referenced | MAZ-121 title used as scope boundary; no code-level decisions made without evidence |
+| TDD Implementer | Used | PgPool.test.ts and loadEnvironment SSL tests written before verifying |
+| Judge | Referenced | Pre-PR audit: no secrets in code, SSL defaults safe, deploy workflow non-destructive |
+| Mutation Tester | Not used | StrykerJS not configured |
+
 ## Result obtained
 
-- `README.md`: Design Patterns table, SOLID principles, AOP strategy, Getting Started with prerequisites, env vars, migration commands, Swagger URL, Quality Commands.
-- `docs/RELEASE.md` created — production checklist, Docker, versioning, CI steps.
+### `src/infrastructure/database/PgPool.ts`
+- Added `PoolOptions { ssl?: boolean }` parameter to `createPool`.
+- When `ssl: true`, passes `{ rejectUnauthorized: false }` to pg Pool (compatible with all cloud providers including self-signed certs).
+- When `ssl: false` or omitted, no SSL config is passed (local Docker).
+
+### `src/framework/config/environment.ts`
+- Added `databaseSsl: boolean` to `Environment` type.
+- Resolves from `DATABASE_SSL` env var if set; defaults to `true` when `NODE_ENV=production`, `false` otherwise.
+- Zero breaking change for existing local setups (Docker uses `DATABASE_SSL=false`).
+
+### `src/framework/app.ts`
+- `createPool` now receives `{ ssl: environment.databaseSsl }`.
+
+### `.env.example`
+- Added `DATABASE_SSL=false` for local Docker.
+- Added commented examples for cloud providers (Neon, Supabase, Railway, Render).
+
+### `.github/workflows/deploy.yml`
+- New workflow triggered on push to `main`.
+- Runs the full `verify` job first.
+- `deploy` job is scaffolded with commented examples for Railway, Render, and Docker registry.
+- Team must configure the deployment step and add the required secret to GitHub repository settings.
+
+### `docs/RELEASE.md`
+- Cloud database setup section with connection string formats per provider.
+- Deployment workflow configuration instructions.
+- Migration run commands for cloud database.
+
+### `tests/infrastructure/database/PgPool.test.ts`
+- 7 tests: createPool with ssl=false, ssl=true, no options; loadEnvironment databaseSsl from DATABASE_SSL env var; default to true in production; default to false in development.
+
+`npm run verify` passes: lint ✅ typecheck ✅ 285 tests ✅ build ✅
+
+## Team modifications pending human review
+
+- Choose the cloud provider and configure the `deploy` job in `.github/workflows/deploy.yml`.
+- Add the required secret (e.g., `RAILWAY_TOKEN` or `RENDER_DEPLOY_HOOK`) in GitHub repository settings.
+- Run migrations against the cloud database manually before first deployment.
+- Confirm whether `rejectUnauthorized: false` is acceptable for the team's SSL policy, or whether a CA certificate should be pinned.
 
 ## Lessons / limitations
 
-Delivery documentation completes the Section 6 compliance requirement. No backend production code was changed in this ticket.
+- Most cloud PostgreSQL providers require SSL but use self-signed certificates, so `rejectUnauthorized: false` is necessary. For stricter security, the CA cert can be pinned via `ssl.ca` — but that requires storing the cert securely, which is out of scope here.
+- `DATABASE_SSL` env var override allows flexible local development without modifying the production default.
+- The deploy workflow is intentionally left as a scaffold — committing a broken deploy step would be worse than an explicit placeholder.
+
+
+---
+
+# AI Log — fix: add runtime enum guards via parseEnumFromInput / parseEnumFromDb
+
+**Date:** 2026-06-18
+**Branch:** fix/enum-runtime-validation
+
+## Task / problem
+
+TypeScript `as EnumType` casts were used throughout the application and infrastructure layers without any runtime check. An invalid string arriving from the HTTP body (e.g. an unknown `difficulty` value) or from a corrupted DB row would be silently accepted at compile time and propagate through the system, causing obscure downstream failures instead of a clear error at the entry point.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+User requested a fix for all unsafe enum casts in the codebase, distinguishing between input coming from the HTTP layer (should produce a 422 ValidationError) and values coming from the database (should produce a 500 InfrastructureError indicating data corruption).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Not used | N/A | N/A |
+| Planner/Slicer | Not used | N/A | N/A |
+| TDD Implementer | Referenced | Tests written alongside each production change; new LevelMapper.test.ts file created | CreateLevelUseCase.test.ts, LevelMapper.test.ts |
+| Judge | Referenced | Reviewed the two-helper design (parseEnumFromInput vs parseEnumFromDb) to ensure layer separation was correct | N/A |
+| Mutation Tester | Not used | N/A | N/A |
+
+## Result obtained
+
+- Added `src/shared/parseEnum.ts` with two helpers:
+  - `parseEnumFromInput` — throws `ValidationError` (422) for invalid values from the application layer
+  - `parseEnumFromDb` — throws `InfrastructureError` (500) for corrupted values from the DB
+- `CreateLevelUseCase.ts`: replaced `as CellType`, `as Direction`, `as Difficulty` with `parseEnumFromInput`
+- `UpdateLevelDefinitionUseCase.ts`: replaced `as CellType`, `as Direction` with `parseEnumFromInput`
+- `LevelMapper.ts`: replaced all 4 enum casts with `parseEnumFromDb`
+- `PgUserRepository.ts`: replaced `as UserRole`, `as UserStatus` with `parseEnumFromDb`
+- Added 3 tests to `CreateLevelUseCase.test.ts` covering invalid difficulty, cell type, and direction
+- Added new `tests/infrastructure/level-catalog/LevelMapper.test.ts` (5 tests: valid reconstitution + InfrastructureError on 4 corrupted DB values)
+- Test count: 279 → 294
+
+## Team modifications pending human review
+
+- `parseEnumFromDb` throws `InfrastructureError` with the raw DB value in the message. If that message ever surfaces to the client, it could leak internal field names. Confirm the error middleware never forwards 500 message bodies to the frontend.
+
+## Lessons / limitations
+
+- Splitting into two helpers (one per layer) makes the error contract explicit: 422 for bad user input, 500 for bad DB state. A single helper with a flag would have obscured which case each call site handles.
+
+
+---
+
+# AI Log — fix: read userId from JWT payload in LeaderboardController
+
+**Date:** 2026-06-18
+**Branch:** fix/leaderboard-auth-userid
+
+## Task / problem
+
+`LeaderboardController.submitScore` read `userId` directly from the HTTP request body. Because the `POST /leaderboard/scores` route had no authentication middleware, any caller could supply an arbitrary `userId` and submit scores on behalf of any user. This allowed score spoofing without authentication.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+User requested a security fix to prevent score spoofing: add `authMiddleware` to the leaderboard submit route and read `userId` from the verified JWT payload instead of the request body, following the same pattern already established in the progress routes.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Not used | N/A | N/A |
+| Planner/Slicer | Not used | N/A | N/A |
+| TDD Implementer | Referenced | Added 401 tests for missing and invalid token; updated existing tests to remove userId from body and add Authorization header | submitScore.test.ts, LeaderboardController.test.ts |
+| Judge | Referenced | Verified the pattern matches progressRoutes.ts and createProgressTestApp.ts exactly | N/A |
+| Mutation Tester | Not used | N/A | N/A |
+
+## Result obtained
+
+- `leaderboardRoutes.ts`: accepts `authMiddleware: RequestHandler` parameter; applied to `POST /leaderboard/scores` only (GET remains public)
+- `LeaderboardController.submitScore`: removed `userId` from body destructuring and required-fields check; reads `userId` from `(req as AuthenticatedRequest).user.userId`
+- `app.ts`: passes `authMiddleware` to `createLeaderboardRouter`
+- `tests/helpers/createLeaderboardTestApp.ts`: now accepts `TokenService` and wires real `createAuthMiddleware` (aligned with `createProgressTestApp`)
+- `tests/api/leaderboard/submitScore.test.ts`: removed `userId` from `VALID_BODY`; added `FakeTokenService`; added tests for 401 without token and 401 with invalid token; all existing tests updated to send `Authorization: Bearer valid-token`
+- `tests/framework/leaderboard/LeaderboardController.test.ts`: added `user` property to mock request objects; removed `userId` from `validBody`
+- Test count: 286 → 288
+
+## Team modifications pending human review
+
+- **Breaking change for the frontend**: `userId` must be removed from the submit score request body. The frontend must send a valid `Authorization: Bearer <token>` header on this endpoint.
+- The GET `/leaderboard/:levelId` route intentionally remains public (no auth required) — confirm this is the desired behavior.
+
+## Lessons / limitations
+
+- The `createProgressTestApp` pattern (accepting a real `TokenService` and wiring `createAuthMiddleware`) is the correct approach for controller tests that involve authenticated routes. Using a fake middleware that just calls `next()` would bypass the auth contract entirely.
+
+
+---
+
+# AI Log — fix: LeaderboardId and EntryId UUID validation
+
+**Date:** 2026-06-18
+**Branch:** fix/leaderboard-uuid-ids
+
+## Task / problem
+
+`LeaderboardId` and `EntryId` had public constructors that accepted any non-empty string. The `SubmitScoreService` passed client-provided `leaderboardId` and `entryId` strings directly via `new LeaderboardId(...)` / `new EntryId(...)`. The DB schema defines both columns as `UUID PRIMARY KEY`, so any non-UUID string causes `invalid input syntax for type uuid` in production.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+Continuation of critical bug fix session.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Not used | N/A | N/A |
+| Planner/Slicer | Referenced | Read migration 002 to confirm UUID PK before touching code | 002_create_leaderboards.sql |
+| TDD Implementer | Referenced | Tests updated alongside each production file; all 277 pass | tests/domain/leaderboard/, tests/infrastructure/leaderboard/, tests/application/leaderboard/ |
+| Judge | Not used | N/A | N/A |
+| Mutation Tester | Not used | N/A | N/A |
+
+## Result obtained
+
+- `LeaderboardId`: private constructor, UUID v4 validation, `create()` + `generate()` static factories, `InvalidArgumentError`
+- `EntryId`: same pattern as above
+- `PgLeaderboardRepository`: `new LeaderboardId(...)` → `LeaderboardId.create(...)`, `new EntryId(...)` → `EntryId.create(...)`
+- `SubmitScoreService`: same factory replacements; client must now supply valid UUIDs for `leaderboardId` and `entryId`
+- All test fixtures updated to use valid UUID constants
+- All 277 tests pass, `tsc --noEmit` clean
+
+## Team modifications pending human review
+
+- `SubmitScoreService` still accepts `leaderboardId` and `entryId` from HTTP body (Fix #8). After this fix, invalid UUIDs will throw `InvalidArgumentError` at the VO level instead of reaching the DB — an improvement, but the architecture concern (client-generated IDs) remains for a future ticket.
+
+## Lessons / limitations
+
+- Same root cause as the Progress UUID fix: VOs must enforce UUID format in their constructor, not rely on DB constraints, because pool mocks accept any string in tests.
+
+
+---
+
+# AI Log — fix: validate duplicate positions in LevelDefinition
+
+**Date:** 2026-06-18
+**Branch:** fix/level-definition-duplicate-positions
+
+## Task / problem
+
+`LevelDefinition.create()` validated bounds and START/EXIT counts but did not check for duplicate positions. Two cells could occupy the same `(row, col)` and the domain would accept them, deferring the constraint to the SQL `UNIQUE(level_id, row, col)` index. Domain invariants must be enforced at the VO level.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+Continuation of critical bug fix session.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Not used | N/A | N/A |
+| Planner/Slicer | Not used | N/A | N/A |
+| TDD Implementer | Referenced | Added test alongside production change | LevelDefinition.test.ts |
+| Judge | Not used | N/A | N/A |
+| Mutation Tester | Not used | N/A | N/A |
+
+## Result obtained
+
+- `LevelDefinition.create()`: added `Set<string>` keyed by `${row},${col}` to detect duplicates during the existing bounds check loop; throws `InvalidArgumentError` on duplicate
+- Added test `should_throw_when_two_cells_share_the_same_position`
+- 279 tests pass, `tsc --noEmit` clean
+
+## Lessons / limitations
+
+- Duplicate detection is O(n) with the Set, same pass as bounds checking — no extra loop needed.
+
+
+---
+
+# AI Log — fix: check isActive before bcrypt in LoginUseCase
+
+**Date:** 2026-06-18
+**Branch:** fix/login-isactive-order
+
+## Task / problem
+
+`LoginUseCase` ran `bcrypt.verify()` before checking `user.isActive`. For suspended accounts, bcrypt always ran regardless of whether the password was correct, wasting compute and creating inconsistent timing behavior. The isActive check must happen before the expensive bcrypt operation.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+Continuation of critical bug fix session.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Not used | N/A | N/A |
+| Planner/Slicer | Not used | N/A | N/A |
+| TDD Implementer | Referenced | Added new test to prove isActive fires before bcrypt | LoginUseCase.test.ts |
+| Judge | Not used | N/A | N/A |
+| Mutation Tester | Not used | N/A | N/A |
+
+## Result obtained
+
+- `LoginUseCase`: moved `isActive` check before `passwordHasher.verify()`
+- Added test `should_throw_forbidden_error_when_account_is_suspended_even_if_password_is_wrong` — this test would FAIL on the old code (bcrypt returns false → Unauthorized, not Forbidden), proving the ordering is now correct
+- 278 tests pass, `tsc --noEmit` clean
+
+## Team modifications pending human review
+
+- `ForbiddenError` is returned for suspended accounts — this reveals account existence to the caller. If the team wants to hide account status from unauthenticated callers, suspended accounts should also return `UnauthorizedError`. This is a product/UX decision, not a code defect.
+
+## Lessons / limitations
+
+- The new test is the key artifact: a test for `suspended + wrong password → ForbiddenError` only passes if isActive is checked BEFORE bcrypt. This makes the ordering a contractual invariant, not just a comment.
+
+
+---
+
+# AI Log — fix: Progress UUID ids
+
+**Date:** 2026-06-18
+**Branch:** fix/progress-uuid-ids
+
+## Task / problem
+
+Deep review of all tickets revealed that `ProgressId` and `CompletedLevelId` had public constructors that accepted any non-empty string. The `ProgressController` was generating IDs as `progress-${userId}` and `CompletedLevelId` was derived as `${progressId}-${levelId}`. Both formats are not valid UUIDs, causing `invalid input syntax for type uuid` errors against the `UUID PRIMARY KEY` schema in production.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+User requested a deep review of all tickets and instructed to start fixing critical issues.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Not used | N/A | N/A |
+| Planner/Slicer | Referenced | Deep review identified the bug and all affected files before touching code | review report |
+| TDD Implementer | Referenced | Tests updated alongside each production file change; all 277 pass | tests/application/progress/, tests/domain/progress/ |
+| Judge | Not used | N/A | N/A |
+| Mutation Tester | Not used | N/A | N/A |
+
+## Result obtained
+
+- `ProgressId`: private constructor, UUID v4 validation, `create()` + `generate()` static factories, `InvalidArgumentError` on invalid input
+- `CompletedLevelId`: same pattern as above
+- `PlayerProgress.recordCompletion`: uses `CompletedLevelId.generate()` instead of derived string
+- `LoadProgressService`, `CompleteLevelService`, `SyncProgressService`: removed `progressId`/`newProgressId` from inputs; use `ProgressId.generate()` server-side
+- `ProgressController`: removed all `progress-${userId}` patterns
+- `PgProgressRepository`: uses `ProgressId.create()` and `CompletedLevelId.create()` in mapper
+- All test fixtures updated to use valid UUID constants
+
+## Team modifications pending human review
+
+- `SyncProgressService` now creates the transient `local` object using `remote.id` (when remote exists) to satisfy `ProgressMergePolicy` which verifies user ownership. Team should confirm this is the correct identity for the local in-memory snapshot.
+- `LoadProgressService` still persists an empty progress on first load (CQS violation noted in review). Left as-is — fixing requires a separate decision on whether to defer creation to `completeLevel`.
+
+## Lessons / limitations
+
+- Non-UUID IDs in domain VOs are invisible in tests when pool mocks accept any string. The bug only surfaces against a real PostgreSQL DB. This is why UUID validation must be enforced in the VO itself, not delegated to the DB constraint.
+
+
+---
+
+# AI Log — fix: wire UnitOfWork transactions to repositories via AsyncLocalStorage
+
+**Date:** 2026-06-18
+**Branch:** fix/unit-of-work-transactional-client
+
+## Task / problem
+
+`PgUnitOfWork.runInTransaction` acquired a dedicated `PoolClient` and ran `BEGIN`/`COMMIT` on it, but all repositories called `this.pool.query()` directly. The repositories never saw the transactional client, so every query ran on a separate, auto-committed connection. Any use case wrapped with `TransactionDecorator` had no real atomicity — the `BEGIN`/`COMMIT` was a no-op.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+User requested a fix for the UnitOfWork placebo bug, making the transactional client visible to all repositories that execute within a `runInTransaction` call, without changing repository constructor signatures or adding new ports.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Not used | N/A | N/A |
+| Planner/Slicer | Not used | N/A | N/A |
+| TDD Implementer | Referenced | Added test verifying transactionContext exposes the active client during runInTransaction and is cleared after | PgUnitOfWork.test.ts |
+| Judge | Referenced | Evaluated AsyncLocalStorage as the non-invasive option over constructor injection or a context parameter | N/A |
+| Mutation Tester | Not used | N/A | N/A |
+
+## Result obtained
+
+- Added `src/infrastructure/database/transactionContext.ts` with:
+  - `transactionContext`: `AsyncLocalStorage<PoolClient>` shared across all async descendants
+  - `getQueryRunner(pool)`: returns the active transactional client if one exists, otherwise the pool (used in read methods)
+  - `withTransactionalClient(pool, fn)`: joins the active transaction if one exists; otherwise acquires its own client and manages `BEGIN`/`COMMIT`/`ROLLBACK` (used in `save()` methods)
+- `PgUnitOfWork.ts`: `runInTransaction` now calls `transactionContext.run(client, operation)` so the client is propagated to all async descendants
+- `PgUserRepository.ts`: `save()` uses `getQueryRunner(this.pool).query()`
+- `PgLevelRepository.ts`, `PgLeaderboardRepository.ts`, `PgProgressRepository.ts`: read methods use `getQueryRunner`; `save()` replaced manual `connect()` + `BEGIN`/`COMMIT` blocks with `withTransactionalClient`
+- Added test `should_expose_transactional_client_via_context_during_operation` to `PgUnitOfWork.test.ts`
+- Test count: 286 → 287
+
+## Team modifications pending human review
+
+- `withTransactionalClient` is designed for single-aggregate `save()` calls. If a future use case needs to save two aggregates in one transaction via the UoW, the outer `runInTransaction` already covers both — no changes needed. However, if a repository `save()` is ever called directly outside a UoW context, it will manage its own transaction.
+
+## Lessons / limitations
+
+- `AsyncLocalStorage` is the Node.js idiomatic approach for propagating context across an async call tree without touching function signatures. It is available from Node 16+ with no extra dependencies.
+- The `withTransactionalClient` guard (`if (existing) return fn(existing)`) is what makes the UoW and standalone-save scenarios composable without duplicating `BEGIN`/`COMMIT` logic.
+
+
+---
+
+# AI Log — fix: Wire Leaderboard and Progress routes in app.ts
+
+**Date:** 2026-06-18
+**Branch:** fix/wire-framework-app
+
+## Task / problem
+
+Deep review revealed that `src/framework/app.ts` only wired the Identity bounded context. The Leaderboard and Progress bounded contexts had complete framework and application layers (controllers, routes, use cases, repositories) that were never mounted. No concrete `DomainEventBus` implementation existed, so any use case requiring it could not be instantiated.
+
+## Tool and model
+
+- Tool: Claude Code (claude.ai/code)
+- Model: Claude Sonnet 4.6
+
+## Prompt used
+
+Continuation of critical bug fix session. User granted one-time merge permission for fix PRs.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Not used | N/A | N/A |
+| Planner/Slicer | Referenced | Read all constructors before touching app.ts | GetLeaderboardService, SubmitScoreService, LoadProgressService, authMiddleware |
+| TDD Implementer | Not used | No new logic introduced | — |
+| Judge | Not used | N/A | N/A |
+| Mutation Tester | Not used | N/A | N/A |
+
+## Result obtained
+
+- `src/infrastructure/events/InMemoryEventBus.ts`: concrete `DomainEventBus` implementation that logs published events via the `Logger` port
+- `src/framework/app.ts`: wired `PgProgressRepository`, `PgLeaderboardRepository`, `InMemoryEventBus`, `LoadProgressService`, `CompleteLevelService`, `SyncProgressService`, `GetLeaderboardService`, `SubmitScoreService`, `ProgressController`, `LeaderboardController`, `createAuthMiddleware`, `createProgressRouter`, `createLeaderboardRouter`
+- All 277 tests pass, `tsc --noEmit` clean
+
+## Team modifications pending human review
+
+- `InMemoryEventBus` only logs events — no subscribers. This is intentional: no event handler infrastructure exists yet. When the team adds handlers, they should inject them into this bus or replace it with a proper dispatcher.
+- Level Catalog has no framework layer yet (no `LevelController` / routes). Left unwired — there is no corresponding ticket for the HTTP API at this stage.
+
+## Lessons / limitations
+
+- A missing `DomainEventBus` implementation is a silent runtime failure: TypeScript compiles fine, but any use case that calls `eventBus.publishAll()` would throw at startup when the dependency is injected. Always wire concrete infrastructure before registering routes.
 
 
 <!-- AI_LOG_ENTRIES_END -->
