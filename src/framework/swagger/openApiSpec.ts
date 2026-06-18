@@ -152,6 +152,108 @@ export const openApiSpec = {
         },
       },
     },
+    '/levels': {
+      get: {
+        summary: 'List all published levels',
+        tags: ['Level Catalog'],
+        responses: {
+          '200': { description: 'Published levels list', content: { 'application/json': { schema: { $ref: '#/components/schemas/LevelsListResponse' } } } },
+        },
+      },
+      post: {
+        summary: 'Create a new level (admin only)',
+        tags: ['Level Catalog'],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CreateLevelRequest' },
+              example: {
+                name: 'Arrow Maze 1',
+                description: 'A beginner maze',
+                difficulty: 'EASY',
+                boardSize: { rows: 3, cols: 3 },
+                cells: [
+                  { position: { row: 0, col: 0 }, type: 'START' },
+                  { position: { row: 0, col: 1 }, type: 'ARROW', direction: 'RIGHT' },
+                  { position: { row: 0, col: 2 }, type: 'END' },
+                ],
+              },
+            },
+          },
+        },
+        responses: {
+          '201': { description: 'Level created', content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateLevelResponse' } } } },
+          '400': { description: 'Missing required fields', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '403': { description: 'Admin access required', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '422': { description: 'Level is not solvable or domain validation failed', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+        },
+      },
+    },
+    '/levels/{levelId}': {
+      get: {
+        summary: 'Get a level by ID',
+        tags: ['Level Catalog'],
+        parameters: [{ name: 'levelId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: {
+          '200': { description: 'Level detail', content: { 'application/json': { schema: { $ref: '#/components/schemas/LevelDetailResponse' } } } },
+          '400': { description: 'Invalid UUID format', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '404': { description: 'Level not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+        },
+      },
+    },
+    '/levels/{levelId}/definition': {
+      put: {
+        summary: 'Update level grid definition (admin only)',
+        tags: ['Level Catalog'],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'levelId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/UpdateLevelDefinitionRequest' } },
+          },
+        },
+        responses: {
+          '200': { description: 'Definition updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/LevelIdResponse' } } } },
+          '400': { description: 'Missing required fields', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '403': { description: 'Admin access required', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '404': { description: 'Level not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+        },
+      },
+    },
+    '/levels/{levelId}/publish': {
+      post: {
+        summary: 'Publish a level (admin only)',
+        tags: ['Level Catalog'],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'levelId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: {
+          '200': { description: 'Level published', content: { 'application/json': { schema: { $ref: '#/components/schemas/LevelIdResponse' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '403': { description: 'Admin access required', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '404': { description: 'Level not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '422': { description: 'Level is not solvable', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+        },
+      },
+    },
+    '/levels/{levelId}/archive': {
+      post: {
+        summary: 'Archive a level (admin only)',
+        tags: ['Level Catalog'],
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'levelId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: {
+          '200': { description: 'Level archived', content: { 'application/json': { schema: { $ref: '#/components/schemas/LevelIdResponse' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '403': { description: 'Admin access required', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+          '404': { description: 'Level not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+        },
+      },
+    },
     '/leaderboard/{levelId}': {
       get: {
         summary: 'Get leaderboard for a level',
@@ -306,6 +408,121 @@ export const openApiSpec = {
                 },
               },
             },
+          },
+        },
+      },
+      CellInput: {
+        type: 'object',
+        required: ['position', 'type'],
+        properties: {
+          position: {
+            type: 'object',
+            required: ['row', 'col'],
+            properties: {
+              row: { type: 'integer', minimum: 0 },
+              col: { type: 'integer', minimum: 0 },
+            },
+          },
+          type: { type: 'string', enum: ['START', 'END', 'ARROW', 'EMPTY'] },
+          direction: { type: 'string', enum: ['UP', 'DOWN', 'LEFT', 'RIGHT', 'UP_LEFT', 'UP_RIGHT', 'DOWN_LEFT', 'DOWN_RIGHT'] },
+        },
+      },
+      CreateLevelRequest: {
+        type: 'object',
+        required: ['name', 'description', 'difficulty', 'boardSize', 'cells'],
+        properties: {
+          name: { type: 'string', minLength: 1, maxLength: 100 },
+          description: { type: 'string', maxLength: 500 },
+          difficulty: { type: 'string', enum: ['EASY', 'MEDIUM', 'HARD'] },
+          boardSize: {
+            type: 'object',
+            required: ['rows', 'cols'],
+            properties: {
+              rows: { type: 'integer', minimum: 2 },
+              cols: { type: 'integer', minimum: 2 },
+            },
+          },
+          cells: { type: 'array', items: { $ref: '#/components/schemas/CellInput' } },
+          timeLimit: { type: 'integer', minimum: 1, nullable: true },
+          moveCount: { type: 'integer', minimum: 1, nullable: true },
+        },
+      },
+      UpdateLevelDefinitionRequest: {
+        type: 'object',
+        required: ['boardSize', 'cells'],
+        properties: {
+          boardSize: {
+            type: 'object',
+            required: ['rows', 'cols'],
+            properties: {
+              rows: { type: 'integer', minimum: 2 },
+              cols: { type: 'integer', minimum: 2 },
+            },
+          },
+          cells: { type: 'array', items: { $ref: '#/components/schemas/CellInput' } },
+        },
+      },
+      CreateLevelResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: { type: 'object', required: ['levelId'], properties: { levelId: { type: 'string', format: 'uuid' } } },
+        },
+      },
+      LevelIdResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: { type: 'object', required: ['levelId'], properties: { levelId: { type: 'string', format: 'uuid' } } },
+        },
+      },
+      LevelSummary: {
+        type: 'object',
+        required: ['levelId', 'name', 'difficulty', 'createdAt'],
+        properties: {
+          levelId: { type: 'string', format: 'uuid' },
+          name: { type: 'string' },
+          difficulty: { type: 'string', enum: ['EASY', 'MEDIUM', 'HARD'] },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      LevelsListResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: {
+            type: 'object',
+            required: ['levels'],
+            properties: { levels: { type: 'array', items: { $ref: '#/components/schemas/LevelSummary' } } },
+          },
+        },
+      },
+      LevelDetail: {
+        type: 'object',
+        required: ['levelId', 'name', 'description', 'difficulty', 'status', 'version', 'createdAt', 'updatedAt'],
+        properties: {
+          levelId: { type: 'string', format: 'uuid' },
+          name: { type: 'string' },
+          description: { type: 'string' },
+          difficulty: { type: 'string', enum: ['EASY', 'MEDIUM', 'HARD'] },
+          status: { type: 'string', enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED'] },
+          version: { type: 'integer' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      LevelDetailResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: {
+            type: 'object',
+            required: ['level'],
+            properties: { level: { $ref: '#/components/schemas/LevelDetail' } },
           },
         },
       },
