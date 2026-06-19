@@ -5,7 +5,6 @@ import { LevelDefinition } from '../../domain/level-catalog/value-objects/LevelD
 import { LevelDescription } from '../../domain/level-catalog/value-objects/LevelDescription.js';
 import { LevelName } from '../../domain/level-catalog/value-objects/LevelName.js';
 import { LevelVersion } from '../../domain/level-catalog/value-objects/LevelVersion.js';
-import { MoveCount } from '../../domain/level-catalog/value-objects/MoveCount.js';
 import { Position } from '../../domain/level-catalog/value-objects/Position.js';
 import { TimeLimit } from '../../domain/level-catalog/value-objects/TimeLimit.js';
 import { Difficulty } from '../../domain/level-catalog/enums/Difficulty.js';
@@ -25,7 +24,6 @@ export type LevelRow = {
   arrows: unknown;
   attempts: number | null;
   time_limit_seconds: number | null;
-  move_count: number | null;
   created_at: Date;
   updated_at: Date;
 };
@@ -63,9 +61,6 @@ export function rowToLevel(levelRow: LevelRow, _cellRows: CellRow[] = []): Level
     LevelVersion.create(levelRow.version),
     levelRow.time_limit_seconds !== null
       ? TimeLimit.create(levelRow.time_limit_seconds)
-      : undefined,
-    levelRow.move_count !== null
-      ? MoveCount.create(levelRow.move_count)
       : undefined,
     levelRow.created_at,
     levelRow.updated_at,

@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS levels (
   arrows              JSONB        NOT NULL DEFAULT '[]'::jsonb,
   attempts            INT          NOT NULL DEFAULT 5 CHECK (attempts >= 1),
   time_limit_seconds  INT,
-  move_count          INT,
   created_at          TIMESTAMPTZ  NOT NULL,
   updated_at          TIMESTAMPTZ  NOT NULL
 );
@@ -18,6 +17,9 @@ DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint WHERE conname = 'chk_levels_arrows_array'
+  ) AND EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'levels' AND column_name = 'arrows'
   ) THEN
     ALTER TABLE levels
       ADD CONSTRAINT chk_levels_arrows_array CHECK (jsonb_typeof(arrows) = 'array');

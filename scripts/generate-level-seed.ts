@@ -195,7 +195,7 @@ LEVELS.forEach((meta, index) => {
   rows.push(
     `-- Level ${index + 1}: ${meta.name} (${meta.difficulty}, ${meta.arrowCount} arrows` +
       `${meta.timeLimitSeconds ? `, ${meta.timeLimitSeconds}s` : ""}, ${meta.attempts} attempts)\n` +
-      `INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)\n` +
+      `INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)\n` +
       `VALUES (\n` +
       `  ${sqlString(id)},\n` +
       `  ${sqlString(meta.name)},\n` +
@@ -206,7 +206,6 @@ LEVELS.forEach((meta, index) => {
       `  ${sqlJsonb(records)},\n` +
       `  ${meta.attempts},\n` +
       `  ${sqlNumberOrNull(meta.timeLimitSeconds)},\n` +
-      `  NULL,\n` +
       `  NOW(),\n` +
       `  NOW()\n` +
       `)\nON CONFLICT (id) DO UPDATE SET\n` +
@@ -218,7 +217,6 @@ LEVELS.forEach((meta, index) => {
       `  arrows = EXCLUDED.arrows,\n` +
       `  attempts = EXCLUDED.attempts,\n` +
       `  time_limit_seconds = EXCLUDED.time_limit_seconds,\n` +
-      `  move_count = EXCLUDED.move_count,\n` +
       `  updated_at = EXCLUDED.updated_at;`
   );
 });

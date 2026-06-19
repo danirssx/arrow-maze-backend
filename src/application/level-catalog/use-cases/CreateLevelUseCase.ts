@@ -6,7 +6,6 @@ import { LevelDefinition } from "../../../domain/level-catalog/value-objects/Lev
 import { LevelDescription } from "../../../domain/level-catalog/value-objects/LevelDescription.js";
 import { LevelName } from "../../../domain/level-catalog/value-objects/LevelName.js";
 import { LevelVersion } from "../../../domain/level-catalog/value-objects/LevelVersion.js";
-import { MoveCount } from "../../../domain/level-catalog/value-objects/MoveCount.js";
 import { Position } from "../../../domain/level-catalog/value-objects/Position.js";
 import { TimeLimit } from "../../../domain/level-catalog/value-objects/TimeLimit.js";
 import { LevelId } from "../../../domain/shared/LevelId.js";
@@ -31,7 +30,6 @@ export type CreateLevelInput = {
   arrows: ArrowInput[];
   attempts?: number;
   timeLimit?: number;
-  moveCount?: number;
 };
 
 export type CreateLevelOutput = { levelId: string };
@@ -50,8 +48,7 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
       LevelDefinition.create(arrows, input.attempts),
       difficulty,
       LevelVersion.initial(),
-      input.timeLimit ? TimeLimit.create(input.timeLimit) : undefined,
-      input.moveCount ? MoveCount.create(input.moveCount) : undefined
+      input.timeLimit ? TimeLimit.create(input.timeLimit) : undefined
     );
 
     await this.repo.save(level);
