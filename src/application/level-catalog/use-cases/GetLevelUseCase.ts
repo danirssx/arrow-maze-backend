@@ -13,6 +13,8 @@ export type LevelDto = {
   status: string;
   version: number;
   definition: LevelDefinitionDto;
+  timeLimitSeconds?: number;
+  moveCount?: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -54,6 +56,8 @@ export class GetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
             direction: arrow.direction,
           })),
         },
+        ...(level.timeLimit !== undefined ? { timeLimitSeconds: level.timeLimit.value } : {}),
+        ...(level.moveCount !== undefined ? { moveCount: level.moveCount.value } : {}),
         createdAt: level.createdAt,
         updatedAt: level.updatedAt,
       },

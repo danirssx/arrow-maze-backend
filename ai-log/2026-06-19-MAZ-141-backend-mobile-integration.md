@@ -1,0 +1,39 @@
+# AI Log — MAZ-141 — Backend setup and level contract integration
+
+## Ticket
+
+- Linear: `MAZ-141`
+- Branch: `fix/backend-integration-setup-MAZ-141`
+- Worktree: `worktrees/am-MAZ-141-backend`
+
+## Agent Roles Used
+
+| Role | Status | Notes |
+| --- | --- | --- |
+| Spec Partner | Referenced | Used backend-as-source-of-truth requirement to expose level metadata needed by mobile. |
+| Planner/Slicer | Referenced | Grouped DB setup and level contract changes under the integration ticket. |
+| TDD Implementer | Used | Added DB setup script and extended level DTO outputs with tests. |
+| Judge | Referenced | Ran typecheck, lint, OpenAPI export, and focused backend tests. |
+| Mutation | Not used | Mutation testing was out of scope for this integration pass. |
+
+## Summary
+
+- Added `scripts/run-sql-files.mjs`.
+- Added `db:migrate`, `db:seed`, and `db:setup` npm scripts.
+- Updated README and release docs so migration `005_refactor_levels_to_arrow_specs.sql` runs before seeds.
+- Extended `/levels` summaries with `arrowCount`, `attempts`, and optional `timeLimitSeconds`.
+- Extended `/levels/:id` detail with optional `timeLimitSeconds` and `moveCount`.
+- Updated Swagger source and regenerated `docs/openapi.json`.
+
+## Validation
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run export-openapi`
+- `npm test -- --runInBand tests/api/level-catalog/getLevels.test.ts tests/api/level-catalog/getLevel.test.ts tests/application/level-catalog/GetLevelsUseCase.test.ts tests/application/level-catalog/GetLevelUseCase.test.ts`
+- `npm run verify` - green, 58 suites / 310 tests
+
+## Notes
+
+- `npm run export-openapi` and backend API tests needed elevated execution because sandboxing blocked local IPC/listener creation.
+- Validation used a temporary ignored `node_modules` symlink to the main backend worktree, then removed it.

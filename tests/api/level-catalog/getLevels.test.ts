@@ -13,7 +13,14 @@ import { createLevelCatalogTestApp } from '../../helpers/createLevelCatalogTestA
 class FakeGetLevelsUseCase implements UseCase<GetLevelsInput, GetLevelsOutput> {
   result: GetLevelsOutput = {
     levels: [
-      { levelId: '550e8400-e29b-41d4-a716-446655440001', name: 'Easy Start', difficulty: 'EASY', createdAt: new Date('2026-01-01') },
+      {
+        levelId: '550e8400-e29b-41d4-a716-446655440001',
+        name: 'Easy Start',
+        difficulty: 'EASY',
+        arrowCount: 2,
+        attempts: 5,
+        createdAt: new Date('2026-01-01')
+      },
     ],
   };
   async execute(_input: GetLevelsInput): Promise<GetLevelsOutput> {
@@ -135,6 +142,8 @@ describe('GET /levels', () => {
     expect(level).toHaveProperty('levelId');
     expect(level).toHaveProperty('name');
     expect(level).toHaveProperty('difficulty');
+    expect(level).toHaveProperty('arrowCount');
+    expect(level).toHaveProperty('attempts');
     expect(level).toHaveProperty('createdAt');
   });
 });
