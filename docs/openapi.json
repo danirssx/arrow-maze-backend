@@ -1727,11 +1727,6 @@
             "type": "integer",
             "minimum": 1,
             "nullable": true
-          },
-          "moveCount": {
-            "type": "integer",
-            "minimum": 1,
-            "nullable": true
           }
         }
       },
@@ -1930,11 +1925,6 @@
             "$ref": "#/components/schemas/LevelDefinitionDto"
           },
           "timeLimitSeconds": {
-            "type": "integer",
-            "minimum": 1,
-            "nullable": true
-          },
-          "moveCount": {
             "type": "integer",
             "minimum": 1,
             "nullable": true

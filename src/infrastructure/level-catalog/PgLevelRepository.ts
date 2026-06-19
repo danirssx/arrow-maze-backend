@@ -46,8 +46,8 @@ export class PgLevelRepository implements LevelRepository {
     try {
       await withTransactionalClient(this.pool, async (client) => {
         await client.query(
-          `INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, $12)
+          `INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11)
            ON CONFLICT (id) DO UPDATE
              SET name               = EXCLUDED.name,
                  description        = EXCLUDED.description,
@@ -57,7 +57,6 @@ export class PgLevelRepository implements LevelRepository {
                  arrows             = EXCLUDED.arrows,
                  attempts           = EXCLUDED.attempts,
                  time_limit_seconds = EXCLUDED.time_limit_seconds,
-                 move_count         = EXCLUDED.move_count,
                  updated_at         = EXCLUDED.updated_at`,
           [
             level.id.value,
@@ -69,7 +68,6 @@ export class PgLevelRepository implements LevelRepository {
             JSON.stringify(arrowsToRecord(level)),
             level.definition.attempts,
             level.timeLimit?.value ?? null,
-            level.moveCount?.value ?? null,
             level.createdAt,
             level.updatedAt,
           ],

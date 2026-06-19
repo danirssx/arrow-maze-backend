@@ -9,14 +9,21 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'levels' AND column_name = 'board_rows'
   ) THEN
-    ALTER TABLE levels ALTER COLUMN board_rows DROP NOT NULL;
+    ALTER TABLE levels DROP COLUMN board_rows;
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'levels' AND column_name = 'board_cols'
   ) THEN
-    ALTER TABLE levels ALTER COLUMN board_cols DROP NOT NULL;
+    ALTER TABLE levels DROP COLUMN board_cols;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'levels' AND column_name = 'move_count'
+  ) THEN
+    ALTER TABLE levels DROP COLUMN move_count;
   END IF;
 END $$;
 
