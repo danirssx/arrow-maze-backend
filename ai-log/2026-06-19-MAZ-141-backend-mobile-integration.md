@@ -36,6 +36,7 @@
 - `npm run verify` - green, 58 suites / 310 tests
 - Local DB validation - green: 15 published Arrow Untangle levels, ArrowSpec path invariants, head direction rule, and DAG solvability.
 - Temporary backend on `localhost:3001` - `/health`, `/levels`, and `/levels/:id` returned 200 against local Postgres.
+- Docker backend on `localhost:3000` rebuilt from this worktree - `/health`, `/levels`, and `/levels/:id` returned 200 against the migrated DB.
 
 ## Notes
 
