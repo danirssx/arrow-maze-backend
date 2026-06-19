@@ -7,6 +7,9 @@ export type LevelSummaryDto = {
   levelId: string;
   name: string;
   difficulty: string;
+  arrowCount: number;
+  attempts: number;
+  timeLimitSeconds?: number;
   createdAt: Date;
 };
 
@@ -22,6 +25,9 @@ export class GetLevelsUseCase implements UseCase<GetLevelsInput, GetLevelsOutput
         levelId: l.id.value,
         name: l.name.value,
         difficulty: l.difficulty,
+        arrowCount: l.definition.arrows.length,
+        attempts: l.definition.attempts,
+        ...(l.timeLimit !== undefined ? { timeLimitSeconds: l.timeLimit.value } : {}),
         createdAt: l.createdAt,
       })),
     };

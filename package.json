@@ -12,6 +12,9 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:coverage": "npm test -- --coverage",
     "verify": "npm run lint && npm run typecheck && npm run test:coverage && npm run build",
+    "db:migrate": "node scripts/run-sql-files.mjs migrations",
+    "db:seed": "node scripts/run-sql-files.mjs seeds",
+    "db:setup": "npm run db:migrate && npm run db:seed",
     "export-openapi": "tsx scripts/export-openapi.ts",
     "seed:generate": "tsx scripts/generate-level-seed.ts",
     "prepare": "husky"

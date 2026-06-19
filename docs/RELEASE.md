@@ -40,17 +40,23 @@ npm run dev
 Apply in order before first run:
 
 ```bash
+npm run db:migrate
+```
+
+Or apply the SQL files manually in order:
+
+```bash
 psql $DATABASE_URL -f src/infrastructure/database/migrations/001_create_users.sql
 psql $DATABASE_URL -f src/infrastructure/database/migrations/002_create_leaderboards.sql
 psql $DATABASE_URL -f src/infrastructure/database/migrations/003_create_player_progress.sql
 psql $DATABASE_URL -f src/infrastructure/database/migrations/004_create_levels.sql
+psql $DATABASE_URL -f src/infrastructure/database/migrations/005_refactor_levels_to_arrow_specs.sql
 ```
 
 Then seed the published level catalog (and, optionally, demo data):
 
 ```bash
-psql $DATABASE_URL -f src/infrastructure/database/seeds/001_seed_levels.sql
-psql $DATABASE_URL -f src/infrastructure/database/seeds/002_seed_demo_data.sql
+npm run db:seed
 ```
 
 The level seed is generated — re-run `npx tsx scripts/generate-level-seed.ts` to
