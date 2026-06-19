@@ -5,6 +5,8 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    environment:
+      DATABASE_URL: postgresql://arrow_maze:arrow_maze@database:5432/arrow_maze
     depends_on:
       - database
 

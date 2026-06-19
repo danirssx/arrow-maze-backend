@@ -13,6 +13,7 @@
     "test:coverage": "npm test -- --coverage",
     "verify": "npm run lint && npm run typecheck && npm run test:coverage && npm run build",
     "export-openapi": "tsx scripts/export-openapi.ts",
+    "seed:generate": "tsx scripts/generate-level-seed.ts",
     "prepare": "husky"
   },
   "dependencies": {

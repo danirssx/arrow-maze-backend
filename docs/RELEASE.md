@@ -41,9 +41,20 @@ Apply in order before first run:
 
 ```bash
 psql $DATABASE_URL -f src/infrastructure/database/migrations/001_create_users.sql
-psql $DATABASE_URL -f src/infrastructure/database/migrations/002_create_leaderboard.sql
+psql $DATABASE_URL -f src/infrastructure/database/migrations/002_create_leaderboards.sql
 psql $DATABASE_URL -f src/infrastructure/database/migrations/003_create_player_progress.sql
+psql $DATABASE_URL -f src/infrastructure/database/migrations/004_create_levels.sql
 ```
+
+Then seed the published level catalog (and, optionally, demo data):
+
+```bash
+psql $DATABASE_URL -f src/infrastructure/database/seeds/001_seed_levels.sql
+psql $DATABASE_URL -f src/infrastructure/database/seeds/002_seed_demo_data.sql
+```
+
+The level seed is generated — re-run `npx tsx scripts/generate-level-seed.ts` to
+regenerate it after changing the level definitions.
 
 ## Cloud database setup (Neon / Supabase / Railway / Render)
 
