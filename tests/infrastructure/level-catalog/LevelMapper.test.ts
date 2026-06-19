@@ -14,7 +14,6 @@ const validLevelRow: LevelRow = {
   arrows: [{ id: 'a', color: '#5262FB', path: [{ row: 0, col: 0 }], direction: 'UP' }],
   attempts: 5,
   time_limit_seconds: null,
-  move_count: null,
   created_at: new Date(),
   updated_at: new Date(),
 };

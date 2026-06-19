@@ -920,7 +920,6 @@ export const openApiSpec = {
           arrows: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ArrowSpec' } },
           attempts: { type: 'integer', minimum: 1, nullable: true },
           timeLimit: { type: 'integer', minimum: 1, nullable: true },
-          moveCount: { type: 'integer', minimum: 1, nullable: true },
         },
       },
       UpdateLevelDefinitionRequest: {
@@ -984,7 +983,6 @@ export const openApiSpec = {
           version: { type: 'integer' },
           definition: { $ref: '#/components/schemas/LevelDefinitionDto' },
           timeLimitSeconds: { type: 'integer', minimum: 1, nullable: true },
-          moveCount: { type: 'integer', minimum: 1, nullable: true },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
         },

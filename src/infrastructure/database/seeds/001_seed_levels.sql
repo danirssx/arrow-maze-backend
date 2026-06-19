@@ -4,7 +4,7 @@
 -- Arrows are stored as JSONB: { id, color, path:[{row,col}, ... tail->head], direction }.
 
 -- Level 1: First Knot (EASY, 2 arrows, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440010',
   'First Knot',
@@ -15,7 +15,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"}]'::jsonb,
   5,
   NULL,
-  NULL,
   NOW(),
   NOW()
 )
@@ -28,11 +27,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 2: Warm-Up (EASY, 3 arrows, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440011',
   'Warm-Up',
@@ -43,7 +41,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":5},{"row":4,"col":5},{"row":3,"col":5},{"row":3,"col":6},{"row":3,"col":7}],"direction":"RIGHT"}]'::jsonb,
   5,
   NULL,
-  NULL,
   NOW(),
   NOW()
 )
@@ -56,11 +53,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 3: Cross (EASY, 3 arrows, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440012',
   'Cross',
@@ -71,7 +67,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":5},{"row":4,"col":5},{"row":3,"col":5},{"row":3,"col":6},{"row":3,"col":7}],"direction":"RIGHT"}]'::jsonb,
   5,
   NULL,
-  NULL,
   NOW(),
   NOW()
 )
@@ -84,11 +79,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 4: Tangle (EASY, 4 arrows, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440013',
   'Tangle',
@@ -99,7 +93,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":5},{"row":4,"col":5},{"row":3,"col":5},{"row":3,"col":6},{"row":3,"col":7}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":1},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"}]'::jsonb,
   5,
   NULL,
-  NULL,
   NOW(),
   NOW()
 )
@@ -112,11 +105,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 5: Weave (EASY, 4 arrows, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440014',
   'Weave',
@@ -127,7 +119,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":5},{"row":4,"col":5},{"row":3,"col":5},{"row":3,"col":6},{"row":3,"col":7}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":1},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"}]'::jsonb,
   5,
   NULL,
-  NULL,
   NOW(),
   NOW()
 )
@@ -140,11 +131,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 6: Stack (MEDIUM, 5 arrows, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440015',
   'Stack',
@@ -155,7 +145,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":6},{"row":4,"col":6},{"row":3,"col":6},{"row":3,"col":7},{"row":3,"col":8}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":0},{"row":2,"col":1},{"row":1,"col":1}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":5},{"row":1,"col":5},{"row":1,"col":6},{"row":1,"col":7}],"direction":"RIGHT"}]'::jsonb,
   5,
   NULL,
-  NULL,
   NOW(),
   NOW()
 )
@@ -168,11 +157,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 7: Rush (MEDIUM, 5 arrows, 75s, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440016',
   'Rush',
@@ -183,7 +171,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":6},{"row":4,"col":6},{"row":3,"col":6},{"row":3,"col":7},{"row":3,"col":8}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":0},{"row":2,"col":1},{"row":1,"col":1}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":5},{"row":1,"col":5},{"row":1,"col":6},{"row":1,"col":7}],"direction":"RIGHT"}]'::jsonb,
   5,
   75,
-  NULL,
   NOW(),
   NOW()
 )
@@ -196,11 +183,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 8: Lattice (MEDIUM, 6 arrows, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440017',
   'Lattice',
@@ -211,7 +197,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":6},{"row":4,"col":6},{"row":3,"col":6},{"row":3,"col":7},{"row":3,"col":8}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":0},{"row":2,"col":1},{"row":1,"col":1}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":5},{"row":1,"col":5},{"row":1,"col":6},{"row":1,"col":7}],"direction":"RIGHT"},{"id":"f","color":"purple","path":[{"row":3,"col":-2},{"row":3,"col":-1},{"row":3,"col":0},{"row":2,"col":0},{"row":1,"col":0}],"direction":"UP"}]'::jsonb,
   5,
   NULL,
-  NULL,
   NOW(),
   NOW()
 )
@@ -224,11 +209,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 9: Pressure (MEDIUM, 6 arrows, 70s, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440018',
   'Pressure',
@@ -239,7 +223,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":6},{"row":4,"col":6},{"row":3,"col":6},{"row":3,"col":7},{"row":3,"col":8}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":0},{"row":2,"col":1},{"row":1,"col":1}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":5},{"row":1,"col":5},{"row":1,"col":6},{"row":1,"col":7}],"direction":"RIGHT"},{"id":"f","color":"purple","path":[{"row":3,"col":-2},{"row":3,"col":-1},{"row":3,"col":0},{"row":2,"col":0},{"row":1,"col":0}],"direction":"UP"}]'::jsonb,
   5,
   70,
-  NULL,
   NOW(),
   NOW()
 )
@@ -252,11 +235,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 10: Medium Finale (MEDIUM, 7 arrows, 65s, 5 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440019',
   'Medium Finale',
@@ -267,7 +249,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5},{"row":0,"col":6}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":7},{"row":4,"col":7},{"row":3,"col":7},{"row":3,"col":8},{"row":3,"col":9}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":-1},{"row":2,"col":0},{"row":1,"col":0}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":6},{"row":1,"col":6},{"row":1,"col":7},{"row":1,"col":8}],"direction":"RIGHT"},{"id":"f","color":"purple","path":[{"row":3,"col":2},{"row":3,"col":3},{"row":3,"col":4},{"row":2,"col":4},{"row":1,"col":4}],"direction":"UP"},{"id":"g","color":"crimson","path":[{"row":4,"col":6},{"row":3,"col":6},{"row":3,"col":7}],"direction":"RIGHT"}]'::jsonb,
   5,
   65,
-  NULL,
   NOW(),
   NOW()
 )
@@ -280,11 +261,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 11: Hard Knot (HARD, 7 arrows, 4 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440020',
   'Hard Knot',
@@ -295,7 +275,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5},{"row":0,"col":6}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":7},{"row":4,"col":7},{"row":3,"col":7},{"row":3,"col":8},{"row":3,"col":9}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":-1},{"row":2,"col":0},{"row":1,"col":0}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":6},{"row":1,"col":6},{"row":1,"col":7},{"row":1,"col":8}],"direction":"RIGHT"},{"id":"f","color":"purple","path":[{"row":3,"col":2},{"row":3,"col":3},{"row":3,"col":4},{"row":2,"col":4},{"row":1,"col":4}],"direction":"UP"},{"id":"g","color":"crimson","path":[{"row":4,"col":6},{"row":3,"col":6},{"row":3,"col":7}],"direction":"RIGHT"}]'::jsonb,
   4,
   NULL,
-  NULL,
   NOW(),
   NOW()
 )
@@ -308,11 +287,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 12: Hard Timer (HARD, 8 arrows, 70s, 4 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440021',
   'Hard Timer',
@@ -323,7 +301,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5},{"row":0,"col":6}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":7},{"row":4,"col":7},{"row":3,"col":7},{"row":3,"col":8},{"row":3,"col":9}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":-1},{"row":2,"col":0},{"row":1,"col":0}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":6},{"row":1,"col":6},{"row":1,"col":7},{"row":1,"col":8}],"direction":"RIGHT"},{"id":"f","color":"purple","path":[{"row":3,"col":2},{"row":3,"col":3},{"row":3,"col":4},{"row":2,"col":4},{"row":1,"col":4}],"direction":"UP"},{"id":"g","color":"crimson","path":[{"row":4,"col":6},{"row":3,"col":6},{"row":3,"col":7}],"direction":"RIGHT"},{"id":"h","color":"white","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"}]'::jsonb,
   4,
   70,
-  NULL,
   NOW(),
   NOW()
 )
@@ -336,11 +313,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 13: Hard Mesh (HARD, 8 arrows, 65s, 4 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440022',
   'Hard Mesh',
@@ -351,7 +327,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5},{"row":0,"col":6}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":7},{"row":4,"col":7},{"row":3,"col":7},{"row":3,"col":8},{"row":3,"col":9}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":-1},{"row":2,"col":0},{"row":1,"col":0}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":6},{"row":1,"col":6},{"row":1,"col":7},{"row":1,"col":8}],"direction":"RIGHT"},{"id":"f","color":"purple","path":[{"row":3,"col":2},{"row":3,"col":3},{"row":3,"col":4},{"row":2,"col":4},{"row":1,"col":4}],"direction":"UP"},{"id":"g","color":"crimson","path":[{"row":4,"col":6},{"row":3,"col":6},{"row":3,"col":7}],"direction":"RIGHT"},{"id":"h","color":"white","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"}]'::jsonb,
   4,
   65,
-  NULL,
   NOW(),
   NOW()
 )
@@ -364,11 +339,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 14: Hard Snarl (HARD, 9 arrows, 60s, 4 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440023',
   'Hard Snarl',
@@ -379,7 +353,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5},{"row":0,"col":6},{"row":0,"col":7}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":8},{"row":4,"col":8},{"row":3,"col":8},{"row":3,"col":9},{"row":3,"col":10}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":5},{"row":2,"col":6},{"row":1,"col":6}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":7},{"row":1,"col":7},{"row":1,"col":8},{"row":1,"col":9}],"direction":"RIGHT"},{"id":"f","color":"purple","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":3,"col":3},{"row":2,"col":3},{"row":1,"col":3}],"direction":"UP"},{"id":"g","color":"crimson","path":[{"row":4,"col":7},{"row":3,"col":7},{"row":3,"col":8}],"direction":"RIGHT"},{"id":"h","color":"white","path":[{"row":3,"col":-1},{"row":3,"col":0},{"row":2,"col":0},{"row":1,"col":0}],"direction":"UP"},{"id":"i","color":"orange","path":[{"row":3,"col":8},{"row":2,"col":8},{"row":1,"col":8},{"row":1,"col":9},{"row":1,"col":10}],"direction":"RIGHT"}]'::jsonb,
   4,
   60,
-  NULL,
   NOW(),
   NOW()
 )
@@ -392,11 +365,10 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;
 
 -- Level 15: Hard Finale (HARD, 10 arrows, 55s, 3 attempts)
-INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, move_count, created_at, updated_at)
+INSERT INTO levels (id, name, description, difficulty, status, version, arrows, attempts, time_limit_seconds, created_at, updated_at)
 VALUES (
   '550e8400-e29b-41d4-a716-446655440024',
   'Hard Finale',
@@ -407,7 +379,6 @@ VALUES (
   '[{"id":"a","color":"blue","path":[{"row":0,"col":0},{"row":0,"col":1},{"row":0,"col":2},{"row":0,"col":3},{"row":0,"col":4},{"row":0,"col":5},{"row":0,"col":6},{"row":0,"col":7}],"direction":"RIGHT"},{"id":"b","color":"green","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":2,"col":2},{"row":1,"col":2}],"direction":"UP"},{"id":"c","color":"yellow","path":[{"row":5,"col":8},{"row":4,"col":8},{"row":3,"col":8},{"row":3,"col":9},{"row":3,"col":10}],"direction":"RIGHT"},{"id":"d","color":"pink","path":[{"row":2,"col":5},{"row":2,"col":6},{"row":1,"col":6}],"direction":"UP"},{"id":"e","color":"cyan","path":[{"row":2,"col":7},{"row":1,"col":7},{"row":1,"col":8},{"row":1,"col":9}],"direction":"RIGHT"},{"id":"f","color":"purple","path":[{"row":3,"col":1},{"row":3,"col":2},{"row":3,"col":3},{"row":2,"col":3},{"row":1,"col":3}],"direction":"UP"},{"id":"g","color":"crimson","path":[{"row":4,"col":7},{"row":3,"col":7},{"row":3,"col":8}],"direction":"RIGHT"},{"id":"h","color":"white","path":[{"row":3,"col":-1},{"row":3,"col":0},{"row":2,"col":0},{"row":1,"col":0}],"direction":"UP"},{"id":"i","color":"orange","path":[{"row":3,"col":8},{"row":2,"col":8},{"row":1,"col":8},{"row":1,"col":9},{"row":1,"col":10}],"direction":"RIGHT"},{"id":"j","color":"teal","path":[{"row":2,"col":3},{"row":2,"col":4},{"row":1,"col":4}],"direction":"UP"}]'::jsonb,
   3,
   55,
-  NULL,
   NOW(),
   NOW()
 )
@@ -420,5 +391,4 @@ ON CONFLICT (id) DO UPDATE SET
   arrows = EXCLUDED.arrows,
   attempts = EXCLUDED.attempts,
   time_limit_seconds = EXCLUDED.time_limit_seconds,
-  move_count = EXCLUDED.move_count,
   updated_at = EXCLUDED.updated_at;

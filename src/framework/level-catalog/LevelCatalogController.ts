@@ -46,7 +46,7 @@ export class LevelCatalogController {
         throw new ForbiddenError('Admin access required');
       }
 
-      const { name, description, difficulty, arrows, attempts, timeLimit, moveCount } =
+      const { name, description, difficulty, arrows, attempts, timeLimit } =
         req.body as Record<string, unknown>;
 
       if (!name || !description || !difficulty || !arrows) {
@@ -60,7 +60,6 @@ export class LevelCatalogController {
         arrows: arrows as CreateLevelInput['arrows'],
         ...(attempts !== undefined && { attempts: Number(attempts) }),
         ...(timeLimit !== undefined && { timeLimit: Number(timeLimit) }),
-        ...(moveCount !== undefined && { moveCount: Number(moveCount) }),
       });
 
       res.status(201).json(ApiResponsePresenter.success(result));

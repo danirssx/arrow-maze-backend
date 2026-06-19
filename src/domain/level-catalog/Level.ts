@@ -10,7 +10,6 @@ import type { LevelDefinition } from "./value-objects/LevelDefinition.js";
 import type { LevelDescription } from "./value-objects/LevelDescription.js";
 import type { LevelName } from "./value-objects/LevelName.js";
 import type { LevelVersion } from "./value-objects/LevelVersion.js";
-import type { MoveCount } from "./value-objects/MoveCount.js";
 import type { TimeLimit } from "./value-objects/TimeLimit.js";
 
 export class Level extends Entity<LevelId> {
@@ -23,7 +22,6 @@ export class Level extends Entity<LevelId> {
     private _status: LevelStatus,
     private readonly _version: LevelVersion,
     private readonly _timeLimit: TimeLimit | undefined,
-    private readonly _moveCount: MoveCount | undefined,
     private readonly _createdAt: Date,
     private _updatedAt: Date
   ) {
@@ -37,8 +35,7 @@ export class Level extends Entity<LevelId> {
     definition: LevelDefinition,
     difficulty: Difficulty,
     version: LevelVersion,
-    timeLimit?: TimeLimit,
-    moveCount?: MoveCount
+    timeLimit?: TimeLimit
   ): Level {
     const now = new Date();
     return new Level(
@@ -50,7 +47,6 @@ export class Level extends Entity<LevelId> {
       LevelStatus.DRAFT,
       version,
       timeLimit,
-      moveCount,
       now,
       now
     );
@@ -65,7 +61,6 @@ export class Level extends Entity<LevelId> {
     status: LevelStatus,
     version: LevelVersion,
     timeLimit: TimeLimit | undefined,
-    moveCount: MoveCount | undefined,
     createdAt: Date,
     updatedAt: Date
   ): Level {
@@ -78,7 +73,6 @@ export class Level extends Entity<LevelId> {
       status,
       version,
       timeLimit,
-      moveCount,
       createdAt,
       updatedAt
     );
@@ -125,7 +119,6 @@ export class Level extends Entity<LevelId> {
   get status(): LevelStatus { return this._status; }
   get version(): LevelVersion { return this._version; }
   get timeLimit(): TimeLimit | undefined { return this._timeLimit; }
-  get moveCount(): MoveCount | undefined { return this._moveCount; }
   get createdAt(): Date { return this._createdAt; }
   get updatedAt(): Date { return this._updatedAt; }
   get isDraft(): boolean { return this._status === LevelStatus.DRAFT; }
