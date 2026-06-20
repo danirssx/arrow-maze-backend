@@ -20,14 +20,14 @@ import { TransactionDecorator } from "../application/aspects/TransactionDecorato
 import { UseCaseLoggingDecorator } from "../application/aspects/UseCaseLoggingDecorator.js";
 import { BcryptPasswordHasher } from "../infrastructure/identity/BcryptPasswordHasher.js";
 import { JwtTokenService } from "../infrastructure/identity/JwtTokenService.js";
-import { PgUnitOfWork } from "../infrastructure/database/PgUnitOfWork.js";
-import { PgUserRepository } from "../infrastructure/identity/PgUserRepository.js";
-import { PgProgressRepository } from "../infrastructure/progress/PgProgressRepository.js";
-import { PgLeaderboardRepository } from "../infrastructure/leaderboard/PgLeaderboardRepository.js";
-import { PgLevelRepository } from "../infrastructure/level-catalog/PgLevelRepository.js";
+import { PrismaUnitOfWork } from "../infrastructure/database/PrismaUnitOfWork.js";
+import { PrismaUserRepository } from "../infrastructure/identity/PrismaUserRepository.js";
+import { PrismaProgressRepository } from "../infrastructure/progress/PrismaProgressRepository.js";
+import { PrismaLeaderboardRepository } from "../infrastructure/leaderboard/PrismaLeaderboardRepository.js";
+import { PrismaLevelRepository } from "../infrastructure/level-catalog/PrismaLevelRepository.js";
 import { LevelSolvabilityPolicy } from "../domain/level-catalog/LevelSolvabilityPolicy.js";
 import { InMemoryEventBus } from "../infrastructure/events/InMemoryEventBus.js";
-import { createPool } from "../infrastructure/database/PgPool.js";
+import { createPrismaClient } from "../infrastructure/database/PrismaClientProvider.js";
 import { ConsoleLogger } from "../infrastructure/logging/ConsoleLogger.js";
 import { loadEnvironment } from "./config/environment.js";
 import { createAuthMiddleware } from "./middleware/authMiddleware.js";
@@ -48,16 +48,16 @@ export function createApp() {
   const environment = loadEnvironment();
   const logger = new ConsoleLogger();
 
-  const pool = createPool(environment.databaseUrl, { ssl: environment.databaseSsl });
-  const userRepository = new PgUserRepository(pool);
+  const prisma = createPrismaClient(environment.databaseUrl, { ssl: environment.databaseSsl });
+  const userRepository = new PrismaUserRepository(prisma);
   const passwordHasher = new BcryptPasswordHasher();
   const tokenService = new JwtTokenService(environment.jwtSecret);
-  const unitOfWork = new PgUnitOfWork(pool);
+  const unitOfWork = new PrismaUnitOfWork(prisma);
   const eventBus = new InMemoryEventBus(logger);
 
-  const progressRepository = new PgProgressRepository(pool);
-  const leaderboardRepository = new PgLeaderboardRepository(pool);
-  const levelRepository = new PgLevelRepository(pool);
+  const progressRepository = new PrismaProgressRepository(prisma);
+  const leaderboardRepository = new PrismaLeaderboardRepository(prisma);
+  const levelRepository = new PrismaLevelRepository(prisma);
   const solvabilityPolicy = new LevelSolvabilityPolicy();
 
   const registerUseCase = new TransactionDecorator(

@@ -62,6 +62,7 @@ Reglas del pipeline (obligatorias):
 - `src/application` depends on domain and ports/interfaces, never concrete infrastructure or framework code.
 - `src/infrastructure` implements application ports and adapts external tools.
 - `src/framework` contains Express, routes, controllers, middleware, Swagger, environment configuration, and dependency wiring.
+- Database access uses Prisma ORM. The Prisma schema lives in `prisma/` (tracked by Prisma Migrate) and the generated client + `@prisma/adapter-pg` are used ONLY inside `src/infrastructure`. Never import `@prisma/client` from `src/domain` or `src/application`; those layers depend only on the repository/`UnitOfWork` ports. Transactions go through `PrismaUnitOfWork` + `prismaContext`.
 
 ## 2. Design Patterns
 
