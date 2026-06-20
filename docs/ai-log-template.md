@@ -16,11 +16,20 @@ Summarize the user prompt and any local guidelines read before implementation. D
 
 | Agent | Status | How it was used | Evidence |
 | --- | --- | --- | --- |
-| Spec Partner | Used / Referenced / Not used | Describe whether `.agents/spec-partner.md` produced/aligned a spec or was only referenced. | `specs/...`, Linear issue, or N/A |
-| Planner/Slicer | Used / Referenced / Not used | Describe whether `.agents/planner.md` created/sliced tickets or was only referenced. | `plan/...`, Linear issue, or N/A |
-| TDD Implementer | Used / Referenced / Not used | Describe test-first or test-guided implementation work. | Tests, commit, PR |
-| Judge | Used / Referenced / Not used | Describe review checklist or separate PR review. | PR comment, checklist, or N/A |
-| Mutation Tester | Used / Referenced / Not used | Describe mutation run and survivor report if applicable. | Mutation log or N/A |
+| Spec Partner (`.agents/spec-partner.md`) | Used / Referenced / Not used | Did it produce/align `specs/<feature>.spec.md` through debate, or was it only referenced? | `specs/...`, Linear issue, or N/A |
+| Planner / Gherkin Author (`.agents/planner.md`) | Used / Referenced / Not used | Did it distill the Gherkin `.feature` contract and slice tickets, or was it only referenced? | `specs/<feature>.feature`, `plan/...`, Linear issue, or N/A |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used / Referenced / Not used | Describe the Red-Green-Refactor cycles and the `@s → test` map. | Tests, commit, PR |
+| Judge (`.agents/judge.md`) | Used / Referenced / Not used | Describe scenario-coverage + quality verdict (APPROVED / CHANGES_REQUESTED). | `ai-log/<...>-judge.md`, PR comment, or N/A |
+| Mutation Tester (`.agents/mutation.md`) | Used / Referenced / Not used | Describe the mutation run, score, and survivors. | `ai-log/<...>-mutation.md` + score, or N/A |
+
+Use `Used` only when the role prompt was applied directly. Use `Referenced` when the prompt was read and its constraints guided the work in the same session (state the exact rule applied). Use `Not used` when the role did not apply (e.g. Mutation Tester until StrykerJS is configured).
+
+## Scenario Coverage (@s ↔ test)
+
+Map every Gherkin scenario from the approved `.feature` to the test that verifies it. Required for implementation tickets.
+
+- @s1 → `should_<expected>_when_<condition>`
+- @s2 → ...
 
 ## Result Obtained
 
