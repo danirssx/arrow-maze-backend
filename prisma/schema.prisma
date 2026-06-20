@@ -1,0 +1,102 @@
+// Prisma schema for Arrow Maze backend.
+//
+// Architecture note: this schema and the generated Prisma Client are an
+// INFRASTRUCTURE detail. Only `src/infrastructure` may import `@prisma/client`.
+// `src/domain` and `src/application` must never depend on the ORM.
+//
+// Models use camelCase fields mapped to the existing snake_case columns/tables
+// via `@map`/`@@map`, so the database layout is unchanged while the client API
+// stays idiomatic. `@db` types mirror the schema produced by the original SQL
+// migrations (now baselined under prisma/migrations).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @db.Uuid
+  email        String   @unique @db.VarChar(255)
+  username     String   @unique @db.VarChar(30)
+  passwordHash String   @map("password_hash")
+  role         String   @default("USER") @db.VarChar(10)
+  status       String   @default("ACTIVE") @db.VarChar(10)
+  createdAt    DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @map("updated_at") @db.Timestamptz(6)
+
+  @@map("users")
+}
+
+model Leaderboard {
+  id         String             @id @db.Uuid
+  levelId    String             @unique @map("level_id") @db.VarChar(255)
+  maxEntries Int                @default(10) @map("max_entries")
+  updatedAt  DateTime           @map("updated_at") @db.Timestamptz(6)
+  entries    LeaderboardEntry[]
+
+  @@map("leaderboards")
+}
+
+model LeaderboardEntry {
+  id               String      @id @db.Uuid
+  leaderboardId    String      @map("leaderboard_id") @db.Uuid
+  userId           String      @map("user_id") @db.Uuid
+  levelId          String      @map("level_id") @db.VarChar(255)
+  usernameSnapshot String      @map("username_snapshot") @db.VarChar(255)
+  score            Int
+  timeSeconds      Decimal     @map("time_seconds") @db.Decimal
+  movesCount       Int         @map("moves_count")
+  rank             Int?
+  submittedAt      DateTime    @map("submitted_at") @db.Timestamptz(6)
+  leaderboard      Leaderboard @relation(fields: [leaderboardId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([leaderboardId, userId])
+  @@index([leaderboardId], map: "idx_leaderboard_entries_leaderboard_id")
+  @@map("leaderboard_entries")
+}
+
+model PlayerProgress {
+  id              String           @id @db.Uuid
+  userId          String           @unique @map("user_id") @db.Uuid
+  version         Int              @default(0)
+  updatedAt       DateTime         @map("updated_at") @db.Timestamptz(6)
+  completedLevels CompletedLevel[]
+
+  @@map("player_progress")
+}
+
+model CompletedLevel {
+  id              String         @id @db.Uuid
+  progressId      String         @map("progress_id") @db.Uuid
+  levelId         String         @map("level_id") @db.VarChar(255)
+  bestScore       Int            @map("best_score")
+  bestTimeSeconds Decimal        @map("best_time_seconds") @db.Decimal
+  bestMovesCount  Int            @map("best_moves_count")
+  completedAt     DateTime       @map("completed_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @map("updated_at") @db.Timestamptz(6)
+  progress        PlayerProgress @relation(fields: [progressId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([progressId, levelId])
+  @@index([progressId], map: "idx_completed_levels_progress_id")
+  @@map("completed_levels")
+}
+
+model Level {
+  id               String   @id @db.Uuid
+  name             String   @db.VarChar(100)
+  description      String   @default("") @db.VarChar(500)
+  difficulty       String   @db.VarChar(10)
+  status           String   @default("DRAFT") @db.VarChar(10)
+  version          Int      @default(1)
+  arrows           Json     @default("[]")
+  attempts         Int      @default(5)
+  timeLimitSeconds Int?     @map("time_limit_seconds")
+  createdAt        DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status], map: "idx_levels_status")
+  @@map("levels")
+}

@@ -14,7 +14,12 @@ import { LevelId } from '../../domain/shared/LevelId.js';
 import { parseEnumFromDb } from '../../shared/parseEnum.js';
 import { InfrastructureError } from '../../shared/errors/InfrastructureError.js';
 
-export type LevelRow = {
+/**
+ * Shape of a `levels` row as returned by Prisma (camelCase fields mapped from
+ * the snake_case columns). `arrows` is the JSONB payload, typed `unknown` so the
+ * mapper validates it before trusting it.
+ */
+export type LevelRecord = {
   id: string;
   name: string;
   description: string;
@@ -23,9 +28,9 @@ export type LevelRow = {
   version: number;
   arrows: unknown;
   attempts: number | null;
-  time_limit_seconds: number | null;
-  created_at: Date;
-  updated_at: Date;
+  timeLimitSeconds: number | null;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 type ArrowRecord = {
@@ -35,35 +40,26 @@ type ArrowRecord = {
   direction: string;
 };
 
-export type CellRow = {
-  row: number;
-  col: number;
-  type: string;
-  direction: string | null;
-};
-
-export function rowToLevel(levelRow: LevelRow, _cellRows: CellRow[] = []): Level {
-  const arrows = parseArrowRecords(levelRow.arrows).map((arrow) =>
+export function recordToLevel(record: LevelRecord): Level {
+  const arrows = parseArrowRecords(record.arrows).map((arrow) =>
     ArrowSpec.create(
       arrow.id,
       arrow.color,
       arrow.path.map((position) => Position.create(position.row, position.col)),
-      parseEnumFromDb(Direction, arrow.direction, 'direction')
-    )
+      parseEnumFromDb(Direction, arrow.direction, 'direction'),
+    ),
   );
   return Level.reconstitute(
-    LevelId.create(levelRow.id),
-    LevelName.create(levelRow.name),
-    LevelDescription.create(levelRow.description),
-    LevelDefinition.create(arrows, levelRow.attempts ?? undefined),
-    parseEnumFromDb(Difficulty, levelRow.difficulty, 'difficulty'),
-    parseEnumFromDb(LevelStatus, levelRow.status, 'status'),
-    LevelVersion.create(levelRow.version),
-    levelRow.time_limit_seconds !== null
-      ? TimeLimit.create(levelRow.time_limit_seconds)
-      : undefined,
-    levelRow.created_at,
-    levelRow.updated_at,
+    LevelId.create(record.id),
+    LevelName.create(record.name),
+    LevelDescription.create(record.description),
+    LevelDefinition.create(arrows, record.attempts ?? undefined),
+    parseEnumFromDb(Difficulty, record.difficulty, 'difficulty'),
+    parseEnumFromDb(LevelStatus, record.status, 'status'),
+    LevelVersion.create(record.version),
+    record.timeLimitSeconds !== null ? TimeLimit.create(record.timeLimitSeconds) : undefined,
+    record.createdAt,
+    record.updatedAt,
   );
 }
 
@@ -96,11 +92,12 @@ function isArrowRecord(value: unknown): value is ArrowRecord {
     typeof record['color'] === 'string' &&
     typeof record['direction'] === 'string' &&
     Array.isArray(record['path']) &&
-    record['path'].every((pos) =>
-      typeof pos === 'object' &&
-      pos !== null &&
-      Number.isInteger((pos as Record<string, unknown>)['row']) &&
-      Number.isInteger((pos as Record<string, unknown>)['col'])
+    record['path'].every(
+      (pos) =>
+        typeof pos === 'object' &&
+        pos !== null &&
+        Number.isInteger((pos as Record<string, unknown>)['row']) &&
+        Number.isInteger((pos as Record<string, unknown>)['col']),
     )
   );
 }
