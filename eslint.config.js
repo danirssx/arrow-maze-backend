@@ -4,7 +4,7 @@ import importPlugin from "eslint-plugin-import";
 
 export default [
   {
-    ignores: ["dist/**", "coverage/**", "node_modules/**"]
+    ignores: ["dist/**", "coverage/**", "node_modules/**", "prisma/seed-data/**"]
   },
   {
     files: ["**/*.ts"],
