@@ -25,12 +25,13 @@ mutante que sobrevive es un agujero en la red.
 1. Lee `docs/mutation-testing.md` (umbral, alcance y reglas).
 2. Identifica los archivos de `src/` tocados por el ticket (mira el `ai-log/`
    y el diff del PR). El foco es `src/domain` y `src/application`.
-3. Ejecuta StrykerJS sobre esos archivos (mutate restringido al diff):
+3. Ejecuta StrykerJS sobre esos archivos (mutate restringido al diff). El
+   script ya inyecta `NODE_OPTIONS=--experimental-vm-modules` (ESM + ts-jest):
    ```bash
-   npx stryker run
+   npm run mutation -- --mutate "src/domain/<archivo>.ts,src/application/<archivo>.ts"
    ```
-   Si StrykerJS aún no está configurado en el repo, repórtalo como bloqueo:
-   no inventes scores.
+   El config vive en `stryker.conf.json` (break threshold 80). Si por algún
+   motivo la herramienta no corre, repórtalo como bloqueo: no inventes scores.
 4. **Umbral**: el mutation score de las líneas nuevas/tocadas DEBE ser ≥ el
    umbral de `docs/mutation-testing.md`.
 5. Por cada mutante **sobreviviente**, anota en
@@ -68,7 +69,7 @@ FAIL -> ai-log/<fecha>-<ticket>-mutation.md (score N%, K sobrevivientes)
 ```
 o
 ```
-blocked -> StrykerJS no configurado
+blocked -> <motivo> (p. ej. StrykerJS no corre en el entorno)
 ```
 
 ## Reglas duras

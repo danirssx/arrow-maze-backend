@@ -24,7 +24,7 @@ Minimum expected trace for implementation tickets:
 - Planner / Gherkin Author: `Referenced` if the `.feature` contract and tickets already exist; `Used` only if a new contract was distilled or new slices were generated.
 - TDD Implementer: `Used` for code tickets driven test-first; record the `@s → test` map and the Red-Green-Refactor cycles.
 - Judge: `Referenced` if the implementer self-audits before PR against the checklist; `Used` only if a separate review pass/comment (`-judge.md`) is produced.
-- Mutation Tester: `Not used` until StrykerJS is configured; then `Used` only when mutation testing runs and logs survivors with a score.
+- Mutation Tester: `Used` when production code in `domain`/`application` changed and `npm run mutation` ran (log the score and survivors); `Not used` for docs-only or config-only tickets.
 
 Copy `docs/ai-log-template.md` when creating new logs.
 

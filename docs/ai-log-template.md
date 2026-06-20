@@ -22,7 +22,7 @@ Summarize the user prompt and any local guidelines read before implementation. D
 | Judge (`.agents/judge.md`) | Used / Referenced / Not used | Describe scenario-coverage + quality verdict (APPROVED / CHANGES_REQUESTED). | `ai-log/<...>-judge.md`, PR comment, or N/A |
 | Mutation Tester (`.agents/mutation.md`) | Used / Referenced / Not used | Describe the mutation run, score, and survivors. | `ai-log/<...>-mutation.md` + score, or N/A |
 
-Use `Used` only when the role prompt was applied directly. Use `Referenced` when the prompt was read and its constraints guided the work in the same session (state the exact rule applied). Use `Not used` when the role did not apply (e.g. Mutation Tester until StrykerJS is configured).
+Use `Used` only when the role prompt was applied directly. Use `Referenced` when the prompt was read and its constraints guided the work in the same session (state the exact rule applied). Use `Not used` when the role did not apply (e.g. a docs-only ticket with no production code to mutate). StrykerJS is configured (`npm run mutation`), so Mutation Tester is `Used` whenever production code in `domain`/`application` changed.
 
 ## Scenario Coverage (@s ↔ test)
 
