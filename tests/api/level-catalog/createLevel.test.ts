@@ -44,7 +44,9 @@ class FakeGetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
 
 class FakeCreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevelOutput> {
   error: Error | null = null;
-  async execute(_input: CreateLevelInput): Promise<CreateLevelOutput> {
+  lastInput: CreateLevelInput | null = null;
+  async execute(input: CreateLevelInput): Promise<CreateLevelOutput> {
+    this.lastInput = input;
     if (this.error) throw this.error;
     return { levelId: '550e8400-e29b-41d4-a716-446655440099' };
   }
@@ -155,6 +157,29 @@ describe('POST /levels', () => {
     // Assert
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('BAD_REQUEST');
+  });
+
+  it('should_forward_board_shape_to_the_use_case_when_present', async () => {
+    // Arrange
+    const createLevelUseCase = new FakeCreateLevelUseCase();
+    const app = buildApp(createLevelUseCase);
+    const body = {
+      ...VALID_BODY,
+      boardShape: { type: 'CELL_MASK', cells: [{ row: 0, col: 0 }] },
+    };
+
+    // Act
+    const res = await request(app)
+      .post('/levels')
+      .set('Authorization', 'Bearer admin-token')
+      .send(body);
+
+    // Assert
+    expect(res.status).toBe(201);
+    expect(createLevelUseCase.lastInput?.boardShape).toEqual({
+      type: 'CELL_MASK',
+      cells: [{ row: 0, col: 0 }],
+    });
   });
 
   it('should_return_422_when_level_definition_is_not_solvable', async () => {

@@ -287,6 +287,50 @@ Compliance rules should live where agents cannot miss them: `AGENTS.md`, with a 
 
 ---
 
+# AI Usage Log: Agent Role Traceability Documentation
+
+## Task / Problem
+
+Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
+| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
+| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
+| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
+| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
+
+## Result Obtained
+
+Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
+
+## Verification
+
+- Documentation-only change; reviewed modified Markdown files.
+
+## Team Modifications Pending Human Review
+
+- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
+- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
+
+## Lessons / Limitations
+
+Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
+
+
+---
+
 # AI Log — AM-005 — Implement Identity application services
 
 **Date:** 2026-06-17
@@ -927,50 +971,6 @@ Typecheck clean.
 
 ---
 
-# AI Usage Log: Agent Role Traceability Documentation
-
-## Task / Problem
-
-Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
-| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
-| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
-| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
-| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
-
-## Result Obtained
-
-Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
-
-## Verification
-
-- Documentation-only change; reviewed modified Markdown files.
-
-## Team Modifications Pending Human Review
-
-- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
-- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
-
-## Lessons / Limitations
-
-Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
-
-
----
-
 # AI Log — Architecture Divergence Fixes
 
 **Date:** 2026-06-17  
@@ -1489,76 +1489,6 @@ User instructed to implement ticket AM-050 following the established workflow: r
 
 ---
 
-# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
-
-## Task / Problem
-
-Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
-
-- `ArrowSpec[]` level definitions.
-- Optional `attempts` with default 5.
-- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
-- OpenAPI and persistence updated for the new contract.
-
-## Tool and Model
-
-- Tool: Codex CLI coding agent.
-- Model: GPT-5 based Codex.
-
-## Prompt Used
-
-The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
-| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
-| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
-| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
-| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
-
-## Result Obtained
-
-- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
-- Replaced `LevelDefinition` with `{ arrows, attempts }`.
-- Replaced solvability logic with blocking-graph DAG detection.
-- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
-- Updated create/update/get level use cases and controller request handling.
-- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
-- Added migration `005_refactor_levels_to_arrow_specs.sql`.
-- Rewrote seed levels as Arrow Untangle examples.
-- Updated Swagger schemas and examples.
-- Rewrote Level Catalog tests for the new model.
-
-## Validation
-
-```sh
-npm run verify
-```
-
-Result: passed.
-
-- Lint: passed.
-- Typecheck: passed.
-- Test coverage: passed, 58 suites / 310 tests.
-- Build: passed.
-
-## Team Modifications Pending Human Review
-
-- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
-- Review production DB migration order before applying to an existing database.
-- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
-
-## Lessons / Limitations
-
-- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
-- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
-
-
----
-
 # AI Log — fix: add runtime enum guards via parseEnumFromInput / parseEnumFromDb
 
 **Date:** 2026-06-18
@@ -1984,6 +1914,477 @@ Continuation of critical bug fix session. User granted one-time merge permission
 ## Lessons / limitations
 
 - A missing `DomainEventBus` implementation is a silent runtime failure: TypeScript compiles fine, but any use case that calls `eventBus.publishAll()` would throw at startup when the dependency is injected. Always wire concrete infrastructure before registering routes.
+
+
+---
+
+# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
+
+## Task / Problem
+
+Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
+
+- `ArrowSpec[]` level definitions.
+- Optional `attempts` with default 5.
+- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
+- OpenAPI and persistence updated for the new contract.
+
+## Tool and Model
+
+- Tool: Codex CLI coding agent.
+- Model: GPT-5 based Codex.
+
+## Prompt Used
+
+The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
+| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
+| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
+| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
+| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
+
+## Result Obtained
+
+- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
+- Replaced `LevelDefinition` with `{ arrows, attempts }`.
+- Replaced solvability logic with blocking-graph DAG detection.
+- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
+- Updated create/update/get level use cases and controller request handling.
+- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
+- Added migration `005_refactor_levels_to_arrow_specs.sql`.
+- Rewrote seed levels as Arrow Untangle examples.
+- Updated Swagger schemas and examples.
+- Rewrote Level Catalog tests for the new model.
+
+## Validation
+
+```sh
+npm run verify
+```
+
+Result: passed.
+
+- Lint: passed.
+- Typecheck: passed.
+- Test coverage: passed, 58 suites / 310 tests.
+- Build: passed.
+
+## Team Modifications Pending Human Review
+
+- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
+- Review production DB migration order before applying to an existing database.
+- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
+
+## Lessons / Limitations
+
+- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
+- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
+
+
+---
+
+# AI Log — MAZ-141 — Backend setup and level contract integration
+
+## Ticket
+
+- Linear: `MAZ-141`
+- Branch: `fix/backend-integration-setup-MAZ-141`
+- Worktree: `worktrees/am-MAZ-141-backend`
+
+## Agent Roles Used
+
+| Role | Status | Notes |
+| --- | --- | --- |
+| Spec Partner | Referenced | Used backend-as-source-of-truth requirement to expose level metadata needed by mobile. |
+| Planner/Slicer | Referenced | Grouped DB setup and level contract changes under the integration ticket. |
+| TDD Implementer | Used | Added DB setup script and extended level DTO outputs with tests. |
+| Judge | Referenced | Ran typecheck, lint, OpenAPI export, and focused backend tests. |
+| Mutation | Not used | Mutation testing was out of scope for this integration pass. |
+
+## Summary
+
+- Added `scripts/run-sql-files.mjs`.
+- Added `db:migrate`, `db:seed`, and `db:setup` npm scripts.
+- Updated README and release docs so migration `005_refactor_levels_to_arrow_specs.sql` runs before seeds.
+- Extended `/levels` summaries with `arrowCount`, `attempts`, and optional `timeLimitSeconds`.
+- Extended `/levels/:id` detail with optional `timeLimitSeconds`.
+- Hardened level migrations so old maze columns (`board_rows`, `board_cols`, `move_count`) are removed and ArrowSpec columns are enforced.
+- Regenerated the level seed without `move_count`.
+- Updated Swagger source and regenerated `docs/openapi.json`.
+
+## Validation
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run export-openapi`
+- `npm test -- --runInBand tests/api/level-catalog/getLevels.test.ts tests/api/level-catalog/getLevel.test.ts tests/application/level-catalog/GetLevelsUseCase.test.ts tests/application/level-catalog/GetLevelUseCase.test.ts`
+- `npm run verify` - green, 58 suites / 310 tests
+- Local DB validation - green: 15 published Arrow Untangle levels, ArrowSpec path invariants, head direction rule, and DAG solvability.
+- Temporary backend on `localhost:3001` - `/health`, `/levels`, and `/levels/:id` returned 200 against local Postgres.
+
+## Notes
+
+- `npm run export-openapi` and backend API tests needed elevated execution because sandboxing blocked local IPC/listener creation.
+- Local Postgres was initially blocked by another container on `5432`; after that container was stopped, the Arrow Maze DB service was recreated/reconnected and migrations/seeds applied.
+- Validation used a temporary ignored `node_modules` symlink to the main backend worktree, then removed it.
+
+
+---
+
+# AI Usage Log: MAZ-143 Migrate database queries to a Prisma ORM
+
+## Task / Problem
+
+MAZ-143 ("Buscar migrar consultas DB a un ORM", repo `arrow-maze-backend`): replace
+all hand-written `pg` SQL in the backend with Prisma ORM, without breaking Clean
+Architecture. The agreed scope (Option B) is a full Prisma adoption: schema +
+generated client for runtime queries, Prisma Migrate for the schema, and a
+Prisma-based seed — so that only the ORM talks to the database. Prisma must remain
+an infrastructure concern; `src/domain` and `src/application` must not import it.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8.
+
+## Prompt Used
+
+User asked (in Spanish) to implement MAZ-143 by migrating every backend query to
+Prisma, allowing restructuring as long as Clean Architecture is preserved, and to
+follow the full ticket workflow. Local guidelines read before coding: `AGENTS.md`
+(both repos), root `MEMORY.md`, `Linear_MCP_Guideline.md`, `ArrowMaze_Linear_Tickets_Plan.md`
+(Definition of Done: "application no importa ORM"), and the existing `pg` infra
+(`PgPool`, `PgUnitOfWork`, `transactionContext`, `Pg*Repository`, `LevelMapper`).
+The execution plan was posted to the Linear ticket description before implementation.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Read `.agents/spec-partner.md` constraints and confirmed scope (Option B vs A) and the "ORM only in infrastructure" invariant with the user before coding. | Linear MAZ-143 description (execution plan) |
+| Planner/Slicer | Referenced | Followed `.agents/planner.md` by slicing the work into setup → runtime layer → migrate/seed → tests → verify/docs, tracked as tasks. | This log; commit history |
+| TDD Implementer | Used | Rewrote the infrastructure adapter tests to mock the Prisma client (AAA, `should_..._when_...`) and kept them green alongside the new adapters; validated runtime end-to-end against a real Postgres. | `tests/infrastructure/**`, smoke + fresh-DB runs |
+| Judge | Referenced | Applied `.agents/judge.md` checklist (architecture boundaries, ports unchanged, no ORM in domain/application, error wrapping preserved) while reviewing the diff. | `npm run lint` (architecture guard), this log |
+| Mutation Tester | Not used | No mutation run for this refactor. | N/A |
+
+## Result Obtained
+
+Runtime data access (infrastructure only):
+
+- `prisma/schema.prisma` — models mapped to the existing tables/columns via
+  `@@map`/`@map`; `@db` types mirror the live schema (introspected, then cleaned).
+- `prisma.config.ts` — Prisma 7 config (datasource URL from env, migrations path,
+  `prisma db seed` command).
+- `src/infrastructure/database/PrismaClientProvider.ts` (replaces `PgPool`) — builds
+  `PrismaClient` over `@prisma/adapter-pg` (`pg` driver adapter) with the same SSL
+  behaviour as before.
+- `src/infrastructure/database/prismaContext.ts` (replaces `transactionContext`) —
+  `AsyncLocalStorage<Prisma.TransactionClient>` with `getClient` / `withTransaction`.
+- `src/infrastructure/database/PrismaUnitOfWork.ts` (replaces `PgUnitOfWork`) —
+  implements the unchanged `UnitOfWork` port via `prisma.$transaction`.
+- `PrismaUserRepository`, `PrismaLeaderboardRepository`, `PrismaLevelRepository`,
+  `PrismaProgressRepository` — rewritten with Prisma (`upsert`, `deleteMany` +
+  `createMany` for atomic saves), same ports, same `InfrastructureError` wrapping.
+  `LevelMapper` updated to a camelCase `LevelRecord` + `recordToLevel` (removed dead
+  `CellRow`/`level_cells` mapping). `src/framework/app.ts` wiring updated.
+- Deleted: `PgPool`, `PgUnitOfWork`, `transactionContext`, the four `Pg*Repository`
+  files, the old SQL `migrations/`+`seeds/`, and `scripts/run-sql-files.mjs`.
+
+Schema & seed (Prisma Migrate + Prisma seed):
+
+- `prisma/migrations/0_init` — baseline migration equal to the prior SQL schema,
+  plus the two CHECK constraints Prisma does not model; baselined on the existing DB
+  with `migrate resolve --applied`.
+- `prisma/seed.ts` + generated `prisma/seed-data/levels.ts` (from the adapted
+  `scripts/generate-level-seed.ts`, which now emits a TS data module instead of SQL);
+  idempotent upserts for published levels and demo users/progress/leaderboards.
+- `package.json`: `db:generate/migrate/migrate:dev/seed/setup/studio` now use the
+  Prisma CLI; added `postinstall: prisma generate`. `Dockerfile` updated to generate
+  the client (schema copied before `npm ci`) and carry `node_modules/.prisma` into the
+  runtime stage. ESLint ignores the generated `prisma/seed-data/**`.
+
+Tests: rewrote the six infra adapter tests for Prisma and added `prismaContext`
+coverage; domain/application/API tests untouched.
+
+## Verification
+
+- `npm run verify` (lint + typecheck + `test:coverage` + build) — green; 316 tests, 59 suites.
+- Real-DB smoke (local Postgres): `findAllPublished` (15), `findByEmail`/`existsByEmail`,
+  leaderboard with Decimal `time_seconds` + rank ordering, progress, and a repository
+  call joining a `PrismaUnitOfWork` transaction — all OK.
+- Fresh-DB path on a throwaway database: `prisma migrate deploy` created all 6 tables
+  and both CHECK constraints; `prisma db seed` loaded 15 levels and 9 leaderboard entries.
+
+## Team Modifications Pending Human Review
+
+- Adopted Prisma 7 with the classic `prisma-client-js` generator (client in
+  `node_modules`, gitignored) over the new generator, to avoid generated TS under the
+  strict `tsconfig`. Worth a review if the team prefers the new `prisma-client` output.
+- The orphaned `level_cells` table (not in the SQL migrations, unused by code) was
+  intentionally left out of the Prisma schema. Fresh databases will not have it; the
+  pre-existing local/cloud copies keep it as harmless dead data until dropped.
+- Migration/seed workflow changed (`db:*` scripts, Dockerfile, README/RELEASE docs).
+- Domain/application tests were not modified and require the usual human review.
+
+## Lessons / Limitations
+
+- Prisma 7 moves the datasource URL out of `schema.prisma` into `prisma.config.ts`
+  and connects via driver adapters; `prisma generate` runs offline and must tolerate a
+  missing `DATABASE_URL` (used `process.env.DATABASE_URL`) so the CI `postinstall` hook
+  does not fail. CI builds run `npm ci` (npm 10, scripts enabled); local npm 11 blocks
+  install scripts, so run `npm run db:generate` once after install.
+- Baselining via `migrate diff` + `migrate resolve --applied` keeps existing data while
+  switching to Prisma Migrate.
+- ESLint `consistent-type-imports` flags `import { Prisma }` when only used for types
+  (`Prisma.Decimal`, `Prisma.InputJsonValue`, `Prisma.TransactionClient`).
+
+
+---
+
+# AI Usage Log: MAZ-148 Support shaped Arrow Untangle level contract + persistence (backend)
+
+## Task / Problem
+
+Implement Phase-1 / MVP of the Abstract Shaped Boards plan in the backend under
+**Option A** (the product owner's decision): `boardShape` is an optional `CELL_MASK`
+that is a visual + authoring/placement mask, **not** a physical wall. Extraction
+physics (`LevelSolvabilityPolicy` blocking-graph DAG) stay unchanged. Persist the
+shape, expose it through the API, and reject invalid shapes with controlled errors.
+Scope: domain `BoardShape` value object + `Level` arrow-containment invariant,
+application create-input + read-DTO, Prisma `levels.board_shape` JSONB migration +
+mapper + repository, and OpenAPI. Covers Gherkin `@s4`, `@s2b`, `@s3a–e`, `@s9`.
+AI/Gemini and image upload are deferred to Phase 2 (MAZ-153).
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8.
+
+## Prompt Used
+
+The user asked to implement the whole `docs/abstract-shaped-boards-plan.md` following
+both repos' `AGENTS.md`, root `MEMORY.md`, `Linear_MCP_Guideline.md`, a new worktree
+per ticket, AI logging + `compile-ai-usage.sh`, MEMORY/AGENTS review, and
+commit/push/PR/Linear — choosing **Option A** and deferring the Gemini/AI + image
+upload work to a separate Phase-2 ticket. The Gherkin contract was approved at the
+single human gate before any production code was written.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | The approved plan doc + Option A decision were distilled into a repo spec; no separate adversarial spec-partner session was run. | `specs/abstract-shaped-boards.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Used | Distilled the executable `.feature` (`@s1..@s10`, `@s8` deferred) and sliced the work into MAZ-148..153 in Linear Backlog with blocking relations + labels. | `specs/abstract-shaped-boards.feature`, MAZ-148..153 |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red→Green per unit: `BoardShape` VO, `Level` containment invariant, create-input mapping + read DTO, `LevelMapper` (de)serialize, repository persist, controller forward, OpenAPI. | tests below + `@s → test` map |
+| Judge (`.agents/judge.md`) | Referenced | Pre-PR self-audit: confirmed scenario coverage and full `npm run verify` green; Clean Architecture boundaries respected (Prisma only in infrastructure). | `npm run verify` |
+| Mutation Tester (`.agents/mutation.md`) | Used | Scoped StrykerJS on the new `BoardShape` VO: **91.18% ≥ 80** break threshold. Surviving mutants are error-message `StringLiteral`s only (tests assert error *type*, not text). | `npm run mutation -- --mutate src/domain/level-catalog/value-objects/BoardShape.ts` |
+
+## Scenario Coverage (@s ↔ test)
+
+- @s4 (persist + GET returns shape) →
+  `GetLevelUseCase.test should_include_board_shape_in_definition_when_level_has_a_shape`,
+  `PrismaLevelRepository.test should_upsert_board_shape_payload_when_level_has_a_shape`,
+  `LevelMapper.test should_reconstitute_board_shape_when_record_has_one`.
+- @s2b (backward compat, null shape) →
+  `GetLevelUseCase.test should_omit_board_shape_when_level_has_none`,
+  `LevelMapper.test should_reconstitute_without_board_shape_when_record_has_none`.
+- @s3a (duplicate cells) → `BoardShape.test should_throw_when_cells_contain_duplicates`,
+  `CreateLevelUseCase.test should_throw_when_board_shape_has_duplicate_cells`.
+- @s3b (arrow outside mask) →
+  `Level.test should_throw_when_an_arrow_cell_lies_outside_the_board_shape`,
+  `CreateLevelUseCase.test should_throw_when_an_arrow_cell_lies_outside_the_board_shape`.
+- @s3c (unsupported type) → `BoardShape.test should_throw_when_type_is_unsupported`,
+  `CreateLevelUseCase.test should_throw_when_board_shape_type_is_unsupported`.
+- @s3d (oversize >600) → `BoardShape.test should_throw_when_cells_exceed_the_maximum`
+  (+ boundary `should_allow_exactly_the_maximum_number_of_cells`).
+- @s3e (present-but-empty) → `BoardShape.test should_throw_when_cells_are_empty`.
+- @s9 (OpenAPI documents shape) → `openApiSpec.test` (BoardShapeInput, CreateLevelRequest, LevelDefinitionDto).
+
+(`@s7`, `@s7b`, `@s10` belong to MAZ-151/MAZ-152; `@s8` is the deferred MAZ-153.)
+
+## Result Obtained
+
+- **Domain**: `value-objects/BoardShape.ts` — immutable `CELL_MASK` value object
+  (`create(type, cells)` validates type; `cellMask` enforces non-empty, no duplicates,
+  `BOARD_SHAPE_MAX_CELLS = 600`; `contains` / `containsAll`; connectivity intentionally
+  not enforced). `Level` aggregate gains an optional `boardShape` (trailing param on
+  `draft`/`reconstitute`, single constructor invariant `assertArrowsWithinShape`: every
+  arrow path cell must be inside the mask) + `boardShape` getter. `LevelSolvabilityPolicy`
+  untouched.
+- **Application**: `CreateLevelInput.boardShape?` + `mapBoardShapeInput`; `LevelDefinitionDto`
+  gains optional `boardShape` (`BoardShapeDto`), populated by `GetLevelUseCase`.
+- **Infrastructure**: Prisma schema `boardShape Json? @map("board_shape")`; hand-authored
+  migration `20260621000000_add_level_board_shape` (nullable JSONB + CHECK
+  `jsonb_typeof = 'object'`); `LevelMapper` `parseBoardShape` (defensive, throws
+  `InfrastructureError` on corrupt JSONB) + `boardShapeToRecord`; `PrismaLevelRepository.save`
+  persists the shape (or `Prisma.DbNull`). `prisma generate` run for the client types.
+- **Framework**: controller forwards optional `boardShape`; OpenAPI adds `BoardShapeInput`
+  and references it from `CreateLevelRequest` + `LevelDefinitionDto`.
+
+## Verification
+
+- `npm run verify` → **61 suites / 345 tests green**, lint + typecheck + build clean.
+- `npm run mutation -- --mutate src/domain/.../BoardShape.ts` → **91.18%** (≥ 80 break).
+
+## Team Modifications Pending Human Review
+
+- **DB migration not applied to a live DB from this worktree** (hand-authored to avoid
+  mutating the shared dev database). Run `npm run db:migrate` (`prisma migrate deploy`)
+  before this lands in an environment; the existing `0_init` baseline orders before it.
+- `prisma generate` updated the shared (symlinked) client to include `boardShape`.
+- Connectivity of the mask is **not enforced** for MVP (islands allowed) and victory-time
+  rendering is a client decision (MAZ-150) — both per the approved gate defaults.
+- `AGENTS.md` needed no change: `BoardShape` is a value object (approved pattern
+  category, gate-approved), Prisma stays in infrastructure, no new top-level folder.
+
+## Lessons / Limitations
+
+`exactOptionalPropertyTypes: true` rejects `x as CreateLevelInput['boardShape']` (which
+includes `undefined`) inside a conditional spread; cast to `NonNullable<...>` instead.
+For a nullable Prisma `Json?` column, write DB NULL with `Prisma.DbNull` (a runtime value,
+so import `Prisma` as a value, not type-only). Scoping Stryker with `--mutate <file>` keeps
+mutation fast and focused on the new logic instead of pre-existing untested branches.
+
+
+---
+
+# AI Usage Log: MAZ-152 Deterministic RandomLevelStrategy for shaped boards (backend)
+
+## Task / Problem
+
+Add a deterministic generator that produces playable Arrow Untangle levels from
+constraints, placing arrows inside a given `BoardShape` mask (Option A — the mask is a
+placement mask, not a wall) and validating every candidate through the SAME rules as
+authored levels (ArrowSpec invariants, board-shape containment, `LevelSolvabilityPolicy`
+DAG). Same seed ⇒ same level; bounded retries ⇒ a controlled generation failure rather
+than an invalid/unsolvable level or a hang. Covers Gherkin `@s7`, `@s7b`. **Stacked on
+MAZ-148** (the `BoardShape` value object); backend-first because solvability + the
+catalog live here.
+# AI Usage Log: MAZ-151 Seed authored abstract shaped levels (backend)
+
+## Task / Problem
+
+Add canonical authored abstract shaped levels (Option A) to the catalog and seed them.
+Authored level JSON lives under `prisma/seed-data/level-json/`; a loader validates every
+file through the domain reconstitution path and the solvability policy before the seed
+upserts it (including `boardShape`). Covers Gherkin `@s10`. **Stacked on MAZ-148** (the
+`BoardShape` value object + mapper + `levels.board_shape` column).
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8.
+
+## Prompt Used
+
+Implement the whole `docs/abstract-shaped-boards-plan.md` under Option A (AI/image
+deferred), following both repos' `AGENTS.md`, root `MEMORY.md`, `Linear_MCP_Guideline.md`,
+a worktree per ticket, AI logging + `compile-ai-usage.sh`, and commit/push/PR/Linear.
+Gherkin contract approved at the single human gate.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the approved spec; no separate session. | `specs/abstract-shaped-boards.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Implemented the generation slice of the approved `.feature` (`@s7`, `@s7b`). | `specs/abstract-shaped-boards.feature`, MAZ-152 |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red→Green: seeded generator producing in-mask straight arrows, solver-rejection retries, controlled failure; then strengthened tests (golden layout, palette cycle, exact reasons) to bite. | `tests/domain/level-catalog/RandomLevelStrategy.test.ts` |
+| Judge (`.agents/judge.md`) | Referenced | Pre-PR self-audit: `npm run verify` green; pure domain service (no infra/framework deps); reuses `LevelSolvabilityPolicy` so generated == authored validation. | `npm run verify` |
+| Mutation Tester (`.agents/mutation.md`) | Used | Scoped StrykerJS on `RandomLevelStrategy.ts`: **88.03% ≥ 80** break threshold. Survivors are equivalent/defensive mutants (the redundant post-`growPath` containment re-check; off-by-one retry bounds that still find a solution). | `npm run mutation -- --mutate src/domain/level-catalog/RandomLevelStrategy.ts` |
+
+## Scenario Coverage (@s ↔ test)
+
+- @s7 (generated level passes the same validation + determinism) →
+  `RandomLevelStrategy.test should_generate_a_solvable_level_with_arrows_inside_the_mask`,
+  `should_produce_a_known_layout_for_a_fixed_seed`,
+  `should_be_deterministic_for_the_same_seed`,
+  `should_cycle_arrow_colors_through_the_palette`.
+- @s7b (bounded generation failure, never invalid) →
+  `should_return_a_controlled_failure_when_it_cannot_satisfy_the_options`,
+  `should_reject_a_non_positive_arrow_count`,
+  `should_reject_a_non_positive_max_arrow_length`.
+
+## Result Obtained
+
+- `src/domain/level-catalog/RandomLevelStrategy.ts`: a pure domain service.
+  `generate(options)` (seed, difficulty, `BoardShape`, arrowCount, maxArrowLength,
+  attempts, optional maxGenerationAttempts) returns a discriminated
+  `RandomLevelResult` (`{ ok: true, definition, boardShape, difficulty }` or
+  `{ ok: false, reason }`). A seeded PRNG (FNV-1a hash + mulberry32) + fixed iteration
+  order make it deterministic. Each attempt places `arrowCount` straight, in-mask,
+  non-overlapping snakes (head points forward ⇒ always-valid `ArrowSpec`); the candidate
+  is accepted only if `LevelSolvabilityPolicy.isSolvable` holds, else a new attempt runs.
+  After `maxGenerationAttempts` (default 200) it returns a controlled failure.
+
+## Verification
+
+- `npm run verify` → **62 suites / 350 tests** green (lint + typecheck + build).
+- `npm run mutation -- --mutate RandomLevelStrategy.ts` → **88.03%** (≥ 80 break).
+
+## Team Modifications Pending Human Review
+
+- I chose **solver-rejection** (generate → validate with the policy → retry) over the
+  plan's "reverse-dependency construction" preferred algorithm: it is simpler,
+  deterministic, and reuses the existing policy so a generated level can never pass a
+  check an authored level would fail. The plan explicitly lists both options.
+- Not yet wired into a use case / endpoint or daily-challenge persistence — that is a
+  follow-up (intentionally out of this slice's scope).
+- `AGENTS.md` unchanged: `RandomLevelStrategy` was approved at the gate (`@s7`), is a pure
+  domain service (no new top-level folder, no infra/framework import).
+
+## Lessons / Limitations
+
+Generators are hard to mutation-test from behavioural assertions alone — "produces a
+valid level" lets PRNG/placement mutants survive. Pinning the exact layout for a fixed
+seed (a golden test) plus asserting the palette cycle and the exact failure reasons is
+what makes the tests bite (67% → 88%). Straight, forward-pointing arrows are always valid
+`ArrowSpec`s, so generation only has to worry about mask-fit, overlap, and solvability.
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Implemented the seed slice of the approved `.feature` (`@s10`). | `specs/abstract-shaped-boards.feature`, MAZ-151 |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Authored the shaped level JSON + loader + tests; the loader's validation core (`recordToLevel`, `BoardShape`, solvability) was TDD'd in MAZ-148 and is exercised here against real authored data. | `tests/seed/authoredLevels.test.ts` |
+| Judge (`.agents/judge.md`) | Referenced | Pre-PR self-audit: `npm run verify` green; the seed upserts through the same Prisma mappings as the app. | `npm run verify` |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No `src/domain` or `src/application` production code changed (new code is authored data + a `prisma/seed-data` loader, outside Stryker's mutate globs); the reused validation logic was mutation-tested in MAZ-148. | N/A |
+
+## Scenario Coverage (@s ↔ test)
+
+- @s10 (authored abstract level validated + published) →
+  `authoredLevels.test should_load_and_validate_the_authored_shaped_levels`,
+  `should_publish_only_levels_whose_arrows_fit_the_mask`,
+  `should_throw_when_an_authored_level_is_invalid`.
+
+## Result Obtained
+
+- `prisma/seed-data/level-json/cross-beacon.json`: an abstract plus/cross-shaped level
+  (9-cell `CELL_MASK`) with 5 arrows that form an acyclic blocking DAG (provably solvable).
+- `prisma/seed-data/authoredLevels.ts`: `loadAuthoredLevels(dir?)` reads each `*.json`,
+  reconstitutes it through `recordToLevel` (validating ArrowSpec invariants, the mask, and
+  arrow-containment) and rejects it unless `LevelSolvabilityPolicy.isSolvable` holds, then
+  returns a seed-ready record (status `PUBLISHED`).
+- `prisma/seed.ts`: upserts the authored levels (idempotent) including `boardShape`
+  (`Prisma.DbNull` when absent), so `GET /levels` lists the shaped level.
+
+## Verification
+
+- `npm run verify` → **62 suites / 349 tests** green (lint + typecheck + build).
+- The authored JSON passes the same domain validation as API-created levels.
+
+## Team Modifications Pending Human Review
+
+- Seed must run against a DB (`npm run db:setup` / `npm run db:seed`) to publish the level;
+  not exercised against a live DB here (no DB mutated from the worktree).
+- `prisma/**` is outside `tsconfig` `include` (`src/**` only), so `tsc` does not typecheck
+  `seed.ts`; the loader is typechecked via its Jest test and `seed.ts` mirrors the
+  MAZ-148-tested repository `Prisma.DbNull` pattern. (Pre-existing for `seed.ts`.)
+- `AGENTS.md` unchanged (no new folder/pattern; authored JSON is data, the loader reuses
+  domain + mapper).
+
+## Lessons / Limitations
+
+Reusing `recordToLevel` + `LevelSolvabilityPolicy` as the authored-JSON validation gate
+means the seed cannot publish a level the API itself would reject — one validation path,
+no drift. An "all UP/RIGHT arrows" layout keeps the blocking graph acyclic, which is the
+simplest way to author a provably solvable shaped puzzle.
 
 
 <!-- AI_LOG_ENTRIES_END -->

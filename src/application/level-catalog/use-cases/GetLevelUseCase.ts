@@ -18,6 +18,11 @@ export type LevelDto = {
   updatedAt: Date;
 };
 
+export type BoardShapeDto = {
+  type: string;
+  cells: { row: number; col: number }[];
+};
+
 export type LevelDefinitionDto = {
   attempts: number;
   arrows: {
@@ -26,6 +31,7 @@ export type LevelDefinitionDto = {
     path: { row: number; col: number }[];
     direction: string;
   }[];
+  boardShape?: BoardShapeDto;
 };
 
 export type GetLevelOutput = { level: LevelDto };
@@ -54,6 +60,17 @@ export class GetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
             path: arrow.path.map((position) => ({ row: position.row, col: position.col })),
             direction: arrow.direction,
           })),
+          ...(level.boardShape !== undefined
+            ? {
+                boardShape: {
+                  type: level.boardShape.type,
+                  cells: level.boardShape.cells.map((cell) => ({
+                    row: cell.row,
+                    col: cell.col,
+                  })),
+                },
+              }
+            : {}),
         },
         ...(level.timeLimit !== undefined ? { timeLimitSeconds: level.timeLimit.value } : {}),
         createdAt: level.createdAt,

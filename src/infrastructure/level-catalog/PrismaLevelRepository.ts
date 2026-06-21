@@ -1,12 +1,12 @@
 // Pattern: Repository, Adapter
-import type { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, type PrismaClient } from '@prisma/client';
 import type { LevelRepository } from '../../application/level-catalog/ports/LevelRepository.js';
 import type { Level } from '../../domain/level-catalog/Level.js';
 import type { LevelId } from '../../domain/shared/LevelId.js';
 import { LevelStatus } from '../../domain/level-catalog/enums/LevelStatus.js';
 import { InfrastructureError } from '../../shared/errors/InfrastructureError.js';
 import { getClient } from '../database/prismaContext.js';
-import { arrowsToRecord, recordToLevel } from './LevelMapper.js';
+import { arrowsToRecord, boardShapeToRecord, recordToLevel } from './LevelMapper.js';
 
 export class PrismaLevelRepository implements LevelRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -35,6 +35,11 @@ export class PrismaLevelRepository implements LevelRepository {
   async save(level: Level): Promise<void> {
     try {
       const arrows = arrowsToRecord(level) as unknown as Prisma.InputJsonValue;
+      const shapeRecord = boardShapeToRecord(level);
+      const boardShape: Prisma.InputJsonValue | typeof Prisma.DbNull =
+        shapeRecord === null
+          ? Prisma.DbNull
+          : (shapeRecord as unknown as Prisma.InputJsonValue);
       await getClient(this.prisma).level.upsert({
         where: { id: level.id.value },
         create: {
@@ -47,6 +52,7 @@ export class PrismaLevelRepository implements LevelRepository {
           arrows,
           attempts: level.definition.attempts,
           timeLimitSeconds: level.timeLimit?.value ?? null,
+          boardShape,
           createdAt: level.createdAt,
           updatedAt: level.updatedAt,
         },
@@ -59,6 +65,7 @@ export class PrismaLevelRepository implements LevelRepository {
           arrows,
           attempts: level.definition.attempts,
           timeLimitSeconds: level.timeLimit?.value ?? null,
+          boardShape,
           updatedAt: level.updatedAt,
         },
       });
