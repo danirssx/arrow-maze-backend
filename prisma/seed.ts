@@ -9,9 +9,10 @@
  * The seed is idempotent: every write is an upsert keyed by id (or by the
  * relevant unique constraint), so re-running it is safe.
  */
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { createPrismaClient } from "../src/infrastructure/database/PrismaClientProvider.js";
 import { SEED_LEVELS } from "./seed-data/levels.js";
+import { loadAuthoredLevels } from "./seed-data/authoredLevels.js";
 
 function resolveSsl(): boolean {
   if (process.env.DATABASE_SSL !== undefined) {
@@ -101,6 +102,35 @@ async function main(): Promise<void> {
       });
     }
     process.stdout.write(`Seeded ${SEED_LEVELS.length} published levels\n`);
+
+    // Authored abstract shaped levels (Option A) — validated through the domain
+    // path by the loader before they are published here.
+    const authoredLevels = loadAuthoredLevels();
+    for (const level of authoredLevels) {
+      const arrows = level.arrows as unknown as Prisma.InputJsonValue;
+      const boardShape: Prisma.InputJsonValue | typeof Prisma.DbNull =
+        level.boardShape == null
+          ? Prisma.DbNull
+          : (level.boardShape as unknown as Prisma.InputJsonValue);
+      const data = {
+        name: level.name,
+        description: level.description,
+        difficulty: level.difficulty,
+        status: level.status,
+        version: level.version,
+        arrows,
+        attempts: level.attempts,
+        timeLimitSeconds: level.timeLimitSeconds,
+        boardShape,
+        updatedAt: now,
+      };
+      await prisma.level.upsert({
+        where: { id: level.id },
+        create: { id: level.id, createdAt: now, ...data },
+        update: data,
+      });
+    }
+    process.stdout.write(`Seeded ${authoredLevels.length} authored shaped levels\n`);
 
     for (const user of DEMO_USERS) {
       const data = {
