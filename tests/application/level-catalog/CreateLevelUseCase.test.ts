@@ -96,4 +96,93 @@ describe("CreateLevelUseCase", () => {
       })
     ).rejects.toThrow(ValidationError);
   });
+
+  describe("board shape (Option A)", () => {
+    const SHAPED_INPUT = {
+      name: "Shaped Level",
+      description: "An abstract shaped level",
+      difficulty: "EASY",
+      attempts: 4,
+      arrows: [
+        {
+          id: "a",
+          color: "#5262FB",
+          path: [
+            { row: 0, col: 0 },
+            { row: 0, col: 1 },
+          ],
+          direction: "RIGHT",
+        },
+      ],
+      boardShape: {
+        type: "CELL_MASK",
+        cells: [
+          { row: 0, col: 0 },
+          { row: 0, col: 1 },
+          { row: 1, col: 0 },
+        ],
+      },
+    };
+
+    it("should_persist_board_shape_when_create_input_has_a_valid_shape", async () => {
+      // Arrange
+      const repo = new FakeLevelRepository();
+      const useCase = new CreateLevelUseCase(repo);
+
+      // Act
+      await useCase.execute(SHAPED_INPUT);
+
+      // Assert
+      expect(repo.savedLevels[0].boardShape).toBeDefined();
+      expect(repo.savedLevels[0].boardShape!.size).toBe(3);
+    });
+
+    it("should_throw_when_board_shape_type_is_unsupported", async () => {
+      // Arrange
+      const repo = new FakeLevelRepository();
+      const useCase = new CreateLevelUseCase(repo);
+
+      // Act / Assert
+      await expect(
+        useCase.execute({
+          ...SHAPED_INPUT,
+          boardShape: { ...SHAPED_INPUT.boardShape, type: "HEXAGON" },
+        })
+      ).rejects.toThrow();
+    });
+
+    it("should_throw_when_board_shape_has_duplicate_cells", async () => {
+      // Arrange
+      const repo = new FakeLevelRepository();
+      const useCase = new CreateLevelUseCase(repo);
+
+      // Act / Assert
+      await expect(
+        useCase.execute({
+          ...SHAPED_INPUT,
+          boardShape: {
+            type: "CELL_MASK",
+            cells: [
+              { row: 0, col: 0 },
+              { row: 0, col: 0 },
+            ],
+          },
+        })
+      ).rejects.toThrow();
+    });
+
+    it("should_throw_when_an_arrow_cell_lies_outside_the_board_shape", async () => {
+      // Arrange — mask omits (0, 1) which the arrow occupies
+      const repo = new FakeLevelRepository();
+      const useCase = new CreateLevelUseCase(repo);
+
+      // Act / Assert
+      await expect(
+        useCase.execute({
+          ...SHAPED_INPUT,
+          boardShape: { type: "CELL_MASK", cells: [{ row: 0, col: 0 }] },
+        })
+      ).rejects.toThrow();
+    });
+  });
 });

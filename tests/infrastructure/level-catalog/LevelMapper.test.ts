@@ -1,6 +1,13 @@
-import { recordToLevel } from '../../../src/infrastructure/level-catalog/LevelMapper.js';
+import {
+  recordToLevel,
+  boardShapeToRecord,
+} from '../../../src/infrastructure/level-catalog/LevelMapper.js';
 import { InfrastructureError } from '../../../src/shared/errors/InfrastructureError.js';
 import type { LevelRecord } from '../../../src/infrastructure/level-catalog/LevelMapper.js';
+import {
+  makePublishedLevel,
+  makeShapedPublishedLevel,
+} from '../../application/level-catalog/helpers/levelFixtures.js';
 
 const LEVEL_ID = '550e8400-e29b-41d4-a716-446655440010';
 
@@ -53,5 +60,50 @@ describe('LevelMapper.recordToLevel', () => {
     };
 
     expect(() => recordToLevel(corruptRecord)).toThrow(InfrastructureError);
+  });
+
+  it('should_reconstitute_board_shape_when_record_has_one', () => {
+    const record: LevelRecord = {
+      ...validLevelRecord,
+      boardShape: {
+        type: 'CELL_MASK',
+        cells: [
+          { row: 0, col: 0 },
+          { row: 0, col: 1 },
+        ],
+      },
+    };
+
+    const level = recordToLevel(record);
+
+    expect(level.boardShape).toBeDefined();
+    expect(level.boardShape!.size).toBe(2);
+  });
+
+  it('should_reconstitute_without_board_shape_when_record_has_none', () => {
+    expect(recordToLevel(validLevelRecord).boardShape).toBeUndefined();
+  });
+
+  it('should_throw_infrastructure_error_when_board_shape_is_corrupted_in_db', () => {
+    const corruptRecord: LevelRecord = {
+      ...validLevelRecord,
+      boardShape: { type: 'CELL_MASK', cells: 'not-an-array' },
+    };
+
+    expect(() => recordToLevel(corruptRecord)).toThrow(InfrastructureError);
+  });
+});
+
+describe('LevelMapper.boardShapeToRecord', () => {
+  it('should_serialize_board_shape_when_level_has_one', () => {
+    const record = boardShapeToRecord(makeShapedPublishedLevel());
+
+    expect(record).not.toBeNull();
+    expect(record!.type).toBe('CELL_MASK');
+    expect(record!.cells).toHaveLength(4);
+  });
+
+  it('should_return_null_when_level_has_no_board_shape', () => {
+    expect(boardShapeToRecord(makePublishedLevel())).toBeNull();
   });
 });

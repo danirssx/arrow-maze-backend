@@ -94,6 +94,7 @@ model Level {
   arrows           Json     @default("[]")
   attempts         Int      @default(5)
   timeLimitSeconds Int?     @map("time_limit_seconds")
+  boardShape       Json?    @map("board_shape")
   createdAt        DateTime @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime @map("updated_at") @db.Timestamptz(6)
 

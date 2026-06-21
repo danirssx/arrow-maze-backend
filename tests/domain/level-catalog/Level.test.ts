@@ -11,7 +11,11 @@ import { Direction } from "../../../src/domain/level-catalog/enums/Direction";
 import { Difficulty } from "../../../src/domain/level-catalog/enums/Difficulty";
 import { LevelStatus } from "../../../src/domain/level-catalog/enums/LevelStatus";
 import { LevelPublished } from "../../../src/domain/level-catalog/events/LevelPublished";
-import { BusinessRuleViolationError } from "../../../src/domain/errors/DomainError";
+import {
+  BusinessRuleViolationError,
+  InvalidArgumentError,
+} from "../../../src/domain/errors/DomainError";
+import { BoardShape } from "../../../src/domain/level-catalog/value-objects/BoardShape";
 
 // Subject to human review — domain aggregate test
 
@@ -110,5 +114,78 @@ describe("Level", () => {
     // Assert
     expect(first).toHaveLength(1);
     expect(second).toHaveLength(0);
+  });
+});
+
+describe("Level board shape (Option A)", () => {
+  const shapedDefinition = () =>
+    LevelDefinition.create([
+      ArrowSpec.create(
+        "a",
+        "#5262FB",
+        [Position.create(0, 0), Position.create(0, 1)],
+        Direction.RIGHT
+      ),
+    ]);
+
+  const draftWithShape = (shape: BoardShape) =>
+    Level.draft(
+      LevelId.generate(),
+      LevelName.create("Shaped"),
+      LevelDescription.create("A shaped level"),
+      shapedDefinition(),
+      Difficulty.EASY,
+      LevelVersion.initial(),
+      undefined,
+      shape
+    );
+
+  it("should_expose_a_board_shape_that_contains_all_arrow_cells", () => {
+    // Arrange
+    const shape = BoardShape.cellMask([
+      Position.create(0, 0),
+      Position.create(0, 1),
+      Position.create(1, 0),
+    ]);
+
+    // Act
+    const level = draftWithShape(shape);
+
+    // Assert
+    expect(level.boardShape).toBe(shape);
+  });
+
+  it("should_default_board_shape_to_undefined_when_not_provided", () => {
+    expect(makeDraftLevel().boardShape).toBeUndefined();
+  });
+
+  it("should_throw_when_an_arrow_cell_lies_outside_the_board_shape", () => {
+    // Arrange — mask omits (0, 1) which arrow "a" occupies
+    const shape = BoardShape.cellMask([Position.create(0, 0)]);
+
+    // Act / Assert
+    expect(() => draftWithShape(shape)).toThrow(InvalidArgumentError);
+  });
+
+  it("should_throw_when_reconstituting_with_an_arrow_outside_the_shape", () => {
+    // Arrange
+    const shape = BoardShape.cellMask([Position.create(0, 0)]);
+
+    // Act / Assert
+    expect(() =>
+      Level.reconstitute(
+        LevelId.generate(),
+        LevelName.create("Shaped"),
+        LevelDescription.create("A shaped level"),
+        shapedDefinition(),
+        Difficulty.EASY,
+        LevelStatus.PUBLISHED,
+        LevelVersion.initial(),
+        undefined,
+        new Date(),
+        new Date(),
+        shape
+      )
+    ).toThrow(InvalidArgumentError);
   });
 });

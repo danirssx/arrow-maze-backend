@@ -1,6 +1,7 @@
 // Pattern: Mapper
 import { Level } from '../../domain/level-catalog/Level.js';
 import { ArrowSpec } from '../../domain/level-catalog/value-objects/ArrowSpec.js';
+import { BoardShape } from '../../domain/level-catalog/value-objects/BoardShape.js';
 import { LevelDefinition } from '../../domain/level-catalog/value-objects/LevelDefinition.js';
 import { LevelDescription } from '../../domain/level-catalog/value-objects/LevelDescription.js';
 import { LevelName } from '../../domain/level-catalog/value-objects/LevelName.js';
@@ -31,6 +32,7 @@ export type LevelRecord = {
   timeLimitSeconds: number | null;
   createdAt: Date;
   updatedAt: Date;
+  boardShape?: unknown;
 };
 
 type ArrowRecord = {
@@ -38,6 +40,11 @@ type ArrowRecord = {
   color: string;
   path: { row: number; col: number }[];
   direction: string;
+};
+
+export type BoardShapeRecord = {
+  type: string;
+  cells: { row: number; col: number }[];
 };
 
 export function recordToLevel(record: LevelRecord): Level {
@@ -60,6 +67,7 @@ export function recordToLevel(record: LevelRecord): Level {
     record.timeLimitSeconds !== null ? TimeLimit.create(record.timeLimitSeconds) : undefined,
     record.createdAt,
     record.updatedAt,
+    parseBoardShape(record.boardShape),
   );
 }
 
@@ -70,6 +78,51 @@ export function arrowsToRecord(level: Level): ArrowRecord[] {
     path: arrow.path.map((position) => ({ row: position.row, col: position.col })),
     direction: arrow.direction,
   }));
+}
+
+/** Serializes the aggregate's optional board shape to a JSONB record, or null. */
+export function boardShapeToRecord(level: Level): BoardShapeRecord | null {
+  const shape = level.boardShape;
+  if (shape === undefined) {
+    return null;
+  }
+  return {
+    type: shape.type,
+    cells: shape.cells.map((cell) => ({ row: cell.row, col: cell.col })),
+  };
+}
+
+function parseBoardShape(value: unknown): BoardShape | undefined {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  if (!isBoardShapeRecord(value)) {
+    throw new InfrastructureError('Corrupted DB value for board_shape: invalid record');
+  }
+  try {
+    return BoardShape.create(
+      value.type,
+      value.cells.map((cell) => Position.create(cell.row, cell.col)),
+    );
+  } catch (err) {
+    throw new InfrastructureError('Corrupted DB value for board_shape', { cause: String(err) });
+  }
+}
+
+function isBoardShapeRecord(value: unknown): value is BoardShapeRecord {
+  if (typeof value !== 'object' || value === null) return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record['type'] === 'string' &&
+    Array.isArray(record['cells']) &&
+    record['cells'].every(
+      (cell) =>
+        typeof cell === 'object' &&
+        cell !== null &&
+        Number.isInteger((cell as Record<string, unknown>)['row']) &&
+        Number.isInteger((cell as Record<string, unknown>)['col']),
+    )
+  );
 }
 
 function parseArrowRecords(value: unknown): ArrowRecord[] {

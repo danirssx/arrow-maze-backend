@@ -902,12 +902,28 @@ export const openApiSpec = {
           direction: { type: 'string', enum: ['UP', 'DOWN', 'LEFT', 'RIGHT'] },
         },
       },
+      BoardShapeInput: {
+        type: 'object',
+        description:
+          'Optional abstract board mask (Option A): a visual + authoring/placement mask, not a physical wall.',
+        required: ['type', 'cells'],
+        properties: {
+          type: { type: 'string', enum: ['CELL_MASK'] },
+          cells: {
+            type: 'array',
+            minItems: 1,
+            maxItems: 600,
+            items: { $ref: '#/components/schemas/PositionInput' },
+          },
+        },
+      },
       LevelDefinitionDto: {
         type: 'object',
         required: ['arrows', 'attempts'],
         properties: {
           arrows: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ArrowSpec' } },
           attempts: { type: 'integer', minimum: 1 },
+          boardShape: { $ref: '#/components/schemas/BoardShapeInput' },
         },
       },
       CreateLevelRequest: {
@@ -920,6 +936,7 @@ export const openApiSpec = {
           arrows: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ArrowSpec' } },
           attempts: { type: 'integer', minimum: 1, nullable: true },
           timeLimit: { type: 'integer', minimum: 1, nullable: true },
+          boardShape: { $ref: '#/components/schemas/BoardShapeInput' },
         },
       },
       UpdateLevelDefinitionRequest: {
