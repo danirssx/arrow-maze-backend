@@ -8,7 +8,7 @@ describe("loadAuthoredLevels", () => {
     const levels = loadAuthoredLevels();
 
     expect(levels.length).toBeGreaterThanOrEqual(1);
-    const cross = levels.find((level) => level.id === "550e8400-e29b-41d4-a716-446655440020");
+    const cross = levels.find((level) => level.id === "550e8400-e29b-41d4-a716-446655440030");
     expect(cross).toBeDefined();
     expect(cross!.status).toBe("PUBLISHED");
     expect(cross!.boardShape).not.toBeNull();
