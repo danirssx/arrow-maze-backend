@@ -2,6 +2,7 @@ import { Level } from "../../../domain/level-catalog/Level.js";
 import { Difficulty } from "../../../domain/level-catalog/enums/Difficulty.js";
 import { Direction } from "../../../domain/level-catalog/enums/Direction.js";
 import { ArrowSpec } from "../../../domain/level-catalog/value-objects/ArrowSpec.js";
+import { BoardShape } from "../../../domain/level-catalog/value-objects/BoardShape.js";
 import { LevelDefinition } from "../../../domain/level-catalog/value-objects/LevelDefinition.js";
 import { LevelDescription } from "../../../domain/level-catalog/value-objects/LevelDescription.js";
 import { LevelName } from "../../../domain/level-catalog/value-objects/LevelName.js";
@@ -23,6 +24,11 @@ export type ArrowInput = {
   direction?: string;
 };
 
+export type BoardShapeInput = {
+  type: string;
+  cells: PositionInput[];
+};
+
 export type CreateLevelInput = {
   name: string;
   description: string;
@@ -30,6 +36,7 @@ export type CreateLevelInput = {
   arrows: ArrowInput[];
   attempts?: number;
   timeLimit?: number;
+  boardShape?: BoardShapeInput;
 };
 
 export type CreateLevelOutput = { levelId: string };
@@ -41,6 +48,8 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
     const id = LevelId.generate();
     const difficulty = parseEnumFromInput(Difficulty, input.difficulty, 'difficulty');
     const arrows = input.arrows.map((arrow) => mapArrowInput(arrow));
+    const boardShape =
+      input.boardShape !== undefined ? mapBoardShapeInput(input.boardShape) : undefined;
     const level = Level.draft(
       id,
       LevelName.create(input.name),
@@ -48,12 +57,20 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
       LevelDefinition.create(arrows, input.attempts),
       difficulty,
       LevelVersion.initial(),
-      input.timeLimit ? TimeLimit.create(input.timeLimit) : undefined
+      input.timeLimit ? TimeLimit.create(input.timeLimit) : undefined,
+      boardShape
     );
 
     await this.repo.save(level);
     return { levelId: id.value };
   }
+}
+
+export function mapBoardShapeInput(input: BoardShapeInput): BoardShape {
+  return BoardShape.create(
+    input.type,
+    input.cells.map((cell) => Position.create(cell.row, cell.col))
+  );
 }
 
 export function mapArrowInput(input: ArrowInput): ArrowSpec {

@@ -4,6 +4,7 @@ import { Difficulty } from "../../../../src/domain/level-catalog/enums/Difficult
 import { Direction } from "../../../../src/domain/level-catalog/enums/Direction";
 import { LevelStatus } from "../../../../src/domain/level-catalog/enums/LevelStatus";
 import { ArrowSpec } from "../../../../src/domain/level-catalog/value-objects/ArrowSpec";
+import { BoardShape } from "../../../../src/domain/level-catalog/value-objects/BoardShape";
 import { LevelDefinition } from "../../../../src/domain/level-catalog/value-objects/LevelDefinition";
 import { LevelDescription } from "../../../../src/domain/level-catalog/value-objects/LevelDescription";
 import { LevelId } from "../../../../src/domain/shared/LevelId.js";
@@ -41,6 +42,44 @@ export function makePublishedLevel(id = VALID_UUID): Level {
 export function makeArchivedLevel(id = VALID_UUID): Level {
   const level = makePublishedLevel(id);
   level.archive();
+  return level;
+}
+
+/** A 2x2 CELL_MASK that contains the single 2-cell arrow used in shaped fixtures. */
+export function makeBoardShape(): BoardShape {
+  return BoardShape.cellMask([
+    Position.create(0, 0),
+    Position.create(0, 1),
+    Position.create(1, 0),
+    Position.create(1, 1),
+  ]);
+}
+
+export function makeShapedDraftLevel(id = VALID_UUID): Level {
+  const definition = LevelDefinition.create([
+    ArrowSpec.create(
+      "a",
+      "#5262FB",
+      [Position.create(0, 0), Position.create(0, 1)],
+      Direction.RIGHT
+    ),
+  ]);
+  return Level.draft(
+    LevelId.create(id),
+    LevelName.create("Shaped Level"),
+    LevelDescription.create("A shaped level"),
+    definition,
+    Difficulty.EASY,
+    LevelVersion.initial(),
+    undefined,
+    makeBoardShape()
+  );
+}
+
+export function makeShapedPublishedLevel(id = VALID_UUID): Level {
+  const level = makeShapedDraftLevel(id);
+  level.publish(new LevelSolvabilityPolicy());
+  level.pullDomainEvents();
   return level;
 }
 

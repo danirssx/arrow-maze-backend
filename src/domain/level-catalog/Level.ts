@@ -1,11 +1,12 @@
 // Pattern: Aggregate Root
-import { BusinessRuleViolationError } from "../errors/DomainError.js";
+import { BusinessRuleViolationError, InvalidArgumentError } from "../errors/DomainError.js";
 import { Entity } from "../shared/Entity.js";
 import type { LevelId } from "../shared/LevelId.js";
 import type { Difficulty } from "./enums/Difficulty.js";
 import { LevelStatus } from "./enums/LevelStatus.js";
 import { LevelPublished } from "./events/LevelPublished.js";
 import type { LevelSolvabilityPolicy } from "./LevelSolvabilityPolicy.js";
+import type { BoardShape } from "./value-objects/BoardShape.js";
 import type { LevelDefinition } from "./value-objects/LevelDefinition.js";
 import type { LevelDescription } from "./value-objects/LevelDescription.js";
 import type { LevelName } from "./value-objects/LevelName.js";
@@ -23,9 +24,11 @@ export class Level extends Entity<LevelId> {
     private readonly _version: LevelVersion,
     private readonly _timeLimit: TimeLimit | undefined,
     private readonly _createdAt: Date,
-    private _updatedAt: Date
+    private _updatedAt: Date,
+    private readonly _boardShape: BoardShape | undefined = undefined
   ) {
     super(id);
+    Level.assertArrowsWithinShape(_definition, _boardShape);
   }
 
   static draft(
@@ -35,7 +38,8 @@ export class Level extends Entity<LevelId> {
     definition: LevelDefinition,
     difficulty: Difficulty,
     version: LevelVersion,
-    timeLimit?: TimeLimit
+    timeLimit?: TimeLimit,
+    boardShape?: BoardShape
   ): Level {
     const now = new Date();
     return new Level(
@@ -48,7 +52,8 @@ export class Level extends Entity<LevelId> {
       version,
       timeLimit,
       now,
-      now
+      now,
+      boardShape
     );
   }
 
@@ -62,7 +67,8 @@ export class Level extends Entity<LevelId> {
     version: LevelVersion,
     timeLimit: TimeLimit | undefined,
     createdAt: Date,
-    updatedAt: Date
+    updatedAt: Date,
+    boardShape?: BoardShape
   ): Level {
     return new Level(
       id,
@@ -74,8 +80,29 @@ export class Level extends Entity<LevelId> {
       version,
       timeLimit,
       createdAt,
-      updatedAt
+      updatedAt,
+      boardShape
     );
+  }
+
+  /**
+   * Option A invariant: when a board shape is present it is a placement mask, so
+   * every cell of every arrow path must lie inside it. The shape is never a
+   * physical wall, so extraction/solvability are unaffected.
+   */
+  private static assertArrowsWithinShape(
+    definition: LevelDefinition,
+    boardShape: BoardShape | undefined
+  ): void {
+    if (boardShape === undefined) {
+      return;
+    }
+    const cells = definition.arrows.flatMap((arrow) => [...arrow.path]);
+    if (!boardShape.containsAll(cells)) {
+      throw new InvalidArgumentError(
+        "Level has an arrow cell outside the board shape mask"
+      );
+    }
   }
 
   publish(policy: LevelSolvabilityPolicy): void {
@@ -119,6 +146,7 @@ export class Level extends Entity<LevelId> {
   get status(): LevelStatus { return this._status; }
   get version(): LevelVersion { return this._version; }
   get timeLimit(): TimeLimit | undefined { return this._timeLimit; }
+  get boardShape(): BoardShape | undefined { return this._boardShape; }
   get createdAt(): Date { return this._createdAt; }
   get updatedAt(): Date { return this._updatedAt; }
   get isDraft(): boolean { return this._status === LevelStatus.DRAFT; }

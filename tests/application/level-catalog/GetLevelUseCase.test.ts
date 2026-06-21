@@ -1,6 +1,11 @@
 import { GetLevelUseCase } from "../../../src/application/level-catalog/use-cases/GetLevelUseCase";
 import { NotFoundError } from "../../../src/shared/errors/ApplicationError";
-import { FakeLevelRepository, makePublishedLevel, VALID_UUID } from "./helpers/levelFixtures";
+import {
+  FakeLevelRepository,
+  makePublishedLevel,
+  makeShapedPublishedLevel,
+  VALID_UUID,
+} from "./helpers/levelFixtures";
 
 // Subject to human review — application use case test
 
@@ -45,5 +50,33 @@ describe("GetLevelUseCase", () => {
     await expect(
       useCase.execute({ levelId: "not-a-uuid" })
     ).rejects.toThrow();
+  });
+
+  it("should_include_board_shape_in_definition_when_level_has_a_shape", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makeShapedPublishedLevel(VALID_UUID));
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ levelId: VALID_UUID });
+
+    // Assert
+    expect(result.level.definition.boardShape).toBeDefined();
+    expect(result.level.definition.boardShape!.type).toBe("CELL_MASK");
+    expect(result.level.definition.boardShape!.cells).toHaveLength(4);
+  });
+
+  it("should_omit_board_shape_when_level_has_none", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makePublishedLevel(VALID_UUID));
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ levelId: VALID_UUID });
+
+    // Assert
+    expect(result.level.definition.boardShape).toBeUndefined();
   });
 });

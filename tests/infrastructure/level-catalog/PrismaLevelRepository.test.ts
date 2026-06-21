@@ -4,7 +4,11 @@ import { PrismaLevelRepository } from "../../../src/infrastructure/level-catalog
 import { Level } from "../../../src/domain/level-catalog/Level.js";
 import { LevelId } from "../../../src/domain/shared/LevelId.js";
 import { InfrastructureError } from "../../../src/shared/errors/InfrastructureError.js";
-import { makePublishedLevel, VALID_UUID } from "../../application/level-catalog/helpers/levelFixtures.js";
+import {
+  makePublishedLevel,
+  makeShapedPublishedLevel,
+  VALID_UUID,
+} from "../../application/level-catalog/helpers/levelFixtures.js";
 
 // Subject to human review — infrastructure adapter test
 
@@ -130,6 +134,24 @@ describe("PrismaLevelRepository", () => {
             id: VALID_UUID,
             status: "PUBLISHED",
             arrows: expect.arrayContaining([expect.objectContaining({ id: "a", direction: "UP" })]),
+          }),
+        })
+      );
+    });
+
+    it("should_upsert_board_shape_payload_when_level_has_a_shape", async () => {
+      // Arrange
+      const { prisma, level } = makePrisma();
+      const repo = new PrismaLevelRepository(prisma);
+
+      // Act
+      await repo.save(makeShapedPublishedLevel());
+
+      // Assert
+      expect(level.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({
+            boardShape: expect.objectContaining({ type: "CELL_MASK" }),
           }),
         })
       );
