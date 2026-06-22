@@ -64,6 +64,21 @@ type LevelMeta = {
   minDensity: number;
   minBlockedArrows: number;
   timeLimitSeconds?: number;
+  /** Optional ASCII-art mask ('#' = playable cell). When present the level is a shaped
+   *  board (Option A): arrows are confined to the mask and a `boardShape` is emitted. */
+  mask?: string[];
+  /** Explicit level id (defaults to the sequential `levelId(index)` of the base 15). */
+  id?: string;
+  /** Explicit catalog order / level number (defaults to `index + 1`). */
+  order?: number;
+};
+
+/** A playable region: either the full rectangle or a shaped cell mask. */
+type Region = {
+  set: ReadonlySet<string>;
+  cells: readonly Cell[];
+  count: number;
+  masked: boolean;
 };
 
 type GeneratedLevel = {
@@ -71,6 +86,7 @@ type GeneratedLevel = {
   occupiedCells: number;
   density: number;
   blockedArrows: number;
+  region: Region;
 };
 
 type Candidate = {
@@ -158,8 +174,32 @@ function translate(cell: Cell, direction: Direction): Cell {
   return { row: cell.row + delta.row, col: cell.col + delta.col };
 }
 
-function inBounds(cell: Cell, rows: number, cols: number): boolean {
-  return cell.row >= 0 && cell.row < rows && cell.col >= 0 && cell.col < cols;
+/**
+ * Builds the playable region for a level: every '#' cell of the ASCII `mask` when
+ * present (a shaped board), otherwise the full `rows x cols` rectangle. `meta.rows`
+ * /`meta.cols` must match the mask's bounding box.
+ */
+function buildRegion(meta: LevelMeta): Region {
+  const cells: Cell[] = [];
+  if (meta.mask !== undefined) {
+    meta.mask.forEach((line, row) => {
+      for (let col = 0; col < line.length; col += 1) {
+        if (line[col] === "#") cells.push({ row, col });
+      }
+    });
+  } else {
+    for (let row = 0; row < meta.rows; row += 1) {
+      for (let col = 0; col < meta.cols; col += 1) {
+        cells.push({ row, col });
+      }
+    }
+  }
+  return {
+    cells,
+    set: new Set(cells.map(cellKey)),
+    count: cells.length,
+    masked: meta.mask !== undefined,
+  };
 }
 
 function isStrictlyAhead(head: Cell, direction: Direction, cell: Cell): boolean {
@@ -201,9 +241,13 @@ function directionCounts(records: readonly ArrowRecord[]): Record<Direction, num
   );
 }
 
-function randomMonotonePath(rng: Rng, meta: LevelMeta): Cell[] | undefined {
+function randomMonotonePath(rng: Rng, meta: LevelMeta, region: Region): Cell[] | undefined {
   const family = FAMILIES[meta.family];
-  const start: Cell = { row: rng.integer(meta.rows), col: rng.integer(meta.cols) };
+  // Masked boards pick a start from the mask cells (1 draw); rectangles keep the
+  // original row/col draws (2 draws) so the base 15 levels regenerate identically.
+  const start: Cell = region.masked
+    ? region.cells[rng.integer(region.count)]!
+    : { row: rng.integer(meta.rows), col: rng.integer(meta.cols) };
   const targetLength = 1 + meta.minBodyCells + rng.integer(meta.maxBodyCells - meta.minBodyCells + 1);
   const path: Cell[] = [start];
   const seen = new Set<string>([cellKey(start)]);
@@ -223,7 +267,7 @@ function randomMonotonePath(rng: Rng, meta: LevelMeta): Cell[] | undefined {
     let selectedStep: Direction | undefined;
     for (const step of steps) {
       const candidate = translate(current, step);
-      if (!inBounds(candidate, meta.rows, meta.cols)) continue;
+      if (!region.set.has(cellKey(candidate))) continue;
       if (seen.has(cellKey(candidate))) continue;
       nextCell = candidate;
       selectedStep = step;
@@ -248,16 +292,17 @@ function makeCandidate(
   meta: LevelMeta,
   arrowIndex: number,
   occupied: ReadonlySet<string>,
-  existing: readonly ArrowRecord[]
+  existing: readonly ArrowRecord[],
+  region: Region
 ): Candidate | undefined {
-  const path = randomMonotonePath(rng, meta);
+  const path = randomMonotonePath(rng, meta, region);
   if (path === undefined || path.some((cell) => occupied.has(cellKey(cell)))) {
     return undefined;
   }
 
   const remainingArrows = meta.arrowCount - arrowIndex - 1;
   const minPathLength = 1 + meta.minBodyCells;
-  const remainingCells = meta.rows * meta.cols - occupied.size;
+  const remainingCells = region.count - occupied.size;
   if (path.length > remainingCells - remainingArrows * minPathLength) {
     return undefined;
   }
@@ -294,6 +339,7 @@ function makeCandidate(
 }
 
 function generateLevel(meta: LevelMeta): GeneratedLevel {
+  const region = buildRegion(meta);
   let bestSummary = "no candidates";
   for (let attempt = 0; attempt < LEVEL_GENERATION_ATTEMPTS; attempt += 1) {
     const rng = new Rng(meta.seed + attempt * 10007);
@@ -303,7 +349,7 @@ function generateLevel(meta: LevelMeta): GeneratedLevel {
     for (let arrowIndex = 0; arrowIndex < meta.arrowCount; arrowIndex += 1) {
       let best: Candidate | undefined;
       for (let candidateIndex = 0; candidateIndex < CANDIDATES_PER_ARROW; candidateIndex += 1) {
-        const candidate = makeCandidate(rng, meta, arrowIndex, occupied, records);
+        const candidate = makeCandidate(rng, meta, arrowIndex, occupied, records, region);
         if (candidate !== undefined && (best === undefined || candidate.score > best.score)) {
           best = candidate;
         }
@@ -319,11 +365,11 @@ function generateLevel(meta: LevelMeta): GeneratedLevel {
       }
     }
 
-    const density = occupied.size / (meta.rows * meta.cols);
+    const density = occupied.size / region.count;
     const blockedArrows = countBlockedArrows(records);
     if (records.length > 0) {
       bestSummary =
-        `${records.length} arrows, ${occupied.size}/${meta.rows * meta.cols} cells ` +
+        `${records.length} arrows, ${occupied.size}/${region.count} cells ` +
         `(${Math.round(density * 100)}%), ${blockedArrows} blocked`;
     }
     if (
@@ -335,7 +381,8 @@ function generateLevel(meta: LevelMeta): GeneratedLevel {
         records,
         occupiedCells: occupied.size,
         density,
-        blockedArrows
+        blockedArrows,
+        region
       };
     }
   }
@@ -379,6 +426,11 @@ function assertLevelQuality(meta: LevelMeta, generated: GeneratedLevel): void {
     );
   }
   assertNoOverlaps(meta, generated.records);
+
+  const singleCell = generated.records.find((record) => record.path.length < 2);
+  if (singleCell !== undefined) {
+    throw new Error(`Level "${meta.name}" has a single-cell arrow ${singleCell.id} (min length is 2)`);
+  }
 
   const definition = LevelDefinition.create(generated.records.map(toArrowSpec), meta.attempts);
   const policy = new LevelSolvabilityPolicy();
@@ -619,6 +671,337 @@ const LEVELS: LevelMeta[] = [
     minDensity: 0.76,
     minBlockedArrows: 34,
     timeLimitSeconds: 90
+  },
+  // ---- Shaped boards (Option A): recognizable masks, dense, multi-cell arrows. ----
+  {
+    name: "Heart Tangle",
+    description: "A heart packed with bendable arrows — clear it from the inside out.",
+    difficulty: Difficulty.MEDIUM,
+    arrowCount: 21,
+    attempts: 6,
+    rows: 12,
+    cols: 16,
+    family: "UP_RIGHT",
+    seed: 5000,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.45,
+    minBlockedArrows: 6,
+    id: "550e8400-e29b-41d4-a716-446655440040",
+    order: 17,
+    mask: [
+      "..####....####..",
+      ".##############.",
+      "################",
+      "################",
+      "################",
+      ".##############.",
+      "..############..",
+      "...##########...",
+      "....########....",
+      ".....######.....",
+      "......####......",
+      ".......##......."
+    ]
+  },
+  {
+    name: "Diamond Drift",
+    description: "A faceted diamond where every ray hides behind another.",
+    difficulty: Difficulty.EASY,
+    arrowCount: 10,
+    attempts: 6,
+    rows: 11,
+    cols: 15,
+    family: "RIGHT_DOWN",
+    seed: 5100,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.42,
+    minBlockedArrows: 3,
+    id: "550e8400-e29b-41d4-a716-446655440041",
+    order: 18,
+    mask: [
+      ".......#.......",
+      "......###......",
+      ".....#####.....",
+      "....#######....",
+      "...#########...",
+      "..###########..",
+      "...#########...",
+      "....#######....",
+      ".....#####.....",
+      "......###......",
+      ".......#......."
+    ]
+  },
+  {
+    name: "Pyramid Climb",
+    description: "A solid pyramid — work the base before the peak frees up.",
+    difficulty: Difficulty.EASY,
+    arrowCount: 11,
+    attempts: 6,
+    rows: 8,
+    cols: 15,
+    family: "DOWN_LEFT",
+    seed: 5200,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.42,
+    minBlockedArrows: 3,
+    id: "550e8400-e29b-41d4-a716-446655440042",
+    order: 19,
+    mask: [
+      ".......#.......",
+      "......###......",
+      ".....#####.....",
+      "....#######....",
+      "...#########...",
+      "..###########..",
+      ".#############.",
+      "###############"
+    ]
+  },
+  {
+    name: "Plus Pressure",
+    description: "A bold plus sign with four crowded arms.",
+    difficulty: Difficulty.MEDIUM,
+    arrowCount: 12,
+    attempts: 6,
+    rows: 13,
+    cols: 13,
+    family: "LEFT_UP",
+    seed: 5300,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.45,
+    minBlockedArrows: 4,
+    id: "550e8400-e29b-41d4-a716-446655440043",
+    order: 20,
+    mask: [
+      ".....###.....",
+      ".....###.....",
+      ".....###.....",
+      ".....###.....",
+      ".....###.....",
+      "#############",
+      "#############",
+      "#############",
+      ".....###.....",
+      ".....###.....",
+      ".....###.....",
+      ".....###.....",
+      ".....###....."
+    ]
+  },
+  {
+    name: "Arrow Ascent",
+    description: "An arrow pointing up, snarled along its head and stem.",
+    difficulty: Difficulty.MEDIUM,
+    arrowCount: 13,
+    attempts: 6,
+    rows: 12,
+    cols: 15,
+    family: "UP_RIGHT",
+    seed: 5400,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.45,
+    minBlockedArrows: 4,
+    id: "550e8400-e29b-41d4-a716-446655440044",
+    order: 21,
+    mask: [
+      ".......#.......",
+      "......###......",
+      ".....#####.....",
+      "....#######....",
+      "...#########...",
+      "..###########..",
+      ".#############.",
+      "###############",
+      "......###......",
+      "......###......",
+      "......###......",
+      "......###......"
+    ]
+  },
+  {
+    name: "Hex Lockdown",
+    description: "A full hexagon — a dense honeycomb of blockers.",
+    difficulty: Difficulty.MEDIUM,
+    arrowCount: 14,
+    attempts: 6,
+    rows: 9,
+    cols: 14,
+    family: "RIGHT_DOWN",
+    seed: 5500,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.48,
+    minBlockedArrows: 5,
+    id: "550e8400-e29b-41d4-a716-446655440045",
+    order: 22,
+    mask: [
+      "....######....",
+      "...########...",
+      "..##########..",
+      ".############.",
+      "##############",
+      ".############.",
+      "..##########..",
+      "...########...",
+      "....######...."
+    ]
+  },
+  {
+    name: "Cat Nap",
+    description: "A cat's head, ears and all, fully tangled.",
+    difficulty: Difficulty.HARD,
+    arrowCount: 17,
+    attempts: 5,
+    rows: 11,
+    cols: 13,
+    family: "DOWN_LEFT",
+    seed: 5600,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.48,
+    minBlockedArrows: 6,
+    id: "550e8400-e29b-41d4-a716-446655440046",
+    order: 23,
+    mask: [
+      "##.........##",
+      "###.......###",
+      "#############",
+      "#############",
+      "#############",
+      "#############",
+      "#############",
+      ".###########.",
+      "..#########..",
+      "...#######...",
+      "....#####...."
+    ]
+  },
+  {
+    name: "Ghost Grid",
+    description: "A wavy-footed ghost stuffed with arrows.",
+    difficulty: Difficulty.HARD,
+    arrowCount: 18,
+    attempts: 5,
+    rows: 11,
+    cols: 12,
+    family: "LEFT_UP",
+    seed: 5700,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.48,
+    minBlockedArrows: 6,
+    id: "550e8400-e29b-41d4-a716-446655440047",
+    order: 24,
+    mask: [
+      "...######...",
+      "..########..",
+      ".##########.",
+      "############",
+      "############",
+      "############",
+      "############",
+      "############",
+      "############",
+      "############",
+      "#.##.##.##.#"
+    ]
+  },
+  {
+    name: "Home Stretch",
+    description: "A little house — roof, walls and a door, all knotted.",
+    difficulty: Difficulty.MEDIUM,
+    arrowCount: 15,
+    attempts: 6,
+    rows: 12,
+    cols: 13,
+    family: "UP_RIGHT",
+    seed: 5800,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.45,
+    minBlockedArrows: 5,
+    id: "550e8400-e29b-41d4-a716-446655440048",
+    order: 25,
+    mask: [
+      "......#......",
+      ".....###.....",
+      "....#####....",
+      "...#######...",
+      "..#########..",
+      ".###########.",
+      "#############",
+      ".###########.",
+      ".###########.",
+      ".####...####.",
+      ".####...####.",
+      ".####...####."
+    ]
+  },
+  {
+    name: "Full Moon",
+    description: "A round disc packed edge to edge.",
+    difficulty: Difficulty.HARD,
+    arrowCount: 18,
+    attempts: 5,
+    rows: 11,
+    cols: 13,
+    family: "RIGHT_DOWN",
+    seed: 5900,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.5,
+    minBlockedArrows: 6,
+    id: "550e8400-e29b-41d4-a716-446655440049",
+    order: 26,
+    mask: [
+      "....#####....",
+      "..#########..",
+      ".###########.",
+      ".###########.",
+      "#############",
+      "#############",
+      "#############",
+      ".###########.",
+      ".###########.",
+      "..#########..",
+      "....#####...."
+    ]
+  },
+  {
+    name: "Octa Crush",
+    description: "An octagon at maximum density — the toughest shaped finale.",
+    difficulty: Difficulty.HARD,
+    arrowCount: 19,
+    attempts: 4,
+    rows: 11,
+    cols: 13,
+    family: "DOWN_LEFT",
+    seed: 6000,
+    minBodyCells: 1,
+    maxBodyCells: 4,
+    minDensity: 0.5,
+    minBlockedArrows: 7,
+    id: "550e8400-e29b-41d4-a716-446655440050",
+    order: 27,
+    mask: [
+      "...#######...",
+      "..#########..",
+      ".###########.",
+      "#############",
+      "#############",
+      "#############",
+      "#############",
+      "#############",
+      ".###########.",
+      "..#########..",
+      "...#######..."
+    ]
   }
 ];
 
@@ -636,6 +1019,7 @@ type CatalogLevelJson = {
   attempts: number;
   timeLimitSeconds?: number;
   arrows: ArrowRecord[];
+  boardShape?: { type: "CELL_MASK"; cells: Cell[] };
 };
 
 function slug(name: string): string {
@@ -653,16 +1037,19 @@ LEVELS.forEach((meta, index) => {
   const generated = generateLevel(meta);
   assertLevelQuality(meta, generated);
 
-  const order = index + 1;
+  const order = meta.order ?? index + 1;
   const level: CatalogLevelJson = {
-    id: levelId(index),
+    id: meta.id ?? levelId(index),
     name: meta.name,
     description: meta.description,
     difficulty: meta.difficulty,
     order,
     attempts: meta.attempts,
     ...(meta.timeLimitSeconds !== undefined ? { timeLimitSeconds: meta.timeLimitSeconds } : {}),
-    arrows: generated.records
+    arrows: generated.records,
+    ...(generated.region.masked
+      ? { boardShape: { type: "CELL_MASK" as const, cells: [...generated.region.cells] } }
+      : {})
   };
   const fileName = `${String(order).padStart(2, "0")}-${slug(meta.name)}.json`;
   writeFileSync(join(outputDir, fileName), `${JSON.stringify(level, null, 2)}\n`);

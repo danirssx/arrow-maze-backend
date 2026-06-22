@@ -73,4 +73,19 @@ describe("loadAuthoredLevels", () => {
       /Duplicate authored level order/
     );
   });
+
+  it("should_populate_generated_shaped_levels_with_only_multi_cell_arrows", () => {
+    // The generated shaped pack (order >= 17) must be dense shaped boards whose
+    // arrows each occupy 2+ cells (no single-cell arrows).
+    const shaped = loadAuthoredLevels().filter((level) => level.order >= 17);
+
+    expect(shaped.length).toBeGreaterThanOrEqual(10);
+    for (const level of shaped) {
+      expect(level.boardShape).not.toBeNull();
+      expect(level.arrows.length).toBeGreaterThan(0);
+      for (const arrow of level.arrows) {
+        expect(arrow.path.length).toBeGreaterThanOrEqual(2);
+      }
+    }
+  });
 });
