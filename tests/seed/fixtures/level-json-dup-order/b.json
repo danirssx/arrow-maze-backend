@@ -1,0 +1,9 @@
+{
+  "id": "550e8400-e29b-41d4-a716-4466554400f3",
+  "name": "Order B",
+  "description": "Shares order 1 with a.json.",
+  "difficulty": "EASY",
+  "order": 1,
+  "attempts": 3,
+  "arrows": [{ "id": "a", "color": "blue", "direction": "UP", "path": [{ "row": 0, "col": 0 }] }]
+}

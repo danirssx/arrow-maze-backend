@@ -1,0 +1,9 @@
+{
+  "id": "550e8400-e29b-41d4-a716-4466554400f1",
+  "name": "Dup B",
+  "description": "Shares an id with a.json.",
+  "difficulty": "EASY",
+  "order": 2,
+  "attempts": 3,
+  "arrows": [{ "id": "a", "color": "blue", "direction": "UP", "path": [{ "row": 0, "col": 0 }] }]
+}

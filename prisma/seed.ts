@@ -2,8 +2,9 @@
  * Database seed, executed by `prisma db seed` (configured in prisma.config.ts).
  *
  * Everything is written through Prisma Client so the seed honours the same
- * mappings and types as the application. Published levels come from the
- * generated `seed-data/levels.ts` module (`npm run seed:generate`); the demo
+ * mappings and types as the application. The published catalog is sourced from the
+ * JSON files in `seed-data/level-json/` (loaded + domain-validated by
+ * `authoredLevels.ts` — drop a JSON, run `db:seed`, it appears); the demo
  * users/progress/leaderboards reproduce the former `002_seed_demo_data.sql`.
  *
  * The seed is idempotent: every write is an upsert keyed by id (or by the
@@ -11,8 +12,14 @@
  */
 import { Prisma } from "@prisma/client";
 import { createPrismaClient } from "../src/infrastructure/database/PrismaClientProvider.js";
-import { SEED_LEVELS } from "./seed-data/levels.js";
 import { loadAuthoredLevels } from "./seed-data/authoredLevels.js";
+
+/**
+ * Base epoch for order-derived `createdAt`. `GET /levels` orders by `createdAt asc`,
+ * so deriving it from the authored `order` lists the catalog in author order without
+ * a schema change. The level number shown in the UI is the position in that list.
+ */
+const ORDER_EPOCH_MS = Date.UTC(2026, 0, 1, 0, 0, 0);
 
 function resolveSsl(): boolean {
   if (process.env.DATABASE_SSL !== undefined) {
@@ -82,36 +89,17 @@ async function main(): Promise<void> {
   const now = new Date();
 
   try {
-    for (const level of SEED_LEVELS) {
-      const arrows = level.arrows as unknown as Prisma.InputJsonValue;
-      const data = {
-        name: level.name,
-        description: level.description,
-        difficulty: level.difficulty,
-        status: level.status,
-        version: level.version,
-        arrows,
-        attempts: level.attempts,
-        timeLimitSeconds: level.timeLimitSeconds,
-        updatedAt: now,
-      };
-      await prisma.level.upsert({
-        where: { id: level.id },
-        create: { id: level.id, createdAt: now, ...data },
-        update: data,
-      });
-    }
-    process.stdout.write(`Seeded ${SEED_LEVELS.length} published levels\n`);
-
-    // Authored abstract shaped levels (Option A) — validated through the domain
-    // path by the loader before they are published here.
-    const authoredLevels = loadAuthoredLevels();
-    for (const level of authoredLevels) {
+    // The published catalog is sourced ENTIRELY from prisma/seed-data/level-json/.
+    // The loader validates every file through the domain (ArrowSpec, board-shape mask
+    // + containment, solvability) and enforces unique id/order before we publish.
+    const catalogLevels = loadAuthoredLevels();
+    for (const level of catalogLevels) {
       const arrows = level.arrows as unknown as Prisma.InputJsonValue;
       const boardShape: Prisma.InputJsonValue | typeof Prisma.DbNull =
         level.boardShape == null
           ? Prisma.DbNull
           : (level.boardShape as unknown as Prisma.InputJsonValue);
+      const createdAt = new Date(ORDER_EPOCH_MS + level.order * 1000);
       const data = {
         name: level.name,
         description: level.description,
@@ -122,15 +110,16 @@ async function main(): Promise<void> {
         attempts: level.attempts,
         timeLimitSeconds: level.timeLimitSeconds,
         boardShape,
+        createdAt,
         updatedAt: now,
       };
       await prisma.level.upsert({
         where: { id: level.id },
-        create: { id: level.id, createdAt: now, ...data },
+        create: { id: level.id, ...data },
         update: data,
       });
     }
-    process.stdout.write(`Seeded ${authoredLevels.length} authored shaped levels\n`);
+    process.stdout.write(`Seeded ${catalogLevels.length} catalog levels from level-json\n`);
 
     for (const user of DEMO_USERS) {
       const data = {
