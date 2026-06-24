@@ -201,6 +201,7 @@ describe('Progress value objects', () => {
   });
 
   it('should_not_expose_http_status_on_progress_vo_error', () => {
+    expect.assertions(2);
     try {
       new ProgressVersion(-1);
     } catch (e) {

@@ -13,7 +13,6 @@ import { SubmittedAt } from '../../../domain/leaderboard/value-objects/Submitted
 import { TimeSeconds } from '../../../domain/leaderboard/value-objects/TimeSeconds.js';
 import { UserId } from '../../../domain/shared/UserId.js';
 import { UsernameSnapshot } from '../../../domain/leaderboard/value-objects/UsernameSnapshot.js';
-import { NotFoundError } from '../../../shared/errors/ApplicationError.js';
 
 export interface SubmitScoreInput {
   leaderboardId: string;

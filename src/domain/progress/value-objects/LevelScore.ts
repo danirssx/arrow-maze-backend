@@ -9,7 +9,7 @@ export class LevelScore {
     if (!Number.isInteger(score) || score < 0) {
       throw new InvalidArgumentError('Score must be a non-negative integer');
     }
-    if (timeSeconds <= 0) {
+    if (isNaN(timeSeconds) || timeSeconds <= 0) {
       throw new InvalidArgumentError('TimeSeconds must be positive');
     }
     if (!Number.isInteger(movesCount) || movesCount < 1) {

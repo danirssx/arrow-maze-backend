@@ -167,6 +167,7 @@ describe('Leaderboard', () => {
     });
 
     it('should_not_expose_http_status_on_invalid_argument_error', () => {
+      expect.assertions(2);
       try {
         new Score(-1);
       } catch (e) {

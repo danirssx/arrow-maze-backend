@@ -2,7 +2,7 @@ import { InvalidArgumentError } from "../../errors/DomainError.js";
 
 export class TimeSeconds {
   constructor(readonly value: number) {
-    if (value <= 0) {
+    if (isNaN(value) || value <= 0) {
       throw new InvalidArgumentError('TimeSeconds must be greater than zero');
     }
   }

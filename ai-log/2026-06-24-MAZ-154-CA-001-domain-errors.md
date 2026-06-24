@@ -99,9 +99,22 @@ User also requested the fix-style PR table documenting changed files.
 
 **Test count:** 350 → 373 (23 new tests)
 
+## Code Review Findings (post-implementation)
+
+Five findings surfaced by `/code-review --effort high` (all CONFIRMED). All fixed before PR.
+
+| # | File | Finding | Fix |
+|---|------|---------|-----|
+| 1 | `PrismaLeaderboardRepository.ts:68` | Blanket catch masked `InvalidArgumentError` from VO constructors as `InfrastructureError` when reconstructing from DB rows | Added `if (err instanceof DomainError) throw err;` before the InfrastructureError rethrow |
+| 2 | `TimeSeconds.ts:5` | `NaN <= 0` is `false` in JS — `new TimeSeconds(NaN)` passed validation silently | Changed guard to `isNaN(value) \|\| value <= 0` |
+| 2b | `LevelScore.ts:12` | Same NaN gap on `timeSeconds` field (same pattern as TimeSeconds, caught during fix) | Changed guard to `isNaN(timeSeconds) \|\| timeSeconds <= 0` |
+| 3 | `Leaderboard.test.ts:169` | `try/catch` without `expect.assertions(2)` — test passes vacuously if Score stops throwing | Added `expect.assertions(2)` |
+| 4 | `PlayerProgress.test.ts:203` | Same silent-pass bug with ProgressVersion | Added `expect.assertions(2)` |
+| 5 | `SubmitScoreService.ts:16` | `NotFoundError` imported but never used after pre-validation removal | Removed dead import |
+
 ## Verification
 
-- `npm run verify` — 63 suites, 373 tests passing, build clean
+- `npm run verify` — 63 suites, 373 tests passing, build clean (post code-review fixes)
 
 ## Team Modifications Pending Human Review
 
