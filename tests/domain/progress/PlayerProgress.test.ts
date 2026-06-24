@@ -14,6 +14,7 @@ import { CompletedLevelId } from '../../../src/domain/progress/value-objects/Com
 import { UpdatedAt } from '../../../src/domain/progress/value-objects/UpdatedAt.js';
 import { UserId } from '../../../src/domain/shared/UserId.js';
 import { LevelId } from '../../../src/domain/shared/LevelId.js';
+import { InvalidArgumentError } from '../../../src/domain/errors/DomainError.js';
 
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const USER_A = '550e8400-e29b-41d4-a716-446655440002';
@@ -179,5 +180,99 @@ describe('ProgressMergePolicy', () => {
     const remote = PlayerProgress.empty(ProgressId.create('550e8400-e29b-41d4-a716-446655440020'), UserId.create(USER_B));
 
     expect(() => policy.merge(local, remote)).toThrow(ProgressUserMismatchError);
+  });
+});
+
+describe('Progress value objects', () => {
+  it('should_throw_invalid_argument_error_when_level_score_has_negative_score', () => {
+    expect(() => new LevelScore(-1, 10, 5)).toThrow(InvalidArgumentError);
+  });
+
+  it('should_throw_invalid_argument_error_when_level_score_has_zero_time', () => {
+    expect(() => new LevelScore(100, 0, 5)).toThrow(InvalidArgumentError);
+  });
+
+  it('should_throw_invalid_argument_error_when_level_score_has_zero_moves', () => {
+    expect(() => new LevelScore(100, 10, 0)).toThrow(InvalidArgumentError);
+  });
+
+  it('should_throw_invalid_argument_error_when_progress_version_is_negative', () => {
+    expect(() => new ProgressVersion(-1)).toThrow(InvalidArgumentError);
+  });
+
+  it('should_not_expose_http_status_on_progress_vo_error', () => {
+    expect.assertions(2);
+    try {
+      new ProgressVersion(-1);
+    } catch (e) {
+      expect(e).toBeInstanceOf(InvalidArgumentError);
+      expect('httpStatus' in (e as object)).toBe(false);
+    }
+  });
+
+  // --- StringLiteral survivors ---
+  it('should_throw_with_exact_message_when_level_score_has_negative_score', () => {
+    expect(() => new LevelScore(-1, 10, 5)).toThrow('Score must be a non-negative integer');
+  });
+
+  it('should_throw_with_exact_message_when_level_score_has_zero_time', () => {
+    expect(() => new LevelScore(100, 0, 5)).toThrow('TimeSeconds must be positive');
+  });
+
+  it('should_throw_with_exact_message_when_level_score_has_zero_moves', () => {
+    expect(() => new LevelScore(100, 10, 0)).toThrow('MovesCount must be a positive integer');
+  });
+
+  it('should_throw_with_exact_message_when_progress_version_is_negative', () => {
+    expect(() => new ProgressVersion(-1)).toThrow('ProgressVersion must be a non-negative integer');
+  });
+
+  // --- Boundary exact survivors ---
+  it('should_be_valid_when_level_score_has_zero_score', () => {
+    expect(() => new LevelScore(0, 10, 1)).not.toThrow();
+    expect(new LevelScore(0, 10, 1).score).toBe(0);
+  });
+
+  it('should_be_valid_when_level_score_has_one_move', () => {
+    expect(() => new LevelScore(100, 10, 1)).not.toThrow();
+    expect(new LevelScore(100, 10, 1).movesCount).toBe(1);
+  });
+
+  // --- LevelScore.isBetterThan logic survivors ---
+  it('should_return_true_when_scores_equal_and_new_time_is_lower', () => {
+    const current = new LevelScore(100, 30, 5);
+    const better  = new LevelScore(100, 20, 5);
+    expect(better.isBetterThan(current)).toBe(true);
+  });
+
+  it('should_return_false_when_scores_equal_and_new_time_is_higher', () => {
+    const current = new LevelScore(100, 20, 5);
+    const worse   = new LevelScore(100, 30, 5);
+    expect(worse.isBetterThan(current)).toBe(false);
+  });
+
+  it('should_return_false_when_scores_equal_and_times_equal', () => {
+    const a = new LevelScore(100, 20, 5);
+    const b = new LevelScore(100, 20, 5);
+    expect(a.isBetterThan(b)).toBe(false);
+  });
+
+  // --- ProgressVersion.isAheadOf logic survivors ---
+  it('should_return_false_when_versions_are_equal', () => {
+    const v5a = new ProgressVersion(5);
+    const v5b = new ProgressVersion(5);
+    expect(v5a.isAheadOf(v5b)).toBe(false);
+  });
+
+  it('should_return_false_when_version_is_behind_other', () => {
+    const v3 = new ProgressVersion(3);
+    const v5 = new ProgressVersion(5);
+    expect(v3.isAheadOf(v5)).toBe(false);
+  });
+
+  it('should_return_true_when_version_is_strictly_ahead_of_other', () => {
+    const v5 = new ProgressVersion(5);
+    const v3 = new ProgressVersion(3);
+    expect(v5.isAheadOf(v3)).toBe(true);
   });
 });

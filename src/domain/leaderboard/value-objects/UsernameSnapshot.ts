@@ -1,7 +1,9 @@
+import { InvalidArgumentError } from "../../errors/DomainError.js";
+
 export class UsernameSnapshot {
   constructor(readonly value: string) {
     if (!value || value.trim().length === 0) {
-      throw new Error('UsernameSnapshot cannot be empty');
+      throw new InvalidArgumentError('UsernameSnapshot cannot be empty');
     }
   }
 

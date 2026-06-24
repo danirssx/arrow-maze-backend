@@ -89,7 +89,7 @@ describe("POST /auth/register", () => {
     expect(res.body.error.code).toBe("CONFLICT");
   });
 
-  it("should_return_400_when_email_format_is_invalid", async () => {
+  it("should_return_422_when_email_format_is_invalid", async () => {
     // Arrange
     const registerUseCase = new FakeRegisterUseCase();
     registerUseCase.error = new InvalidArgumentError("Invalid email format");
@@ -99,7 +99,7 @@ describe("POST /auth/register", () => {
     const res = await request(app).post("/auth/register").send({ ...VALID_BODY, email: "not-an-email" });
 
     // Assert
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error.code).toBe("INVALID_ARGUMENT");
   });
 });

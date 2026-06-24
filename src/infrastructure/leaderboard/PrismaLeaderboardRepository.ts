@@ -15,6 +15,7 @@ import { UpdatedAt } from '../../domain/leaderboard/value-objects/UpdatedAt.js';
 import { UsernameSnapshot } from '../../domain/leaderboard/value-objects/UsernameSnapshot.js';
 import { LevelId } from '../../domain/shared/LevelId.js';
 import { UserId } from '../../domain/shared/UserId.js';
+import { DomainError } from '../../domain/errors/DomainError.js';
 import { InfrastructureError } from '../../shared/errors/InfrastructureError.js';
 import { getClient, withTransaction } from '../database/prismaContext.js';
 
@@ -65,6 +66,7 @@ export class PrismaLeaderboardRepository implements LeaderboardRepository {
         entries: board.entries.map(recordToEntry),
       });
     } catch (err) {
+      if (err instanceof DomainError) throw err;
       throw new InfrastructureError('Failed to find leaderboard', { cause: String(err) });
     }
   }
