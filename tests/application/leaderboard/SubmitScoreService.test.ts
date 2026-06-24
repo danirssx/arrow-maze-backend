@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { SubmitScoreService, type SubmitScoreInput } from '../../../src/application/leaderboard/use-cases/SubmitScoreService.js';
 import type { LeaderboardRepository } from '../../../src/application/leaderboard/ports/ILeaderboardRepository.js';
 import type { DomainEventBus } from '../../../src/application/ports/DomainEventBus.js';
-import { ValidationError } from '../../../src/shared/errors/ApplicationError.js';
+import { InvalidArgumentError } from '../../../src/domain/errors/DomainError.js';
 import { Leaderboard } from '../../../src/domain/leaderboard/Leaderboard.js';
 import { LeaderboardId } from '../../../src/domain/leaderboard/value-objects/LeaderboardId.js';
 import { MaxLeaderboardEntries } from '../../../src/domain/leaderboard/value-objects/MaxLeaderboardEntries.js';
@@ -87,16 +87,22 @@ describe('SubmitScoreService', () => {
       expect(eventBus.publishAll).toHaveBeenCalledTimes(1);
     });
 
-    it('should_throw_validation_error_when_score_is_negative', async () => {
+    it('should_throw_invalid_argument_error_when_score_is_negative', async () => {
       const service = makeService(makeRepo());
 
-      await expect(service.execute(makeInput({ score: -1 }))).rejects.toThrow(ValidationError);
+      await expect(service.execute(makeInput({ score: -1 }))).rejects.toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_validation_error_when_time_seconds_is_zero', async () => {
+    it('should_throw_invalid_argument_error_when_time_seconds_is_zero', async () => {
       const service = makeService(makeRepo());
 
-      await expect(service.execute(makeInput({ timeSeconds: 0 }))).rejects.toThrow(ValidationError);
+      await expect(service.execute(makeInput({ timeSeconds: 0 }))).rejects.toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_invalid_argument_error_when_moves_count_is_zero', async () => {
+      const service = makeService(makeRepo());
+
+      await expect(service.execute(makeInput({ movesCount: 0 }))).rejects.toThrow(InvalidArgumentError);
     });
   });
 });

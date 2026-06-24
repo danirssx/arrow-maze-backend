@@ -123,7 +123,7 @@ describe('GET /levels/:levelId', () => {
     expect(res.body.error.code).toBe('NOT_FOUND');
   });
 
-  it('should_return_400_when_levelId_is_not_a_valid_uuid', async () => {
+  it('should_return_422_when_levelId_is_not_a_valid_uuid', async () => {
     // Arrange
     const getLevelUseCase = new FakeGetLevelUseCase();
     getLevelUseCase.error = new InvalidArgumentError('Invalid UUID: not-a-uuid');
@@ -133,7 +133,7 @@ describe('GET /levels/:levelId', () => {
     const res = await request(app).get('/levels/not-a-uuid');
 
     // Assert
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error.code).toBe('INVALID_ARGUMENT');
   });
 

@@ -2,8 +2,10 @@
 
 import { sanitizeLogContext } from "../../application/aspects/sanitizeLogContext.js";
 import type { Logger } from "../../application/ports/Logger.js";
+import { DomainError } from "../../domain/errors/DomainError.js";
 import { AppError } from "../../shared/errors/index.js";
 import { ApiResponsePresenter } from "./ApiResponsePresenter.js";
+import { DomainErrorMapper } from "./DomainErrorMapper.js";
 
 /**
  * Cross-cutting (AOP) error handler. It is the single place that maps any error
@@ -19,6 +21,12 @@ const INTERNAL_ERROR_MESSAGE = "Internal server error";
 
 export function createErrorMiddleware(logger: Logger): ErrorRequestHandler {
   return (error, request, response, _next) => {
+    if (error instanceof DomainError) {
+      const httpStatus = DomainErrorMapper.toHttpStatus(error);
+      response.status(httpStatus).json(ApiResponsePresenter.error(error.code, error.message));
+      return;
+    }
+
     if (error instanceof AppError) {
       if (error.httpStatus >= 500) {
         logger.error(error.code, sanitizeLogContext({ message: error.message, path: request.path }));

@@ -1,7 +1,9 @@
+import { InvalidArgumentError } from "../../errors/DomainError.js";
+
 export class ProgressVersion {
   constructor(readonly value: number) {
     if (!Number.isInteger(value) || value < 0) {
-      throw new Error('ProgressVersion must be a non-negative integer');
+      throw new InvalidArgumentError('ProgressVersion must be a non-negative integer');
     }
   }
 

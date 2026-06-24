@@ -2484,6 +2484,501 @@ intentional. Verifying the repurposed generator reproduced the migration byte-fo
 was the key safety check that the DB content did not silently change.
 
 
+---
+
+# AI Usage Log: MAZ-170 Author 10+ large dense shaped levels (multi-cell arrows)
+
+## Task / Problem
+
+The product owner asked for a pack of large, densely-populated levels with recognizable
+shapes (heart, animal, etc.) — varied like the original 1–15 — and with **no single-cell
+arrows** (every arrow ≥ 2 cells). Authored them as JSON in `prisma/seed-data/level-json/`
+so `npm run db:seed` publishes them.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Not used | Creative brief given directly. | N/A |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Authored ticket MAZ-170. | MAZ-170 |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Extended the authoring tool to fill ASCII-mask regions; added a catalog test that the generated shaped pack uses only multi-cell arrows + carries a board shape. | `tests/seed/authoredLevels.test.ts` |
+| Judge (`.agents/judge.md`) | Referenced | `npm run verify` green; rendered the masks to confirm shapes read clearly and are well-populated; confirmed the base 15 regenerate byte-for-byte. | `npm run verify` |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No `src/domain`/`src/application` production code changed (only `scripts/`, JSON data, and a test). | N/A |
+
+## Result Obtained
+
+- **`scripts/generate-level-seed.ts`** (the authoring tool, out of the seed) now supports
+  shaped boards: a level can carry an ASCII `mask` ('#' = cell); generation is confined to
+  the mask via a `Region` abstraction, the start cell is drawn from the mask, density is
+  measured over mask cells, and the JSON output emits the `boardShape`. The rectangle path
+  is unchanged (the base 15 regenerate **byte-for-byte** — verified by `git diff`). Added a
+  guard that rejects any single-cell arrow and `id`/`order` overrides.
+- **11 new shaped levels** (orders 17–27, ids `…440040`–`…440050`), all dense (62–82% of
+  mask cells covered), multi-cell arrows only, solvable DAGs, arrows fully inside the mask:
+  Heart, Diamond, Pyramid, Plus, Up-Arrow, Hexagon, Cat, Ghost, House, Full-Moon (disc),
+  Octagon. Difficulty/family varied for variety.
+- The full catalog is now **27 levels** (15 rectangular + Cross Beacon #16 + 11 shaped).
+
+## Verification
+
+- `npm run verify` → **63 suites / 362 tests** green (lint + typecheck + build).
+- Loader validated all 27 levels (solvable, arrows ⊆ mask, unique id/order).
+- ASCII renders confirmed each shape reads clearly and is well-populated.
+
+## Team Modifications Pending Human Review
+
+- Run `npm run db:seed` to publish the 11 new levels (they appear as #17–#27).
+- **Cross Beacon (#16)** keeps its single-cell `center` arrow by design of its minimal
+  9-cell plus — it is the only single-cell arrow in the catalog. Left as-is since it was
+  already approved/working; can be regenerated as a dense plus on request.
+- Density on the most concave shapes (Cat ~63%, House/Full-Moon ~62%) is lower than the
+  rectangular levels (87–99%) because irregular masks pack less tightly with non-overlapping
+  monotone arrows; the dotted mask still renders the full shape. Arrow counts can be pushed
+  higher per shape on request (with some risk of generation retries).
+
+## Lessons / Limitations
+
+Confining the proven monotone-family generator to a cell mask (instead of a rectangle)
+reuses its dense + acyclic-by-construction guarantees for arbitrary shapes; the only care
+needed was preserving the exact RNG draw sequence for the base 15 (mask start = 1 draw,
+rectangle start = 2 draws) so their content does not drift. The dotted board background
+renders the whole mask, so a shape stays recognizable even where arrows don't reach.
+
+
+---
+
+# AI Usage Log: MAZ-167 [CA-014] Enforce `reglas_clean_arch.md` strictly in the judge
+
+## Task / Problem
+
+Cross-repo docs/chore ticket (`MAZ-167`, temporary id `CA-014`,
+milestone `M8 - Clean Architecture Remediation`). The judges already checked the
+dependency rule but did not force reading/applying the **whole**
+`reglas_clean_arch.md` checklist, nor force every `src`-touching ticket to
+declare its per-layer impact through a `Clean Architecture contract`. There was
+also no spec/ticket template carrying that contract, so future tickets had no
+canonical shape for the judge to enforce.
+
+## Tool and Model
+
+Claude Code / claude-opus-4-8.
+
+## Prompt Used
+
+User asked to implement MAZ-167 following the repo agent rules: read both
+`AGENTS.md`, the root `MEMORY.md`, `Linear_MCP_Guideline.md`, work in a fresh
+worktree, log AI usage + run `compile-ai-usage.sh`, commit/push/PR and update
+Linear. Read before implementing: `AGENTS.md`, root `MEMORY.md`,
+`reglas_clean_arch.md`, the Linear ticket body, `.agents/*` and existing specs.
+No secrets pasted.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | This ticket edits the prompt itself: added a mandatory `## Clean Architecture contract` step pointing at `specs/_TEMPLATE.spec.md`. No separate spec-partner session was run. | `.agents/spec-partner.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Edited the prompt to require each `src`-touching slice/ticket carry the `Clean Architecture contract`. No separate planner session. | `.agents/planner.md` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Not used | Docs-only ticket; no production code or tests. | N/A |
+| Judge (`.agents/judge.md`) | Referenced | Main target of the change: tightened protocol step 1/3, verdict checklist and hard rules; followed its own dependency-rule constraints while editing. No separate judge session run against a PR. | `.agents/judge.md` |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No production code changed; nothing to mutate. | N/A |
+
+## Scenario Coverage (@s ↔ test)
+
+Not applicable — docs/chore ticket. Acceptance criteria are non-functional and
+validated by manual dry-run of the judge protocol against this ticket's own
+`Clean Architecture contract` (embedded in the Linear description).
+
+## Result Obtained
+
+- `specs/_TEMPLATE.spec.md` — new backend spec/ticket template with the
+  mandatory `## Clean Architecture contract` section (applicable rules, per-layer
+  impact, forbidden moves, required tests, architecture acceptance criteria).
+- `.agents/judge.md` — protocol step 1 now reads `docs/reglas_clean_arch.md`
+  (mirror of canonical `../reglas_clean_arch.md`) and requires applying the
+  **whole** checklist; step 3 requires the contract follow the template and
+  declare impact per layer; verdict checklist adds a per-layer-impact line and a
+  note requiring one PASS/FAIL per applicable rule; two new hard rules.
+- `.agents/spec-partner.md` / `.agents/planner.md` — require the contract in the
+  generated spec and in every `src`-touching Linear ticket.
+
+## Verification
+
+- Docs-only change under `.agents/` and `specs/` (markdown); no `src`, `tests`
+  or build config touched, so `npm run verify` is unaffected.
+- Dry-run: MAZ-167's Linear description already carries a `## Clean Architecture
+  contract` block (all layers `no previsto`, docs-only) — the judge protocol
+  processes it and would not reject, satisfying the Definition of Done example.
+
+## Team Modifications Pending Human Review
+
+- The canonical `reglas_clean_arch.md` is mirrored into each repo's `docs/`.
+  Path strategy kept as `docs/reglas_clean_arch.md` (self-contained per repo)
+  with `../reglas_clean_arch.md` documented as the canonical fallback.
+- Confirm `specs/_TEMPLATE.spec.md` (underscore prefix) is the desired template
+  location and naming.
+
+## Lessons / Limitations
+
+- Much of CA-014's judge changes had already landed in prior commits; the real
+  remaining gap was the missing spec/ticket template and wiring spec-partner +
+  planner to it. Verified the existing state before adding, to avoid duplication.
+
+
+---
+
+# AI Usage Log: MAZ-154 (CA-001) — Backend: separar errores de dominio puros del mapeo HTTP
+
+## Task / Problem
+
+`DomainError` extendía `AppError` que tiene `httpStatus`, filtrando semántica HTTP al dominio.
+Siete VOs de leaderboard (`Score`, `MoveCount`, `TimeSeconds`, `Rank`, `UsernameSnapshot`,
+`MaxLeaderboardEntries`) y dos de progress (`LevelScore`, `ProgressVersion`) lanzaban
+`throw new Error()` genérico. `SubmitScoreService` duplicaba validaciones de VO para
+evitar que esos errores genéricos se convirtieran en respuestas 500 en producción.
+
+Objetivo: jerarquía de dominio pura sin HTTP, mapper en framework, VOs con errores
+controlados, servicio sin duplicación.
+
+## Tool and Model
+
+Claude Sonnet 4.6 via Claude Code CLI.
+
+## Prompt Used
+
+User requested starting MAZ-154 (CA-001) following the established team workflow:
+spec-partner → planner → human approval → TDD implementer. Spec and Gherkin were
+written first, approved by Fernando, then TDD cycles were run in four batches.
+User also requested the fix-style PR table documenting changed files.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Used | Wrote `specs/backend-domain-errors-CA-001.spec.md` after reading domain error files, VOs, SubmitScoreService, and errorMiddleware. Identified the 3 root causes and proposed the DomainErrorMapper design. | `specs/backend-domain-errors-CA-001.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Used | Distilled 12 Gherkin scenarios covering all 9 VOs, middleware mapping, structural inspection, and service delegation. | `specs/backend-domain-errors-CA-001.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Four Red-Green-Refactor batches (see Scenario Coverage below). Each batch: wrote failing test → ran to confirm RED → implemented → confirmed GREEN. | tests, commits, PR |
+| Judge (`.agents/judge.md`) | Used | Reviewed CA contract, scenario coverage, TDD discipline, dependency rules, and ran architectural grep checks. Verdict: APPROVED. | `ai-log/2026-06-24-MAZ-154-CA-001-judge.md` |
+| Mutation Tester (`.agents/mutation.md`) | Used | First run: FAIL 74.63% (23 survivors). TDD implementer added 30 tests to kill survivors. Second run: PASS 99.25%. | `ai-log/2026-06-24-MAZ-154-CA-001-mutation.md` |
+
+## Scenario Coverage (@s ↔ test)
+
+| Scenario | Test | File |
+|----------|------|------|
+| @s1 — Score rejects negative | `should_throw_invalid_argument_error_when_score_is_negative` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s2 — Score rejects decimal | `should_throw_invalid_argument_error_when_score_is_decimal` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s3 — MoveCount rejects zero | `should_throw_invalid_argument_error_when_move_count_is_zero` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s4 — TimeSeconds rejects zero | `should_throw_invalid_argument_error_when_time_seconds_is_zero` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s5 — Rank rejects zero | `should_throw_invalid_argument_error_when_rank_is_zero` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s6 — UsernameSnapshot rejects empty | `should_throw_invalid_argument_error_when_username_snapshot_is_empty` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s7 — MaxLeaderboardEntries rejects zero | `should_throw_invalid_argument_error_when_max_entries_is_zero` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s8 — LevelScore rejects negative score | `should_throw_invalid_argument_error_when_level_score_has_negative_score` | `tests/domain/progress/PlayerProgress.test.ts` |
+| @s9 — ProgressVersion rejects negative | `should_throw_invalid_argument_error_when_progress_version_is_negative` | `tests/domain/progress/PlayerProgress.test.ts` |
+| @s10 — DomainError → 422 via middleware | `should_return_standard_error_envelope_when_domain_error_is_thrown` | `tests/api/error-handling.test.ts` |
+| @s11 — No httpStatus in domain | `should_be_domain_error_but_not_app_error_when_*` + `should_not_expose_http_status_on_*` | `tests/domain/domain-error.test.ts`, `Leaderboard.test.ts`, `PlayerProgress.test.ts` |
+| @s12 — SubmitScoreService delegates to VO | `should_throw_invalid_argument_error_when_score_is_negative` | `tests/application/leaderboard/SubmitScoreService.test.ts` |
+
+## TDD Cycles
+
+**Batch 1 — DomainError hierarchy**
+- RED: `domain-error.test.ts` updated to assert `not instanceof AppError` and `'httpStatus' in error === false`
+- GREEN: `DomainError.ts` now extends `Error` directly; removed `httpStatus`, removed `AppError` import
+
+**Batch 2 — Framework mapper**
+- RED: `error-handling.test.ts` — `/throw/domain` returned 500 (domain error no longer caught as AppError)
+- GREEN: new `DomainErrorMapper.ts`; `errorMiddleware.ts` now has `instanceof DomainError` branch before `instanceof AppError`
+
+**Batch 3 — 9 VOs**
+- RED: new `toThrow(InvalidArgumentError)` assertions in `Leaderboard.test.ts` and `PlayerProgress.test.ts`
+- GREEN: 9 VOs import `InvalidArgumentError` and replace `throw new Error()` — `Score`, `MoveCount`, `TimeSeconds`, `Rank`, `UsernameSnapshot`, `MaxLeaderboardEntries`, `LevelScore`, `ProgressVersion`
+
+**Batch 4 — SubmitScoreService**
+- RED: service tests updated to expect `InvalidArgumentError` instead of `ValidationError`; added `movesCount` coverage
+- GREEN: pre-validation guards removed from `SubmitScoreService` (lines 38-46); service now delegates fully to VOs
+
+**Side-effect fix**: 2 API tests (`register.test.ts`, `getLevel.test.ts`) expected HTTP 400 for `INVALID_ARGUMENT` (old `AppError.httpStatus`). Updated to expect 422, consistent with spec decision #3.
+
+## Result Obtained
+
+**New files:**
+- `src/framework/errors/DomainErrorMapper.ts` — maps domain error codes to HTTP status
+- `specs/backend-domain-errors-CA-001.spec.md` — Clean Architecture spec with CA contract
+- `specs/backend-domain-errors-CA-001.feature` — 12 Gherkin scenarios
+
+**Modified source files:**
+- `src/domain/errors/DomainError.ts` — extends `Error` directly, no `httpStatus`, no `AppError`
+- `src/framework/errors/errorMiddleware.ts` — added `instanceof DomainError` branch with mapper
+- `src/domain/leaderboard/value-objects/Score.ts` — `InvalidArgumentError`
+- `src/domain/leaderboard/value-objects/MoveCount.ts` — `InvalidArgumentError`
+- `src/domain/leaderboard/value-objects/TimeSeconds.ts` — `InvalidArgumentError`
+- `src/domain/leaderboard/value-objects/Rank.ts` — `InvalidArgumentError`
+- `src/domain/leaderboard/value-objects/UsernameSnapshot.ts` — `InvalidArgumentError`
+- `src/domain/leaderboard/value-objects/MaxLeaderboardEntries.ts` — `InvalidArgumentError`
+- `src/domain/progress/value-objects/LevelScore.ts` — `InvalidArgumentError`
+- `src/domain/progress/value-objects/ProgressVersion.ts` — `InvalidArgumentError`
+- `src/application/leaderboard/use-cases/SubmitScoreService.ts` — pre-validations removed
+
+**Modified test files:**
+- `tests/domain/domain-error.test.ts` — new assertions; removed `httpStatus`/`AppError` checks
+- `tests/domain/leaderboard/Leaderboard.test.ts` — 8 new VO assertions
+- `tests/domain/progress/PlayerProgress.test.ts` — 5 new progress VO assertions
+- `tests/application/leaderboard/SubmitScoreService.test.ts` — expects `InvalidArgumentError`; added `movesCount` test
+- `tests/api/identity/register.test.ts` — 400 → 422 for `INVALID_ARGUMENT`
+- `tests/api/level-catalog/getLevel.test.ts` — 400 → 422 for `INVALID_ARGUMENT`
+
+**Test count:** 350 → 373 (23 new tests from TDD) → 403 (30 additional tests added to kill mutation survivors)
+
+## Code Review Findings (post-implementation)
+
+Five findings surfaced by `/code-review --effort high` (all CONFIRMED). All fixed before PR.
+
+| # | File | Finding | Fix |
+|---|------|---------|-----|
+| 1 | `PrismaLeaderboardRepository.ts:68` | Blanket catch masked `InvalidArgumentError` from VO constructors as `InfrastructureError` when reconstructing from DB rows | Added `if (err instanceof DomainError) throw err;` before the InfrastructureError rethrow |
+| 2 | `TimeSeconds.ts:5` | `NaN <= 0` is `false` in JS — `new TimeSeconds(NaN)` passed validation silently | Changed guard to `isNaN(value) \|\| value <= 0` |
+| 2b | `LevelScore.ts:12` | Same NaN gap on `timeSeconds` field (same pattern as TimeSeconds, caught during fix) | Changed guard to `isNaN(timeSeconds) \|\| timeSeconds <= 0` |
+| 3 | `Leaderboard.test.ts:169` | `try/catch` without `expect.assertions(2)` — test passes vacuously if Score stops throwing | Added `expect.assertions(2)` |
+| 4 | `PlayerProgress.test.ts:203` | Same silent-pass bug with ProgressVersion | Added `expect.assertions(2)` |
+| 5 | `SubmitScoreService.ts:16` | `NotFoundError` imported but never used after pre-validation removal | Removed dead import |
+
+## Verification
+
+- `npm run verify` — 63 suites, 403 tests passing, build clean (final: post mutation survivor fixes)
+
+## Team Modifications Pending Human Review
+
+1. **HTTP status for `INVALID_ARGUMENT` changed from 400 → 422** — the spec justifies this (422
+   is the correct status for a domain invariant violation; 400 is for malformed requests). Two
+   existing API tests were updated to reflect this. Frontend/client consumers must be aware if
+   they switch on specific status codes.
+
+2. **`details` removed from `DomainError`** — `AppError` kept `details` for HTTP error context;
+   `DomainError` no longer exposes it. The `BusinessRuleViolationError` constructor no longer
+   accepts a details argument. No callers in production code passed details to domain errors;
+   only the old `domain-error.test.ts` did (now removed from the test).
+
+3. **`SubmitScoreService` removed pre-validations** — the service now trusts VOs completely.
+   If a VO invariant changes, it automatically propagates without service-level changes.
+
+## Lessons / Limitations
+
+- The ordering of `instanceof` checks in `errorMiddleware` is critical: `DomainError` must come
+  before `AppError` (since they now share only `Error` as base, there's no overlap — but placing
+  domain first is safer and clearer for future readers).
+- `MaxLeaderboardEntries.DEFAULT` is a static field initialized at class load time. Using
+  `InvalidArgumentError` there is safe because the default value (10) is valid and the error
+  path is never hit at initialization.
+
+
+---
+
+# Review — ticket MAZ-154 (CA-001)
+
+**Veredicto:** APPROVED
+
+**Pass:** Second judge pass (post-mutation survivor fixes — boundary + StringLiteral tests added)
+
+---
+
+## Cobertura de escenarios (@s ↔ test)
+
+- @s1: [x] `should_throw_invalid_argument_error_when_score_is_negative` — `tests/domain/leaderboard/Leaderboard.test.ts:141`
+- @s2: [x] `should_throw_invalid_argument_error_when_score_is_decimal` — `tests/domain/leaderboard/Leaderboard.test.ts:145`
+- @s3: [x] `should_throw_invalid_argument_error_when_move_count_is_zero` — `tests/domain/leaderboard/Leaderboard.test.ts:153`
+- @s4: [x] `should_throw_invalid_argument_error_when_time_seconds_is_zero` — `tests/domain/leaderboard/Leaderboard.test.ts:149`
+- @s5: [x] `should_throw_invalid_argument_error_when_rank_is_zero` — `tests/domain/leaderboard/Leaderboard.test.ts:157`
+- @s6: [x] `should_throw_invalid_argument_error_when_username_snapshot_is_empty` — `tests/domain/leaderboard/Leaderboard.test.ts:165`
+- @s7: [x] `should_throw_invalid_argument_error_when_max_entries_is_zero` — `tests/domain/leaderboard/Leaderboard.test.ts:161`
+- @s8: [x] `should_throw_invalid_argument_error_when_level_score_has_negative_score` — `tests/domain/progress/PlayerProgress.test.ts:187`
+- @s9: [x] `should_throw_invalid_argument_error_when_progress_version_is_negative` — `tests/domain/progress/PlayerProgress.test.ts:199`
+- @s10: [x] `should_return_standard_error_envelope_when_domain_error_is_thrown` — `tests/api/error-handling.test.ts:53`
+- @s11: [x] `should_be_domain_error_but_not_app_error_when_*` + `should_not_expose_http_status_on_*` — `tests/domain/domain-error.test.ts:9,19`, `Leaderboard.test.ts:169`, `PlayerProgress.test.ts:203`
+- @s12: [x] `should_throw_invalid_argument_error_when_score_is_negative` — `tests/application/leaderboard/SubmitScoreService.test.ts:90`
+
+All 12 scenarios covered. No scenario left without at least one concrete test.
+
+---
+
+## Disciplina TDD
+
+- **Produccion sin test que la pida?** NO. Toda la produccion nueva esta respaldada por tests:
+  - `DomainError.ts` → `domain-error.test.ts`
+  - `DomainErrorMapper.ts` + `errorMiddleware.ts` branch → `error-handling.test.ts`
+  - 9 VOs → `Leaderboard.test.ts` + `PlayerProgress.test.ts`
+  - `SubmitScoreService` (pre-validation removal) → `SubmitScoreService.test.ts:90-106`
+  - `PrismaLeaderboardRepository.ts:69` (DomainError rethrow guard) → covered by existing infra tests
+- **Evidencia de Rojo→Verde→Refactor?** SI. El ai-log documenta 4 batches con descripcion RED→GREEN para cada uno, mas una fase de fix post code-review en el commit `820e7d6`.
+- **Nuevos tests (segunda pasada):** Los tests de StringLiteral y boundary verifican valores exactos de mensajes y los limites validos/invalidos. No hay ningun test que no corresponda a comportamiento existente de produccion. Los tests de `NoCoverage` (metodos `isHigherThan`, `isFasterThan`, `isBetterThan`, `isAheadOf`, `toString`) cubren logica real de los VOs. PASS.
+
+---
+
+## Regla de dependencia y calidad
+
+### Hallazgos del grep arquitectonico
+
+**`httpStatus|from 'crypto'|from "crypto"|AppError` en `src/domain`**
+
+Matches encontrados: 6 imports de `crypto` en VOs de identidad compartida (`UserId.ts`, `LevelId.ts`, `EntryId.ts`, `CompletedLevelId.ts`, `ProgressId.ts`, `LeaderboardId.ts`).
+
+- **Veredicto sobre crypto**: Pre-existentes, no tocados por este ticket. Deuda arquitectonica a atender en ticket dedicado. No rechaza.
+
+**`from '...(infrastructure|framework)'` en `src/domain` y `src/application`**
+
+Sin resultados. PASS.
+
+**`role !==|role ===|isAdmin|ADMIN` en `src/framework`**
+
+Matches en `src/framework/level-catalog/LevelCatalogController.ts:45,76,101,115` — autorizacion por rol en el controller.
+
+- **Veredicto**: Pre-existentes, no tocados por CA-001. No introduce el problema este PR.
+
+**`createdAt: Date|updatedAt: Date|submittedAt: Date|completedAt: Date` en `src/application`**
+
+Matches en `GetLevelUseCase.ts:17-18`, `GetLevelsUseCase.ts:13`, `GetLeaderboardService.ts:18,25`, `LoadProgressService.ts:16,24`.
+
+- **Veredicto**: Pre-existentes, no tocados por CA-001.
+
+### Calidad de los tests nuevos (segunda pasada)
+
+- **StringLiteral tests** (`Leaderboard.test.ts:180-200`, `PlayerProgress.test.ts:214-228`): verifican mensaje exacto del `InvalidArgumentError`. Todos los mensajes verificados contra source:
+  - `Score`: `'Score must be a non-negative integer'` — `Score.ts:6`. MATCH.
+  - `TimeSeconds` VO: `'TimeSeconds must be greater than zero'` — `TimeSeconds.ts:6`. MATCH.
+  - `MoveCount`: `'MoveCount must be a positive integer'` — `MoveCount.ts:5`. MATCH.
+  - `Rank`: `'Rank must be a positive integer starting at 1'` — verificado en test y source. MATCH.
+  - `MaxLeaderboardEntries`: `'MaxLeaderboardEntries must be a positive integer'` — MATCH.
+  - `UsernameSnapshot`: `'UsernameSnapshot cannot be empty'` — `UsernameSnapshot.ts:6`. MATCH.
+  - `LevelScore` (score negativo): `'Score must be a non-negative integer'` — `LevelScore.ts:10`. MATCH.
+  - `LevelScore` (tiempo cero): `'TimeSeconds must be positive'` — `LevelScore.ts:13`. MATCH. (Distinto del VO `TimeSeconds` que dice "greater than zero" — correcto, son tipos distintos.)
+  - `LevelScore` (moves cero): `'MovesCount must be a positive integer'` — `LevelScore.ts:15`. MATCH.
+  - `ProgressVersion`: `'ProgressVersion must be a non-negative integer'` — `ProgressVersion.ts:5`. MATCH.
+- **Boundary tests** (`Leaderboard.test.ts:205-218`, `PlayerProgress.test.ts:231-239`): verifican limites validos (`Score(0)`, `MoveCount(1)`, `MaxLeaderboardEntries(1)`, `LevelScore(0, ...)`, `LevelScore(..., 1)`). Ninguno es un test del estado privado; todos verifican comportamiento observable (no lanza, valor accesible). PASS.
+- **Whitespace-only UsernameSnapshot** (`Leaderboard.test.ts:221-227`): `UsernameSnapshot.ts:5` usa `.trim().length === 0`, cubre correctamente el caso. PASS.
+- **NoCoverage methods** (`Leaderboard.test.ts:230-270`, `PlayerProgress.test.ts:241-277`): cubren `isHigherThan`, `isFasterThan`, `isBetterThan`, `isAheadOf`, `toString`. Son metodos publicos con logica propia. Los tests verifican comportamiento, no detalles privados. PASS.
+- **Tests no fragiles**: ninguno accede a propiedades internas; todos verifican comportamiento observable. PASS.
+
+### Calidad de archivos de produccion tocados
+
+- `src/domain/errors/DomainError.ts` — Limpio. Extiende `Error` directamente, sin `httpStatus`, sin imports externos. `Object.setPrototypeOf` para compatibilidad de `instanceof`. PASS.
+- `src/framework/errors/DomainErrorMapper.ts` — Correcto. Solo framework sabe de HTTP status. `STATUS_MAP` como constante, fallback a 422. PASS.
+- `src/framework/errors/errorMiddleware.ts` — Branch `instanceof DomainError` colocado antes de `instanceof AppError`. Correcto. PASS.
+- `src/application/leaderboard/use-cases/SubmitScoreService.ts` — Pre-validaciones eliminadas correctamente. El servicio delega a VOs. Sin imports de infrastructure/framework. PASS.
+- Los 9 VOs — Todos usan `InvalidArgumentError` importado de `../../errors/DomainError.js`. Sin imports de capas externas. PASS.
+- `src/infrastructure/leaderboard/PrismaLeaderboardRepository.ts:69` — Guard `if (err instanceof DomainError) throw err` antes del rethrow como `InfrastructureError`. Correcto. PASS.
+
+### Nota sobre @s10 — envelope format
+
+El `.feature` @s10 dice "the response body has success false" y la spec HTTP contract dice `{ "success": false, ... }`. La implementacion real y todos los tests usan `{ "status": "error", ... }` (envelope de `ApiResponsePresenter`). Es una imprecision menor del texto del feature, no del comportamiento. El test `error-handling.test.ts:53` verifica el envelope correcto y pasa. No rechaza.
+
+---
+
+## Suite de tests
+
+```
+Test Suites: 126 passed, 126 total
+Tests:       776 passed, 776 total
+Snapshots:   0 total
+Time:        21.06 s
+```
+
+Verde. Sin regresiones. Incremento de 373 → 776 tests (incluye tests de Stryker sandbox que corren en paralelo, ambas copias pasando).
+
+---
+
+## Checklist Clean Architecture / DDD / MVVM
+
+- **Regla de dependencia**: PASS — `src/domain` no importa nada de `application`/`infrastructure`/`framework`; `src/application` no importa `infrastructure`/`framework`; `DomainErrorMapper` vive en `framework` y apunta hacia adentro (importa `domain`). Confirmado por grep sin resultados.
+- **Dominio independiente**: PASS — `DomainError.ts` extiende `Error` directamente, sin `AppError`, sin `httpStatus`, sin ningun import de capa externa. Los 9 VOs solo importan de `../../errors/DomainError.js` (dentro de domain).
+- **Application solo orquesta**: PASS — `SubmitScoreService` elimino las pre-validaciones duplicadas; ahora solo orquesta la construccion de VOs y la llamada al repositorio. No contiene reglas de negocio propias.
+- **Puertos/adaptadores correctos**: PASS — No se modificaron puertos/repositorios en su contrato; `PrismaLeaderboardRepository` recibio unicamente el guard de rethrow de `DomainError`.
+- **DTOs de frontera simples**: PASS (para los archivos tocados por este ticket) — `SubmitScoreInput` usa primitives. `DomainErrorMapper` no introduce DTOs. Nota: existen DTOs con `Date` en application pero son pre-existentes y fuera del scope de CA-001.
+- **Invariantes en VO/agregados**: PASS — Los 9 VOs lanzan `InvalidArgumentError` en su constructor. `SubmitScoreService` elimino la duplicacion; las invariantes viven ahora exclusivamente en los VOs.
+- **Errores de dominio sin semantica HTTP**: PASS — `DomainError` ya no tiene `httpStatus`; el mapping vive exclusivamente en `src/framework/errors/DomainErrorMapper.ts`.
+- **MVVM**: N/A — Este ticket es backend puro.
+- **Impacto por capa declarado vs. real**:
+  - Domain: declarado y correcto — `DomainError.ts` + 9 VOs modificados.
+  - Application: declarado y correcto — `SubmitScoreService.ts` sin pre-validaciones.
+  - Infrastructure: "no previsto" en spec; en realidad se toco `PrismaLeaderboardRepository.ts` para el guard de rethrow. Modificacion correcta y documentada en ai-log como "Code Review Finding #1". PASS con observacion: la spec deberia haber declarado el impacto en Infrastructure.
+  - Framework: declarado y correcto — `DomainErrorMapper.ts` nuevo + `errorMiddleware.ts` actualizado.
+
+---
+
+## Observaciones (no bloquean aprobacion)
+
+1. **Infrastructure impact no declarado en spec** — `PrismaLeaderboardRepository.ts` fue modificado pero la spec declaro "Infrastructure: no previsto". La modificacion es correcta y fue documentada en el ai-log, pero en futuras iteraciones el spec-partner/planner deberia actualizar la seccion "Layer impact" cuando un code-review descubre impacto adicional antes del merge.
+
+2. **Imprecision en envelope format del .feature** — @s10 dice "success false" pero el sistema usa `status: "error"`. Sugerencia para el spec-partner: alinear el lenguaje del feature con el `ApiResponsePresenter` establecido.
+
+3. **`crypto` en domain (pre-existente)** — El uso de `randomUUID` de Node nativo en VOs de ID es una dependencia de runtime adapter en el dominio. No es introducida por CA-001 pero es una deuda arquitectonica a atender en un ticket dedicado.
+
+4. **Segunda pasada — mutacion resuelta** — Los tests de StringLiteral y boundary agregados eliminan los mutation survivors de la primera pasada. Los mensajes de error exactos son verificados (no se puede cambiar el string sin romper el test). Los limites validos estan cubiertos. Los metodos publicos `isHigherThan`, `isFasterThan`, `isBetterThan`, `isAheadOf`, `toString` tienen cobertura completa con todos los casos de verdad.
+
+
+---
+
+# Mutación — ticket MAZ-154 (CA-001)
+
+**Veredicto:** PASS
+**Score:** 133/137 killed = 99.25% (umbral: 80%)
+**Fecha:** 2026-06-24
+**Branch:** `refactor/backend-domain-errors-CA-001`
+**Pasada:** 2 (segunda — después del segundo ciclo tdd-implementer)
+
+## Resumen por archivo
+
+| Archivo                     | Score  | Killed | Survived | No Cov | Errors |
+|-----------------------------|--------|--------|----------|--------|--------|
+| SubmitScoreService.ts       | 100%   | 6      | 0        | 0      | 0      |
+| DomainError.ts              | 100%   | 5      | 0        | 0      | 0      |
+| MaxLeaderboardEntries.ts    | 100%   | 7      | 0        | 0      | 3      |
+| MoveCount.ts                | 100%   | 10     | 0        | 0      | 0      |
+| Rank.ts                     | 100%   | 10     | 0        | 0      | 0      |
+| Score.ts                    | 100%   | 15     | 0        | 0      | 0      |
+| TimeSeconds.ts              | 100%   | 14     | 0        | 0      | 0      |
+| UsernameSnapshot.ts         | 100%   | 11     | 0        | 0      | 0      |
+| LevelScore.ts               | 97.44% | 38     | 1        | 0      | 0      |
+| ProgressVersion.ts          | 100%   | 17     | 0        | 0      | 0      |
+
+---
+
+## Mutantes sobrevivientes
+
+### src/domain/progress/value-objects/LevelScore.ts
+
+- **Línea 21** — `EqualityOperator`: `this.score > other.score` → `this.score >= other.score`
+  Tests que corrieron: `should_preserve_best_score_when_new_result_is_worse`, `should_update_best_score_when_new_result_is_better`, `should_fire_LevelBestScoreUpdatedEvent_when_better_score_replaces_old`, y 4 más.
+  Falta: un test con dos `LevelScore` donde `score` es idéntico y el nuevo tiene **peor tiempo**, que verifique que `isBetterThan` devuelve `false` (mismo score + peor tiempo no es "mejor"). El operador `>=` hace que empates de score siempre retornen `true` independientemente del tiempo, rompiendo el desempate.
+
+---
+
+## Errores de instrumentación
+
+`MaxLeaderboardEntries.ts` tuvo 3 mutantes con error de instrumentación (igual que en la primera pasada — posiblemente relacionado con el tipo de retorno o inicialización de la constante estática). No afectan el score (no cuentan como killed ni survived).
+
+---
+
+## Comparación con pasada anterior
+
+| Métrica      | Pasada 1  | Pasada 2 |
+|--------------|-----------|----------|
+| Score        | 74.63%    | 99.25%   |
+| Killed       | 100/137   | 133/137  |
+| Survivors    | 23        | 1        |
+| Veredicto    | FAIL      | **PASS** |
+
+La segunda pasada eliminó 22 de los 23 sobrevivientes originales. El único sobreviviente restante (`LevelScore.ts:21` `EqualityOperator`) requiere un test de boundary para `isBetterThan` cuando `score` es igual y el tiempo es peor.
+
+---
+
+## Acción requerida
+
+Score por encima del umbral (80%). Veredicto: **PASS**.
+
+El único sobreviviente restante puede ser tratado por el `tdd-implementer` en la siguiente iteración si se desea llegar al 100% en `LevelScore`. No bloquea el merge.
+
+
 <!-- AI_LOG_ENTRIES_END -->
 
 ## Critical Evaluation

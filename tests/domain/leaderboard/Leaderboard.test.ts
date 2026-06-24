@@ -13,6 +13,7 @@ import { TimeSeconds } from '../../../src/domain/leaderboard/value-objects/TimeS
 import { UsernameSnapshot } from '../../../src/domain/leaderboard/value-objects/UsernameSnapshot.js';
 import { LevelId } from '../../../src/domain/shared/LevelId.js';
 import { UserId } from '../../../src/domain/shared/UserId.js';
+import { InvalidArgumentError } from '../../../src/domain/errors/DomainError.js';
 
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const USER_2 = '550e8400-e29b-41d4-a716-446655440002';
@@ -137,20 +138,134 @@ describe('Leaderboard', () => {
       expect(() => LeaderboardId.create('')).toThrow();
     });
 
-    it('should_throw_when_score_is_negative', () => {
-      expect(() => new Score(-1)).toThrow();
+    it('should_throw_invalid_argument_error_when_score_is_negative', () => {
+      expect(() => new Score(-1)).toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_when_time_seconds_is_zero', () => {
-      expect(() => new TimeSeconds(0)).toThrow();
+    it('should_throw_invalid_argument_error_when_score_is_decimal', () => {
+      expect(() => new Score(1.5)).toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_when_rank_is_zero', () => {
-      expect(() => new Rank(0)).toThrow();
+    it('should_throw_invalid_argument_error_when_time_seconds_is_zero', () => {
+      expect(() => new TimeSeconds(0)).toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_when_max_entries_is_zero', () => {
-      expect(() => new MaxLeaderboardEntries(0)).toThrow();
+    it('should_throw_invalid_argument_error_when_move_count_is_zero', () => {
+      expect(() => new MoveCount(0)).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_invalid_argument_error_when_rank_is_zero', () => {
+      expect(() => new Rank(0)).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_invalid_argument_error_when_max_entries_is_zero', () => {
+      expect(() => new MaxLeaderboardEntries(0)).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_invalid_argument_error_when_username_snapshot_is_empty', () => {
+      expect(() => new UsernameSnapshot('')).toThrow(InvalidArgumentError);
+    });
+
+    it('should_not_expose_http_status_on_invalid_argument_error', () => {
+      expect.assertions(2);
+      try {
+        new Score(-1);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InvalidArgumentError);
+        expect('httpStatus' in (e as object)).toBe(false);
+      }
+    });
+
+    // --- StringLiteral survivors ---
+    it('should_throw_with_exact_message_when_score_is_negative', () => {
+      expect(() => new Score(-1)).toThrow('Score must be a non-negative integer');
+    });
+
+    it('should_throw_with_exact_message_when_time_seconds_is_zero', () => {
+      expect(() => new TimeSeconds(0)).toThrow('TimeSeconds must be greater than zero');
+    });
+
+    it('should_throw_with_exact_message_when_move_count_is_zero', () => {
+      expect(() => new MoveCount(0)).toThrow('MoveCount must be a positive integer');
+    });
+
+    it('should_throw_with_exact_message_when_rank_is_zero', () => {
+      expect(() => new Rank(0)).toThrow('Rank must be a positive integer starting at 1');
+    });
+
+    it('should_throw_with_exact_message_when_max_entries_is_zero', () => {
+      expect(() => new MaxLeaderboardEntries(0)).toThrow('MaxLeaderboardEntries must be a positive integer');
+    });
+
+    it('should_throw_with_exact_message_when_username_snapshot_is_empty', () => {
+      expect(() => new UsernameSnapshot('')).toThrow('UsernameSnapshot cannot be empty');
+    });
+
+    // --- Boundary exact survivors ---
+    it('should_be_valid_when_score_is_zero', () => {
+      expect(() => new Score(0)).not.toThrow();
+      expect(new Score(0).value).toBe(0);
+    });
+
+    it('should_be_valid_when_move_count_is_one', () => {
+      expect(() => new MoveCount(1)).not.toThrow();
+      expect(new MoveCount(1).value).toBe(1);
+    });
+
+    it('should_be_valid_when_max_entries_is_one', () => {
+      expect(() => new MaxLeaderboardEntries(1)).not.toThrow();
+      expect(new MaxLeaderboardEntries(1).value).toBe(1);
+    });
+
+    // --- UsernameSnapshot whitespace-only survivor ---
+    it('should_throw_when_username_snapshot_is_whitespace_only', () => {
+      expect(() => new UsernameSnapshot('   ')).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_with_exact_message_when_username_snapshot_is_whitespace_only', () => {
+      expect(() => new UsernameSnapshot('   ')).toThrow('UsernameSnapshot cannot be empty');
+    });
+
+    // --- NoCoverage methods ---
+    it('should_return_true_when_score_is_higher_than_other', () => {
+      const high = new Score(100);
+      const low = new Score(50);
+      expect(high.isHigherThan(low)).toBe(true);
+    });
+
+    it('should_return_false_when_score_is_lower_than_other', () => {
+      const low = new Score(50);
+      const high = new Score(100);
+      expect(low.isHigherThan(high)).toBe(false);
+    });
+
+    it('should_return_false_when_score_equals_other', () => {
+      const a = new Score(75);
+      const b = new Score(75);
+      expect(a.isHigherThan(b)).toBe(false);
+    });
+
+    it('should_return_true_when_time_is_faster_than_other', () => {
+      const fast = new TimeSeconds(10);
+      const slow = new TimeSeconds(30);
+      expect(fast.isFasterThan(slow)).toBe(true);
+    });
+
+    it('should_return_false_when_time_is_slower_than_other', () => {
+      const slow = new TimeSeconds(30);
+      const fast = new TimeSeconds(10);
+      expect(slow.isFasterThan(fast)).toBe(false);
+    });
+
+    it('should_return_false_when_time_equals_other', () => {
+      const a = new TimeSeconds(20);
+      const b = new TimeSeconds(20);
+      expect(a.isFasterThan(b)).toBe(false);
+    });
+
+    it('should_return_value_string_when_username_snapshot_toString_called', () => {
+      const username = new UsernameSnapshot('PlayerOne');
+      expect(username.toString()).toBe('PlayerOne');
     });
   });
 });
