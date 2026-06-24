@@ -10,7 +10,7 @@ export type LevelSummaryDto = {
   arrowCount: number;
   attempts: number;
   timeLimitSeconds?: number;
-  createdAt: Date;
+  createdAt: string;
 };
 
 export type GetLevelsOutput = { levels: LevelSummaryDto[] };
@@ -28,7 +28,7 @@ export class GetLevelsUseCase implements UseCase<GetLevelsInput, GetLevelsOutput
         arrowCount: l.definition.arrows.length,
         attempts: l.definition.attempts,
         ...(l.timeLimit !== undefined ? { timeLimitSeconds: l.timeLimit.value } : {}),
-        createdAt: l.createdAt,
+        createdAt: l.createdAt.toISOString(),
       })),
     };
   }

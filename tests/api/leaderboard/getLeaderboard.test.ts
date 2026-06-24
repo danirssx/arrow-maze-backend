@@ -23,10 +23,10 @@ class FakeGetUseCase implements UseCase<GetLeaderboardInput, GetLeaderboardOutpu
         timeSeconds: 30,
         movesCount: 15,
         rank: 1,
-        submittedAt: new Date('2026-06-17T00:00:00Z'),
+        submittedAt: '2026-06-17T00:00:00.000Z',
       },
     ],
-    updatedAt: new Date('2026-06-17T00:00:00Z'),
+    updatedAt: '2026-06-17T00:00:00.000Z',
   };
   error: Error | null = null;
   async execute(_input: GetLeaderboardInput): Promise<GetLeaderboardOutput> {
@@ -54,7 +54,7 @@ describe('GET /leaderboard/:levelId', () => {
   it('should_return_200_with_empty_entries_when_leaderboard_is_empty', async () => {
     // Arrange
     const getUseCase = new FakeGetUseCase();
-    getUseCase.result = { leaderboardId: 'lb-1', levelId: 'level-1', entries: [], updatedAt: new Date() };
+    getUseCase.result = { leaderboardId: 'lb-1', levelId: 'level-1', entries: [], updatedAt: new Date().toISOString() };
     const app = createLeaderboardTestApp(new FakeSubmitUseCase(), getUseCase);
 
     // Act

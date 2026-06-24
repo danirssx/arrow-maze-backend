@@ -26,8 +26,10 @@ describe("GetLevelUseCase", () => {
     expect(typeof result.level.difficulty).toBe("string");
     expect(typeof result.level.status).toBe("string");
     expect(result.level.version).toBe(1);
-    expect(result.level.createdAt).toBeInstanceOf(Date);
-    expect(result.level.updatedAt).toBeInstanceOf(Date);
+    expect(typeof result.level.createdAt).toBe('string');
+    expect(result.level.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(typeof result.level.updatedAt).toBe('string');
+    expect(result.level.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
   it("should_throw_not_found_when_level_does_not_exist", async () => {

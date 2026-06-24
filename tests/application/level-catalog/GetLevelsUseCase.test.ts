@@ -49,7 +49,8 @@ describe("GetLevelsUseCase", () => {
     expect(dto.levelId).toBe(VALID_UUID);
     expect(dto.name).toBe("Test Level");
     expect(typeof dto.difficulty).toBe("string");
-    expect(dto.createdAt).toBeInstanceOf(Date);
+    expect(typeof dto.createdAt).toBe('string');
+    expect(dto.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
   it("should_not_return_archived_levels", async () => {
