@@ -30,7 +30,7 @@ User also requested the fix-style PR table documenting changed files.
 | Planner / Gherkin Author (`.agents/planner.md`) | Used | Distilled 12 Gherkin scenarios covering all 9 VOs, middleware mapping, structural inspection, and service delegation. | `specs/backend-domain-errors-CA-001.feature` |
 | TDD Implementer (`.agents/tdd-implementer.md`) | Used | Four Red-Green-Refactor batches (see Scenario Coverage below). Each batch: wrote failing test → ran to confirm RED → implemented → confirmed GREEN. | tests, commits, PR |
 | Judge (`.agents/judge.md`) | Used | Reviewed CA contract, scenario coverage, TDD discipline, dependency rules, and ran architectural grep checks. Verdict: APPROVED. | `ai-log/2026-06-24-MAZ-154-CA-001-judge.md` |
-| Mutation Tester (`.agents/mutation.md`) | Not used | Domain/application code changed — mutation run deferred to post-Judge step per team workflow. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Used | First run: FAIL 74.63% (23 survivors). TDD implementer added 30 tests to kill survivors. Second run: PASS 99.25%. | `ai-log/2026-06-24-MAZ-154-CA-001-mutation.md` |
 
 ## Scenario Coverage (@s ↔ test)
 
@@ -97,7 +97,7 @@ User also requested the fix-style PR table documenting changed files.
 - `tests/api/identity/register.test.ts` — 400 → 422 for `INVALID_ARGUMENT`
 - `tests/api/level-catalog/getLevel.test.ts` — 400 → 422 for `INVALID_ARGUMENT`
 
-**Test count:** 350 → 373 (23 new tests)
+**Test count:** 350 → 373 (23 new tests from TDD) → 403 (30 additional tests added to kill mutation survivors)
 
 ## Code Review Findings (post-implementation)
 
@@ -114,7 +114,7 @@ Five findings surfaced by `/code-review --effort high` (all CONFIRMED). All fixe
 
 ## Verification
 
-- `npm run verify` — 63 suites, 373 tests passing, build clean (post code-review fixes)
+- `npm run verify` — 63 suites, 403 tests passing, build clean (final: post mutation survivor fixes)
 
 ## Team Modifications Pending Human Review
 
