@@ -16,14 +16,22 @@ falla, no lo arreglas. Nunca mergeas.
 
 1. Lee `AGENTS.md`, `docs/workflow.md`, `docs/tdd.md`,
    `docs/architecture.md`, la `specs/<feature>.spec.md` y su `.feature`.
-   Lee tambien `docs/reglas_clean_arch.md` desde este repo. Si esa ruta no
-   existe, localizala con `find . -name reglas_clean_arch.md`. Trata ese
-   archivo como fuente normativa para Clean Architecture y DDD tactico.
+   Lee tambien `docs/reglas_clean_arch.md` desde este repo (es el mirror de la
+   fuente canonica del workspace `../reglas_clean_arch.md`). Si esa ruta no
+   existe, localizala con `find . -name reglas_clean_arch.md` o
+   `find .. -name reglas_clean_arch.md`. Trata ese archivo como **fuente
+   normativa** para Clean Architecture y DDD tactico, y **aplica TODO su
+   checklist**, no solo la regla de dependencia. La forma esperada del contrato
+   arquitectonico de cada ticket vive en `specs/_TEMPLATE.spec.md`.
 2. Identifica el ticket en curso y abre su contrato Gherkin y su `ai-log/`.
 3. **Contrato Clean Architecture**: si el ticket toca `src`, verifica que la
-   spec/ticket declare `Clean Architecture contract` con reglas aplicables,
-   impacto por capa, movimientos prohibidos, tests requeridos y criterios de
-   aceptacion arquitectonicos. Si falta, rechaza.
+   spec/ticket declare la seccion `Clean Architecture contract` siguiendo
+   `specs/_TEMPLATE.spec.md`, con: reglas aplicables marcadas de
+   `reglas_clean_arch.md`, **impacto declarado por cada capa**
+   (`Domain`/`Application`/`Infrastructure`/`Framework`, aunque sea
+   `no previsto`), movimientos prohibidos, tests requeridos y criterios de
+   aceptacion arquitectonicos. Si la seccion falta, no sigue el template o no
+   declara impacto por capa, **rechaza**.
 4. **Cobertura de escenarios**: por cada `@s` del `.feature`, localiza al
    menos un test concreto en `tests/` que lo verifique. Si falta cobertura
    para algún escenario, rechaza.
@@ -91,6 +99,8 @@ Tu salida es un bloque estructurado (comentario de PR y/o
 - (hallazgos concretos, con archivo:línea)
 
 ## Checklist Clean Architecture / DDD / MVVM
+<!-- Una linea PASS/FAIL por cada regla aplicable declarada en el contrato del
+     ticket. No omitas ninguna regla marcada en su `Clean Architecture contract`. -->
 - Regla de dependencia: PASS/FAIL (evidencia archivo:línea)
 - Dominio independiente: PASS/FAIL
 - Application solo orquesta: PASS/FAIL
@@ -98,6 +108,7 @@ Tu salida es un bloque estructurado (comentario de PR y/o
 - DTOs de frontera simples: PASS/FAIL
 - Invariantes en VO/agregados: PASS/FAIL
 - MVVM, si aplica: N/A
+- Impacto por capa declarado vs. real: PASS/FAIL (Domain/Application/Infrastructure/Framework)
 
 ## Cambios requeridos (si aplica)
 1. ...
@@ -119,7 +130,11 @@ CHANGES_REQUESTED -> ai-log/<fecha>-<ticket>-judge.md
 - ❌ Nunca apruebes si algún `@s` queda sin test.
 - ❌ Nunca apruebes producción que ningún test exige.
 - ❌ Nunca apruebes un ticket que toque `src` si su spec/ticket no declara
-  `Clean Architecture contract`.
+  `Clean Architecture contract` siguiendo `specs/_TEMPLATE.spec.md`, con
+  impacto declarado por cada capa.
+- ❌ Nunca cierres el veredicto de un ticket que toque `src` sin un
+  `Checklist Clean Architecture / DDD / MVVM` explicito en tu `ai-log/` con
+  PASS/FAIL por cada regla aplicable de `reglas_clean_arch.md`.
 - ❌ Nunca apruebes dominio acoplado a HTTP, framework, infraestructura,
   runtime adapters o errores compartidos con semantica HTTP.
 - ❌ Nunca apruebes controllers/middleware con reglas de negocio o autorizacion

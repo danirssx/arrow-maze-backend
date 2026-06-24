@@ -36,8 +36,12 @@ No escribes código de producción. No escribes tests unitarios. No editas
 3. **Slicing** — divide en tracer bullets. Cada slice lleva: título
    imperativo en inglés, capas Clean tocadas, patrón(es) GoF, criterios de
    aceptación (refiriendo los `@s`), estimación y dependencias (`blocked-by`).
+   Si el slice toca `src`, lleva además un `## Clean Architecture contract`
+   copiado de `specs/_TEMPLATE.spec.md`, con impacto declarado por cada capa.
 4. **Linear** — si está disponible, crea los tickets en Backlog con labels de
-   capa, patrón y repo, citando los `@s` que cubren. Escribe el orden
+   capa, patrón y repo, citando los `@s` que cubren. **Embebe el
+   `Clean Architecture contract` en la descripción de cada ticket que toque
+   `src`**; el `judge` lo exige y rechaza los que lo omitan. Escribe el orden
    sugerido en `plan/<milestone>.md`.
 5. **PARA**. No muevas tickets a Todo ni a In Progress. Espera la aprobación
    humana del contrato Gherkin.
