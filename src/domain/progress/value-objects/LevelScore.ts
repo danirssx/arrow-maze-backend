@@ -1,3 +1,5 @@
+import { InvalidArgumentError } from "../../errors/DomainError.js";
+
 export class LevelScore {
   constructor(
     readonly score: number,
@@ -5,13 +7,13 @@ export class LevelScore {
     readonly movesCount: number,
   ) {
     if (!Number.isInteger(score) || score < 0) {
-      throw new Error('Score must be a non-negative integer');
+      throw new InvalidArgumentError('Score must be a non-negative integer');
     }
     if (timeSeconds <= 0) {
-      throw new Error('TimeSeconds must be positive');
+      throw new InvalidArgumentError('TimeSeconds must be positive');
     }
     if (!Number.isInteger(movesCount) || movesCount < 1) {
-      throw new Error('MovesCount must be a positive integer');
+      throw new InvalidArgumentError('MovesCount must be a positive integer');
     }
   }
 

@@ -1,7 +1,9 @@
+import { InvalidArgumentError } from "../../errors/DomainError.js";
+
 export class Score {
   constructor(readonly value: number) {
     if (!Number.isInteger(value) || value < 0) {
-      throw new Error('Score must be a non-negative integer');
+      throw new InvalidArgumentError('Score must be a non-negative integer');
     }
   }
 

@@ -13,7 +13,7 @@ import { SubmittedAt } from '../../../domain/leaderboard/value-objects/Submitted
 import { TimeSeconds } from '../../../domain/leaderboard/value-objects/TimeSeconds.js';
 import { UserId } from '../../../domain/shared/UserId.js';
 import { UsernameSnapshot } from '../../../domain/leaderboard/value-objects/UsernameSnapshot.js';
-import { NotFoundError, ValidationError } from '../../../shared/errors/ApplicationError.js';
+import { NotFoundError } from '../../../shared/errors/ApplicationError.js';
 
 export interface SubmitScoreInput {
   leaderboardId: string;
@@ -35,16 +35,6 @@ export class SubmitScoreService implements UseCase<SubmitScoreInput, SubmitScore
   ) {}
 
   async execute(input: SubmitScoreInput): Promise<SubmitScoreOutput> {
-    if (!Number.isInteger(input.score) || input.score < 0) {
-      throw new ValidationError('Score must be a non-negative integer');
-    }
-    if (input.timeSeconds <= 0) {
-      throw new ValidationError('TimeSeconds must be greater than zero');
-    }
-    if (!Number.isInteger(input.movesCount) || input.movesCount <= 0) {
-      throw new ValidationError('MoveCount must be a positive integer');
-    }
-
     const levelId = LevelId.create(input.levelId);
 
     let leaderboard = await this.leaderboardRepository.findByLevelId(levelId);

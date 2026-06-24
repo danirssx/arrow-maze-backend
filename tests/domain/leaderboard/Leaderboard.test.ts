@@ -13,6 +13,7 @@ import { TimeSeconds } from '../../../src/domain/leaderboard/value-objects/TimeS
 import { UsernameSnapshot } from '../../../src/domain/leaderboard/value-objects/UsernameSnapshot.js';
 import { LevelId } from '../../../src/domain/shared/LevelId.js';
 import { UserId } from '../../../src/domain/shared/UserId.js';
+import { InvalidArgumentError } from '../../../src/domain/errors/DomainError.js';
 
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const USER_2 = '550e8400-e29b-41d4-a716-446655440002';
@@ -137,20 +138,41 @@ describe('Leaderboard', () => {
       expect(() => LeaderboardId.create('')).toThrow();
     });
 
-    it('should_throw_when_score_is_negative', () => {
-      expect(() => new Score(-1)).toThrow();
+    it('should_throw_invalid_argument_error_when_score_is_negative', () => {
+      expect(() => new Score(-1)).toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_when_time_seconds_is_zero', () => {
-      expect(() => new TimeSeconds(0)).toThrow();
+    it('should_throw_invalid_argument_error_when_score_is_decimal', () => {
+      expect(() => new Score(1.5)).toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_when_rank_is_zero', () => {
-      expect(() => new Rank(0)).toThrow();
+    it('should_throw_invalid_argument_error_when_time_seconds_is_zero', () => {
+      expect(() => new TimeSeconds(0)).toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_when_max_entries_is_zero', () => {
-      expect(() => new MaxLeaderboardEntries(0)).toThrow();
+    it('should_throw_invalid_argument_error_when_move_count_is_zero', () => {
+      expect(() => new MoveCount(0)).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_invalid_argument_error_when_rank_is_zero', () => {
+      expect(() => new Rank(0)).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_invalid_argument_error_when_max_entries_is_zero', () => {
+      expect(() => new MaxLeaderboardEntries(0)).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_invalid_argument_error_when_username_snapshot_is_empty', () => {
+      expect(() => new UsernameSnapshot('')).toThrow(InvalidArgumentError);
+    });
+
+    it('should_not_expose_http_status_on_invalid_argument_error', () => {
+      try {
+        new Score(-1);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InvalidArgumentError);
+        expect('httpStatus' in (e as object)).toBe(false);
+      }
     });
   });
 });

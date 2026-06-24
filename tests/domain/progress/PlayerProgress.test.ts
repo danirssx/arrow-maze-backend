@@ -14,6 +14,7 @@ import { CompletedLevelId } from '../../../src/domain/progress/value-objects/Com
 import { UpdatedAt } from '../../../src/domain/progress/value-objects/UpdatedAt.js';
 import { UserId } from '../../../src/domain/shared/UserId.js';
 import { LevelId } from '../../../src/domain/shared/LevelId.js';
+import { InvalidArgumentError } from '../../../src/domain/errors/DomainError.js';
 
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const USER_A = '550e8400-e29b-41d4-a716-446655440002';
@@ -179,5 +180,32 @@ describe('ProgressMergePolicy', () => {
     const remote = PlayerProgress.empty(ProgressId.create('550e8400-e29b-41d4-a716-446655440020'), UserId.create(USER_B));
 
     expect(() => policy.merge(local, remote)).toThrow(ProgressUserMismatchError);
+  });
+});
+
+describe('Progress value objects', () => {
+  it('should_throw_invalid_argument_error_when_level_score_has_negative_score', () => {
+    expect(() => new LevelScore(-1, 10, 5)).toThrow(InvalidArgumentError);
+  });
+
+  it('should_throw_invalid_argument_error_when_level_score_has_zero_time', () => {
+    expect(() => new LevelScore(100, 0, 5)).toThrow(InvalidArgumentError);
+  });
+
+  it('should_throw_invalid_argument_error_when_level_score_has_zero_moves', () => {
+    expect(() => new LevelScore(100, 10, 0)).toThrow(InvalidArgumentError);
+  });
+
+  it('should_throw_invalid_argument_error_when_progress_version_is_negative', () => {
+    expect(() => new ProgressVersion(-1)).toThrow(InvalidArgumentError);
+  });
+
+  it('should_not_expose_http_status_on_progress_vo_error', () => {
+    try {
+      new ProgressVersion(-1);
+    } catch (e) {
+      expect(e).toBeInstanceOf(InvalidArgumentError);
+      expect('httpStatus' in (e as object)).toBe(false);
+    }
   });
 });
