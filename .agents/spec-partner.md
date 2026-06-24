@@ -50,6 +50,11 @@ registra la decisión y su razón.
    - **Contrato HTTP** — entradas, status codes, body de éxito y de error,
      auth requerida.
    - **Capa Clean por componente**.
+   - **`## Clean Architecture contract`** (obligatorio si el ticket toca
+     `src`): copia la seccion de `specs/_TEMPLATE.spec.md` y completa reglas
+     aplicables de `docs/reglas_clean_arch.md`, impacto por cada capa,
+     movimientos prohibidos, tests requeridos y criterios de aceptacion
+     arquitectonicos. El `judge` rechaza specs/tickets que la omitan.
    - **Patrón(es) GoF aplicados y por qué** (alternativa descartada).
    - **Casos límite** — enumerados.
    - **Criterios de aceptación Given/When/Then** con IDs `S1`, `S2`, …
