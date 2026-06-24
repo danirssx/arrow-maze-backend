@@ -1,7 +1,6 @@
 export abstract class DomainEvent {
-  readonly occurredOn: Date;
-
-  constructor(readonly aggregateId: string) {
-    this.occurredOn = new Date();
-  }
+  constructor(
+    readonly aggregateId: string,
+    readonly occurredOn: Date,
+  ) {}
 }

@@ -38,10 +38,10 @@ export class Level extends Entity<LevelId> {
     definition: LevelDefinition,
     difficulty: Difficulty,
     version: LevelVersion,
+    now: Date,
     timeLimit?: TimeLimit,
     boardShape?: BoardShape
   ): Level {
-    const now = new Date();
     return new Level(
       id,
       name,
@@ -105,7 +105,7 @@ export class Level extends Entity<LevelId> {
     }
   }
 
-  publish(policy: LevelSolvabilityPolicy): void {
+  publish(policy: LevelSolvabilityPolicy, now: Date): void {
     if (this._status !== LevelStatus.DRAFT) {
       throw new BusinessRuleViolationError("Only draft levels can be published");
     }
@@ -115,28 +115,28 @@ export class Level extends Entity<LevelId> {
       );
     }
     this._status = LevelStatus.PUBLISHED;
-    this._updatedAt = new Date();
+    this._updatedAt = now;
     this.record(
-      new LevelPublished(this.id.value, this._name.value, this._difficulty)
+      new LevelPublished(this.id.value, this._name.value, this._difficulty, now)
     );
   }
 
-  updateDefinition(definition: LevelDefinition): void {
+  updateDefinition(definition: LevelDefinition, now: Date): void {
     if (this._status !== LevelStatus.DRAFT) {
       throw new BusinessRuleViolationError(
         "Only draft levels can have their definition updated"
       );
     }
     this._definition = definition;
-    this._updatedAt = new Date();
+    this._updatedAt = now;
   }
 
-  archive(): void {
+  archive(now: Date): void {
     if (this._status !== LevelStatus.PUBLISHED) {
       throw new BusinessRuleViolationError("Only published levels can be archived");
     }
     this._status = LevelStatus.ARCHIVED;
-    this._updatedAt = new Date();
+    this._updatedAt = now;
   }
 
   get name(): LevelName { return this._name; }

@@ -3,7 +3,7 @@ import { CompletedLevel } from './CompletedLevel.js';
 import { LevelBestScoreUpdatedEvent } from './events/LevelBestScoreUpdatedEvent.js';
 import { LevelCompletedEvent } from './events/LevelCompletedEvent.js';
 import type { LevelCompletionResult } from './LevelCompletionResult.js';
-import { CompletedLevelId } from './value-objects/CompletedLevelId.js';
+import type { CompletedLevelId } from './value-objects/CompletedLevelId.js';
 import type { LevelId } from '../shared/LevelId.js';
 import type { ProgressId } from './value-objects/ProgressId.js';
 import { ProgressVersion } from './value-objects/ProgressVersion.js';
@@ -38,13 +38,13 @@ export class PlayerProgress extends Entity<ProgressId> {
     return new PlayerProgress(props);
   }
 
-  static empty(id: ProgressId, userId: UserId): PlayerProgress {
+  static empty(id: ProgressId, userId: UserId, now: Date): PlayerProgress {
     return new PlayerProgress({
       id,
       userId,
       completedLevels: [],
       version: new ProgressVersion(0),
-      updatedAt: UpdatedAt.now(),
+      updatedAt: new UpdatedAt(now),
     });
   }
 
@@ -64,26 +64,26 @@ export class PlayerProgress extends Entity<ProgressId> {
     return this._completedLevels.has(levelId.value);
   }
 
-  recordCompletion(result: LevelCompletionResult): void {
+  recordCompletion(result: LevelCompletionResult, newEntryId: CompletedLevelId, now: Date): void {
     const key = result.levelId.value;
     const existing = this._completedLevels.get(key);
 
     if (!existing) {
       const entry = CompletedLevel.create({
-        id: CompletedLevelId.generate(),
+        id: newEntryId,
         levelId: result.levelId,
         bestScore: result.score,
         completedAt: result.completedAt,
-        updatedAt: UpdatedAt.now(),
+        updatedAt: new UpdatedAt(now),
       });
       this._completedLevels.set(key, entry);
-      this.record(new LevelCompletedEvent(this.id.value, result.levelId.value, this.userId.value));
+      this.record(new LevelCompletedEvent(this.id.value, result.levelId.value, this.userId.value, now));
     } else if (result.score.isBetterThan(existing.bestScore)) {
-      this._completedLevels.set(key, existing.withBetterScore(result.score));
-      this.record(new LevelBestScoreUpdatedEvent(this.id.value, result.levelId.value, this.userId.value));
+      this._completedLevels.set(key, existing.withBetterScore(result.score, now));
+      this.record(new LevelBestScoreUpdatedEvent(this.id.value, result.levelId.value, this.userId.value, now));
     }
 
     this._version = this._version.increment();
-    this._updatedAt = UpdatedAt.now();
+    this._updatedAt = new UpdatedAt(now);
   }
 }

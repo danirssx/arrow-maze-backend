@@ -6,6 +6,9 @@ import type { UseCase } from "../../aspects/UseCase.js";
 import { ConflictError } from "../../../shared/errors/ApplicationError.js";
 import type { PasswordHasher } from "../ports/PasswordHasher.js";
 import type { UserRepository } from "../ports/UserRepository.js";
+import type { IdGenerator } from "../../ports/IdGenerator.js";
+import type { Clock } from "../../ports/Clock.js";
+import { UserId } from "../../../domain/shared/UserId.js";
 
 export type RegisterUserInput = {
   email: string;
@@ -20,7 +23,9 @@ export type RegisterUserOutput = {
 export class RegisterUserUseCase implements UseCase<RegisterUserInput, RegisterUserOutput> {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly passwordHasher: PasswordHasher
+    private readonly passwordHasher: PasswordHasher,
+    private readonly idGenerator: IdGenerator,
+    private readonly clock: Clock,
   ) {}
 
   async execute(input: RegisterUserInput): Promise<RegisterUserOutput> {
@@ -37,7 +42,9 @@ export class RegisterUserUseCase implements UseCase<RegisterUserInput, RegisterU
     }
 
     const passwordHash = await this.passwordHasher.hash(rawPassword);
-    const user = UserFactory.create(email, username, passwordHash);
+    const id = UserId.create(this.idGenerator.generate());
+    const now = this.clock.now();
+    const user = UserFactory.create(id, email, username, passwordHash, undefined, now);
 
     await this.userRepository.save(user);
 

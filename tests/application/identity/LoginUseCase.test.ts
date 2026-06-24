@@ -20,11 +20,16 @@ import { ForbiddenError, UnauthorizedError } from "../../../src/shared/errors/Ap
 
 const FIXED_ID = "550e8400-e29b-41d4-a716-446655440000";
 
+const FIXED_NOW = new Date("2024-01-15T10:00:00.000Z");
+
 const makeActiveUser = () =>
   UserFactory.create(
+    UserId.create(FIXED_ID),
     Email.create("alice@example.com"),
     Username.create("alice"),
-    PasswordHash.fromHash("$2b$12$hashedvalue")
+    PasswordHash.fromHash("$2b$12$hashedvalue"),
+    undefined,
+    FIXED_NOW,
   );
 
 const makeSuspendedUser = () =>

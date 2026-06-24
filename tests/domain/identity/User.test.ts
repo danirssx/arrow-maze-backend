@@ -10,13 +10,17 @@ import { UserId } from "../../../src/domain/shared/UserId.js";
 import { Username } from "../../../src/domain/identity/value-objects/Username.js";
 import { BusinessRuleViolationError } from "../../../src/domain/errors/DomainError.js";
 
+const FIXED_ID = "11111111-1111-4111-a111-111111111111";
+const FIXED_NOW = new Date("2024-01-15T10:00:00.000Z");
+
 function makeUser(overrides?: { role?: UserRole }): User {
   return User.register(
-    UserId.generate(),
+    UserId.create(FIXED_ID),
     Email.create("test@example.com"),
     Username.create("testuser"),
     PasswordHash.fromHash("hashed_password"),
-    overrides?.role
+    overrides?.role ?? UserRole.USER,
+    FIXED_NOW,
   );
 }
 
@@ -43,10 +47,12 @@ describe("User", () => {
       const email = Email.create("test@example.com");
       const username = Username.create("testuser");
       const user = User.register(
-        UserId.generate(),
+        UserId.create(FIXED_ID),
         email,
         username,
-        PasswordHash.fromHash("hash")
+        PasswordHash.fromHash("hash"),
+        UserRole.USER,
+        FIXED_NOW,
       );
 
       // Act
@@ -64,10 +70,12 @@ describe("User", () => {
     it("should_set_email_correctly_when_registered", () => {
       const email = Email.create("user@game.com");
       const user = User.register(
-        UserId.generate(),
+        UserId.create(FIXED_ID),
         email,
         Username.create("gamer"),
-        PasswordHash.fromHash("hash")
+        PasswordHash.fromHash("hash"),
+        UserRole.USER,
+        FIXED_NOW,
       );
       expect(user.email.value).toBe("user@game.com");
     });
@@ -79,7 +87,7 @@ describe("User", () => {
       user.pullDomainEvents();
       const newHash = PasswordHash.fromHash("new_hash");
 
-      user.changePassword(newHash);
+      user.changePassword(newHash, FIXED_NOW);
 
       expect(user.passwordHash.value).toBe("new_hash");
     });
@@ -88,7 +96,7 @@ describe("User", () => {
       const user = makeUser();
       user.pullDomainEvents();
 
-      user.changePassword(PasswordHash.fromHash("new_hash"));
+      user.changePassword(PasswordHash.fromHash("new_hash"), FIXED_NOW);
       const events = user.pullDomainEvents();
 
       expect(events).toHaveLength(1);
@@ -100,7 +108,7 @@ describe("User", () => {
     it("should_set_status_to_suspended_when_user_is_active", () => {
       const user = makeUser();
 
-      user.suspend();
+      user.suspend(FIXED_NOW);
 
       expect(user.status).toBe(UserStatus.SUSPENDED);
       expect(user.isActive).toBe(false);
@@ -110,7 +118,7 @@ describe("User", () => {
       const user = makeUser();
       user.pullDomainEvents();
 
-      user.suspend();
+      user.suspend(FIXED_NOW);
       const events = user.pullDomainEvents();
 
       expect(events).toHaveLength(1);
@@ -119,9 +127,9 @@ describe("User", () => {
 
     it("should_throw_business_rule_violation_when_suspending_already_suspended_user", () => {
       const user = makeUser();
-      user.suspend();
+      user.suspend(FIXED_NOW);
 
-      expect(() => user.suspend()).toThrow(BusinessRuleViolationError);
+      expect(() => user.suspend(FIXED_NOW)).toThrow(BusinessRuleViolationError);
     });
   });
 
@@ -139,8 +147,8 @@ describe("User", () => {
       const user = makeUser();
       user.pullDomainEvents();
 
-      user.suspend();
-      user.changePassword(PasswordHash.fromHash("h2"));
+      user.suspend(FIXED_NOW);
+      user.changePassword(PasswordHash.fromHash("h2"), FIXED_NOW);
       const events = user.pullDomainEvents();
 
       expect(events).toHaveLength(2);
@@ -149,7 +157,7 @@ describe("User", () => {
 
   describe("reconstitute", () => {
     it("should_rebuild_user_without_emitting_events_when_reconstituted", () => {
-      const id = UserId.generate();
+      const id = UserId.create(FIXED_ID);
       const user = User.reconstitute(
         id,
         Email.create("test@example.com"),
@@ -157,12 +165,65 @@ describe("User", () => {
         PasswordHash.fromHash("hash"),
         UserRole.USER,
         UserStatus.ACTIVE,
-        new Date(),
-        new Date()
+        FIXED_NOW,
+        FIXED_NOW,
       );
 
       expect(user.pullDomainEvents()).toHaveLength(0);
       expect(user.id.equals(id)).toBe(true);
+    });
+  });
+
+  // @s3 — injected clock
+  describe("injected clock", () => {
+    it("should_set_createdAt_and_updatedAt_to_injected_now_when_registered", () => {
+      // Arrange
+      const id = UserId.create(FIXED_ID);
+      const fixedNow = new Date("2024-01-15T10:00:00.000Z");
+
+      // Act
+      const user = User.register(
+        id,
+        Email.create("test@example.com"),
+        Username.create("testuser"),
+        PasswordHash.fromHash("hash"),
+        UserRole.USER,
+        fixedNow,
+      );
+
+      // Assert
+      expect(user.createdAt).toBe(fixedNow);
+      expect(user.updatedAt).toBe(fixedNow);
+    });
+
+    it("should_set_updatedAt_to_injected_now_when_password_is_changed", () => {
+      // Arrange
+      const baseNow = new Date("2024-01-15T10:00:00.000Z");
+      const changeNow = new Date("2024-01-16T10:00:00.000Z");
+      const id = UserId.create(FIXED_ID);
+      const user = User.register(id, Email.create("t@e.com"), Username.create("usr"), PasswordHash.fromHash("h"), UserRole.USER, baseNow);
+      user.pullDomainEvents();
+
+      // Act
+      user.changePassword(PasswordHash.fromHash("new"), changeNow);
+
+      // Assert
+      expect(user.updatedAt).toBe(changeNow);
+    });
+
+    it("should_set_updatedAt_to_injected_now_when_suspended", () => {
+      // Arrange
+      const baseNow = new Date("2024-01-15T10:00:00.000Z");
+      const suspendNow = new Date("2024-01-17T10:00:00.000Z");
+      const id = UserId.create(FIXED_ID);
+      const user = User.register(id, Email.create("t@e.com"), Username.create("usr"), PasswordHash.fromHash("h"), UserRole.USER, baseNow);
+      user.pullDomainEvents();
+
+      // Act
+      user.suspend(suspendNow);
+
+      // Assert
+      expect(user.updatedAt).toBe(suspendNow);
     });
   });
 });

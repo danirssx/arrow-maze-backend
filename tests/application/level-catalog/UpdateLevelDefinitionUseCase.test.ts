@@ -1,9 +1,15 @@
 import { UpdateLevelDefinitionUseCase } from "../../../src/application/level-catalog/use-cases/UpdateLevelDefinitionUseCase";
 import { NotFoundError } from "../../../src/shared/errors/ApplicationError";
 import { BusinessRuleViolationError } from "../../../src/domain/errors/DomainError";
+import type { Clock } from "../../../src/application/ports/Clock";
 import { FakeLevelRepository, makeDraftLevel, makePublishedLevel, VALID_UUID } from "./helpers/levelFixtures";
 
 // Subject to human review — application use case test
+
+const FAKE_NOW = new Date("2024-01-15T10:00:00.000Z");
+class FakeClock implements Clock {
+  now(): Date { return FAKE_NOW; }
+}
 
 const NEW_DEFINITION = {
   attempts: 3,
@@ -17,7 +23,7 @@ describe("UpdateLevelDefinitionUseCase", () => {
     // Arrange
     const repo = new FakeLevelRepository();
     repo.seed(makeDraftLevel(VALID_UUID));
-    const useCase = new UpdateLevelDefinitionUseCase(repo);
+    const useCase = new UpdateLevelDefinitionUseCase(repo, new FakeClock());
 
     // Act
     const result = await useCase.execute({ levelId: VALID_UUID, ...NEW_DEFINITION });
@@ -31,7 +37,7 @@ describe("UpdateLevelDefinitionUseCase", () => {
   it("should_throw_not_found_when_level_does_not_exist", async () => {
     // Arrange
     const repo = new FakeLevelRepository();
-    const useCase = new UpdateLevelDefinitionUseCase(repo);
+    const useCase = new UpdateLevelDefinitionUseCase(repo, new FakeClock());
 
     // Act / Assert
     await expect(
@@ -43,7 +49,7 @@ describe("UpdateLevelDefinitionUseCase", () => {
     // Arrange
     const repo = new FakeLevelRepository();
     repo.seed(makePublishedLevel(VALID_UUID));
-    const useCase = new UpdateLevelDefinitionUseCase(repo);
+    const useCase = new UpdateLevelDefinitionUseCase(repo, new FakeClock());
 
     // Act / Assert
     await expect(

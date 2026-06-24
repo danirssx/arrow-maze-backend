@@ -5,8 +5,9 @@ export class LevelPublished extends DomainEvent {
   constructor(
     public readonly levelId: string,
     public readonly name: string,
-    public readonly difficulty: Difficulty
+    public readonly difficulty: Difficulty,
+    occurredOn: Date,
   ) {
-    super(levelId);
+    super(levelId, occurredOn);
   }
 }
