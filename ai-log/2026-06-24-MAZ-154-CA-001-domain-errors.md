@@ -29,7 +29,7 @@ User also requested the fix-style PR table documenting changed files.
 | Spec Partner (`.agents/spec-partner.md`) | Used | Wrote `specs/backend-domain-errors-CA-001.spec.md` after reading domain error files, VOs, SubmitScoreService, and errorMiddleware. Identified the 3 root causes and proposed the DomainErrorMapper design. | `specs/backend-domain-errors-CA-001.spec.md` |
 | Planner / Gherkin Author (`.agents/planner.md`) | Used | Distilled 12 Gherkin scenarios covering all 9 VOs, middleware mapping, structural inspection, and service delegation. | `specs/backend-domain-errors-CA-001.feature` |
 | TDD Implementer (`.agents/tdd-implementer.md`) | Used | Four Red-Green-Refactor batches (see Scenario Coverage below). Each batch: wrote failing test → ran to confirm RED → implemented → confirmed GREEN. | tests, commits, PR |
-| Judge (`.agents/judge.md`) | Not used | Pending human review post-PR. | N/A |
+| Judge (`.agents/judge.md`) | Used | Reviewed CA contract, scenario coverage, TDD discipline, dependency rules, and ran architectural grep checks. Verdict: APPROVED. | `ai-log/2026-06-24-MAZ-154-CA-001-judge.md` |
 | Mutation Tester (`.agents/mutation.md`) | Not used | Domain/application code changed — mutation run deferred to post-Judge step per team workflow. | N/A |
 
 ## Scenario Coverage (@s ↔ test)
