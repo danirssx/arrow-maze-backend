@@ -12,8 +12,8 @@ export class UserFactory {
     email: Email,
     username: Username,
     passwordHash: PasswordHash,
-    role: UserRole = UserRole.USER,
     now: Date,
+    role: UserRole = UserRole.USER,
   ): User {
     return User.register(id, email, username, passwordHash, role, now);
   }

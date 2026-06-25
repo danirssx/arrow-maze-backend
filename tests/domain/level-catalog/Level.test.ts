@@ -62,7 +62,7 @@ describe("Level", () => {
     const level = makeDraftLevel();
 
     // Act
-    level.publish(new AlwaysSolvablePolicy());
+    level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW);
 
     // Assert
     const events = level.pullDomainEvents();
@@ -78,7 +78,7 @@ describe("Level", () => {
     const level = makeDraftLevel();
 
     // Act
-    level.publish(new AlwaysSolvablePolicy());
+    level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW);
 
     // Assert
     expect(level.status).toBe(LevelStatus.PUBLISHED);
@@ -88,10 +88,10 @@ describe("Level", () => {
   it("should_throw_when_already_published_level_is_published_again", () => {
     // Arrange
     const level = makeDraftLevel();
-    level.publish(new AlwaysSolvablePolicy());
+    level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW);
 
     // Act / Assert
-    expect(() => level.publish(new AlwaysSolvablePolicy())).toThrow(
+    expect(() => level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW)).toThrow(
       BusinessRuleViolationError
     );
   });
@@ -101,7 +101,7 @@ describe("Level", () => {
     const level = makeDraftLevel();
 
     // Act / Assert
-    expect(() => level.publish(new NeverSolvablePolicy())).toThrow(
+    expect(() => level.publish(new NeverSolvablePolicy(), FIXED_LEVEL_NOW)).toThrow(
       BusinessRuleViolationError
     );
   });
@@ -109,7 +109,7 @@ describe("Level", () => {
   it("should_pull_domain_events_and_clear_them", () => {
     // Arrange
     const level = makeDraftLevel();
-    level.publish(new AlwaysSolvablePolicy());
+    level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW);
 
     // Act
     const first = level.pullDomainEvents();

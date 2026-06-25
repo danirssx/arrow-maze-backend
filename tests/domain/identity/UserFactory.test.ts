@@ -19,8 +19,8 @@ describe("UserFactory", () => {
         Email.create("user@example.com"),
         Username.create("player1"),
         PasswordHash.fromHash("hashed"),
-        UserRole.USER,
         FIXED_NOW,
+        UserRole.USER,
       );
 
       expect(user.status).toBe(UserStatus.ACTIVE);
@@ -33,16 +33,16 @@ describe("UserFactory", () => {
         Email.create("a@example.com"),
         Username.create("player_a"),
         PasswordHash.fromHash("h1"),
-        UserRole.USER,
         FIXED_NOW,
+        UserRole.USER,
       );
       const b = UserFactory.create(
         UserId.create(FIXED_ID_B),
         Email.create("b@example.com"),
         Username.create("player_b"),
         PasswordHash.fromHash("h2"),
-        UserRole.USER,
         FIXED_NOW,
+        UserRole.USER,
       );
 
       expect(a.id.equals(b.id)).toBe(false);
@@ -54,8 +54,8 @@ describe("UserFactory", () => {
         Email.create("user@example.com"),
         Username.create("player1"),
         PasswordHash.fromHash("hashed"),
-        UserRole.USER,
         FIXED_NOW,
+        UserRole.USER,
       );
 
       const events = user.pullDomainEvents();
@@ -70,8 +70,8 @@ describe("UserFactory", () => {
         Email.create("admin@example.com"),
         Username.create("sysadmin"),
         PasswordHash.fromHash("hashed"),
-        UserRole.ADMIN,
         FIXED_NOW,
+        UserRole.ADMIN,
       );
 
       expect(user.role).toBe(UserRole.ADMIN);

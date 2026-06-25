@@ -35,7 +35,11 @@ class FakeEventBus implements DomainEventBus {
 }
 
 class FakeIdGenerator implements IdGenerator {
-  generate(): string { return FAKE_ENTRY_ID; }
+  private counter = 0;
+  generate(): string {
+    this.counter++;
+    return `550e8400-e29b-41d4-a716-4466554400${String(this.counter).padStart(2, "0")}`;
+  }
 }
 
 class FakeClock implements Clock {

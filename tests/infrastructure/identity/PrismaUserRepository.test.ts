@@ -38,7 +38,6 @@ const makeUser = () =>
     Email.create("alice@example.com"),
     Username.create("alice"),
     PasswordHash.fromHash("$2b$12$hashedvalue"),
-    undefined,
     FIXED_NOW,
   );
 

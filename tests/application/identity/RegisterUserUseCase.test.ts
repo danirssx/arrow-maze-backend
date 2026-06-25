@@ -107,7 +107,7 @@ describe("RegisterUserUseCase", () => {
 
   it("should_throw_domain_error_when_email_format_is_invalid", async () => {
     // Arrange
-    const useCase = new RegisterUserUseCase(new FakeUserRepository(), new FakePasswordHasher());
+    const useCase = new RegisterUserUseCase(new FakeUserRepository(), new FakePasswordHasher(), new FakeIdGenerator(), new FakeClock());
 
     // Act / Assert
     await expect(useCase.execute({ ...VALID_INPUT, email: "not-an-email" })).rejects.toThrow();
@@ -115,7 +115,7 @@ describe("RegisterUserUseCase", () => {
 
   it("should_throw_domain_error_when_password_is_too_short", async () => {
     // Arrange
-    const useCase = new RegisterUserUseCase(new FakeUserRepository(), new FakePasswordHasher());
+    const useCase = new RegisterUserUseCase(new FakeUserRepository(), new FakePasswordHasher(), new FakeIdGenerator(), new FakeClock());
 
     // Act / Assert
     await expect(useCase.execute({ ...VALID_INPUT, rawPassword: "short" })).rejects.toThrow();

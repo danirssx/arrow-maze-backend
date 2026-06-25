@@ -44,7 +44,7 @@ export class RegisterUserUseCase implements UseCase<RegisterUserInput, RegisterU
     const passwordHash = await this.passwordHasher.hash(rawPassword);
     const id = UserId.create(this.idGenerator.generate());
     const now = this.clock.now();
-    const user = UserFactory.create(id, email, username, passwordHash, undefined, now);
+    const user = UserFactory.create(id, email, username, passwordHash, now);
 
     await this.userRepository.save(user);
 
