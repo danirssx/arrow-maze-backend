@@ -1,6 +1,6 @@
 import { Leaderboard } from '../../../src/domain/leaderboard/Leaderboard.js';
 import { ScoreEntry } from '../../../src/domain/leaderboard/ScoreEntry.js';
-import { DuplicateEntryError, LeaderboardLevelMismatchError } from '../../../src/domain/leaderboard/errors/LeaderboardErrors.js';
+import { LeaderboardLevelMismatchError } from '../../../src/domain/leaderboard/errors/LeaderboardErrors.js';
 import { LeaderboardUpdatedEvent } from '../../../src/domain/leaderboard/events/LeaderboardUpdatedEvent.js';
 import { Rank } from '../../../src/domain/leaderboard/value-objects/Rank.js';
 import { EntryId } from '../../../src/domain/leaderboard/value-objects/EntryId.js';
@@ -123,13 +123,138 @@ describe('Leaderboard', () => {
       expect(() => leaderboard.submitEntry(wrongLevel)).toThrow(LeaderboardLevelMismatchError);
     });
 
-    it('should_throw_when_user_already_has_entry', () => {
+    // --- MAZ-172: best-score upsert (replaces the old duplicate-as-error path) ---
+    it('should_replace_entry_when_resubmitted_score_is_better', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 }));
 
-      expect(() =>
-        leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1 })),
-      ).toThrow(DuplicateEntryError);
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200, timeSeconds: 50 }));
+
+      expect(leaderboard.entries).toHaveLength(1);
+      expect(leaderboard.entries[0]?.score.value).toBe(200);
+      expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_2);
+    });
+
+    it('should_keep_existing_entry_when_resubmitted_score_is_worse', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200, timeSeconds: 30 }));
+
+      // Worse score even though the time is faster: score dominates, so this is a no-op.
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 10 }));
+
+      expect(leaderboard.entries).toHaveLength(1);
+      expect(leaderboard.entries[0]?.score.value).toBe(200);
+      expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_1);
+    });
+
+    it('should_keep_existing_entry_when_resubmitted_score_and_time_are_equal', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 30 }));
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 30 }));
+
+      expect(leaderboard.entries).toHaveLength(1);
+      expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_1);
+    });
+
+    it('should_replace_entry_when_same_score_but_faster_time', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 }));
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 20 }));
+
+      expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_2);
+      expect(leaderboard.entries[0]?.timeSeconds.value).toBe(20);
+    });
+
+    it('should_keep_single_entry_per_user_when_resubmitted', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }));
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200 }));
+
+      const userEntries = leaderboard.entries.filter((e) => e.userId.value === USER_1);
+      expect(userEntries).toHaveLength(1);
+    });
+
+    it('should_keep_other_users_entries_when_one_user_improves', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 150 }));
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_3, userId: USER_1, score: 300 }));
+
+      expect(leaderboard.entries).toHaveLength(2);
+      expect(leaderboard.entries.find((e) => e.userId.value === USER_2)?.score.value).toBe(150);
+      expect(leaderboard.entries.find((e) => e.userId.value === USER_1)?.score.value).toBe(300);
+    });
+
+    it('should_record_event_when_resubmission_is_better', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }));
+      leaderboard.clearEvents();
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200 }));
+
+      expect(leaderboard.domainEvents).toHaveLength(1);
+      expect(leaderboard.domainEvents[0]).toBeInstanceOf(LeaderboardUpdatedEvent);
+    });
+
+    it('should_not_record_event_when_resubmission_is_a_no_op', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200 }));
+      leaderboard.clearEvents();
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100 }));
+
+      expect(leaderboard.domainEvents).toHaveLength(0);
+    });
+
+    it('should_not_bump_updated_at_when_resubmission_is_a_no_op', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200 }));
+      const updatedAtBefore = leaderboard.updatedAt.value;
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100 }));
+
+      expect(leaderboard.updatedAt.value).toBe(updatedAtBefore);
+    });
+  });
+
+  describe('ScoreEntry.isBetterThan', () => {
+    it('should_return_true_when_score_is_higher', () => {
+      const high = makeEntry({ score: 200 });
+      const low = makeEntry({ score: 100 });
+
+      expect(high.isBetterThan(low)).toBe(true);
+    });
+
+    it('should_return_false_when_score_is_lower', () => {
+      const low = makeEntry({ score: 100 });
+      const high = makeEntry({ score: 200 });
+
+      expect(low.isBetterThan(high)).toBe(false);
+    });
+
+    it('should_return_true_when_score_equal_and_time_faster', () => {
+      const faster = makeEntry({ score: 100, timeSeconds: 20 });
+      const slower = makeEntry({ score: 100, timeSeconds: 60 });
+
+      expect(faster.isBetterThan(slower)).toBe(true);
+    });
+
+    it('should_return_false_when_score_equal_and_time_equal', () => {
+      const a = makeEntry({ score: 100, timeSeconds: 30 });
+      const b = makeEntry({ score: 100, timeSeconds: 30 });
+
+      expect(a.isBetterThan(b)).toBe(false);
+    });
+
+    it('should_return_false_when_score_lower_even_if_time_faster', () => {
+      const lowerFaster = makeEntry({ score: 100, timeSeconds: 10 });
+      const higherSlower = makeEntry({ score: 200, timeSeconds: 90 });
+
+      expect(lowerFaster.isBetterThan(higherSlower)).toBe(false);
     });
   });
 
