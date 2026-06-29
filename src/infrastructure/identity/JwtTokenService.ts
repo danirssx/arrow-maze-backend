@@ -1,13 +1,18 @@
 // Pattern: Adapter
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import type { TokenPayload, TokenService } from "../../application/identity/ports/TokenService.js";
 import { UnauthorizedError } from "../../shared/errors/ApplicationError.js";
 
 export class JwtTokenService implements TokenService {
-  constructor(private readonly secret: string) {}
+  constructor(
+    private readonly secret: string,
+    private readonly accessExpiresIn: string | number = "15m",
+  ) {}
 
   generate(payload: TokenPayload): string {
-    return jwt.sign(payload, this.secret, { expiresIn: "7d" });
+    return jwt.sign(payload, this.secret, {
+      expiresIn: this.accessExpiresIn as NonNullable<SignOptions["expiresIn"]>,
+    });
   }
 
   verify(token: string): TokenPayload {

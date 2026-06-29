@@ -5,6 +5,8 @@ export type Environment = {
   databaseUrl: string;
   databaseSsl: boolean;
   jwtSecret: string;
+  jwtAccessExpiresIn: string;
+  refreshTokenTtlDays: number;
 };
 
 export function loadEnvironment(): Environment {
@@ -27,6 +29,8 @@ export function loadEnvironment(): Environment {
     corsOrigin: process.env.CORS_ORIGIN ?? "http://localhost:8081",
     databaseUrl,
     databaseSsl,
-    jwtSecret
+    jwtSecret,
+    jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? "15m",
+    refreshTokenTtlDays: Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? 30)
   };
 }
