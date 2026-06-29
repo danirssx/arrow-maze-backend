@@ -287,50 +287,6 @@ Compliance rules should live where agents cannot miss them: `AGENTS.md`, with a 
 
 ---
 
-# AI Usage Log: Agent Role Traceability Documentation
-
-## Task / Problem
-
-Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
-| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
-| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
-| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
-| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
-
-## Result Obtained
-
-Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
-
-## Verification
-
-- Documentation-only change; reviewed modified Markdown files.
-
-## Team Modifications Pending Human Review
-
-- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
-- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
-
-## Lessons / Limitations
-
-Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
-
-
----
-
 # AI Log — AM-005 — Implement Identity application services
 
 **Date:** 2026-06-17
@@ -971,6 +927,50 @@ Typecheck clean.
 
 ---
 
+# AI Usage Log: Agent Role Traceability Documentation
+
+## Task / Problem
+
+Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
+| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
+| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
+| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
+| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
+
+## Result Obtained
+
+Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
+
+## Verification
+
+- Documentation-only change; reviewed modified Markdown files.
+
+## Team Modifications Pending Human Review
+
+- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
+- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
+
+## Lessons / Limitations
+
+Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
+
+
+---
+
 # AI Log — Architecture Divergence Fixes
 
 **Date:** 2026-06-17  
@@ -1489,6 +1489,76 @@ User instructed to implement ticket AM-050 following the established workflow: r
 
 ---
 
+# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
+
+## Task / Problem
+
+Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
+
+- `ArrowSpec[]` level definitions.
+- Optional `attempts` with default 5.
+- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
+- OpenAPI and persistence updated for the new contract.
+
+## Tool and Model
+
+- Tool: Codex CLI coding agent.
+- Model: GPT-5 based Codex.
+
+## Prompt Used
+
+The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
+| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
+| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
+| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
+| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
+
+## Result Obtained
+
+- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
+- Replaced `LevelDefinition` with `{ arrows, attempts }`.
+- Replaced solvability logic with blocking-graph DAG detection.
+- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
+- Updated create/update/get level use cases and controller request handling.
+- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
+- Added migration `005_refactor_levels_to_arrow_specs.sql`.
+- Rewrote seed levels as Arrow Untangle examples.
+- Updated Swagger schemas and examples.
+- Rewrote Level Catalog tests for the new model.
+
+## Validation
+
+```sh
+npm run verify
+```
+
+Result: passed.
+
+- Lint: passed.
+- Typecheck: passed.
+- Test coverage: passed, 58 suites / 310 tests.
+- Build: passed.
+
+## Team Modifications Pending Human Review
+
+- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
+- Review production DB migration order before applying to an existing database.
+- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
+
+## Lessons / Limitations
+
+- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
+- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
+
+
+---
+
 # AI Log — fix: add runtime enum guards via parseEnumFromInput / parseEnumFromDb
 
 **Date:** 2026-06-18
@@ -1914,76 +1984,6 @@ Continuation of critical bug fix session. User granted one-time merge permission
 ## Lessons / limitations
 
 - A missing `DomainEventBus` implementation is a silent runtime failure: TypeScript compiles fine, but any use case that calls `eventBus.publishAll()` would throw at startup when the dependency is injected. Always wire concrete infrastructure before registering routes.
-
-
----
-
-# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
-
-## Task / Problem
-
-Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
-
-- `ArrowSpec[]` level definitions.
-- Optional `attempts` with default 5.
-- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
-- OpenAPI and persistence updated for the new contract.
-
-## Tool and Model
-
-- Tool: Codex CLI coding agent.
-- Model: GPT-5 based Codex.
-
-## Prompt Used
-
-The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
-| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
-| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
-| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
-| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
-
-## Result Obtained
-
-- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
-- Replaced `LevelDefinition` with `{ arrows, attempts }`.
-- Replaced solvability logic with blocking-graph DAG detection.
-- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
-- Updated create/update/get level use cases and controller request handling.
-- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
-- Added migration `005_refactor_levels_to_arrow_specs.sql`.
-- Rewrote seed levels as Arrow Untangle examples.
-- Updated Swagger schemas and examples.
-- Rewrote Level Catalog tests for the new model.
-
-## Validation
-
-```sh
-npm run verify
-```
-
-Result: passed.
-
-- Lint: passed.
-- Typecheck: passed.
-- Test coverage: passed, 58 suites / 310 tests.
-- Build: passed.
-
-## Team Modifications Pending Human Review
-
-- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
-- Review production DB migration order before applying to an existing database.
-- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
-
-## Lessons / Limitations
-
-- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
-- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
 
 
 ---
@@ -3005,6 +3005,80 @@ new worktree, review root MEMORY.md + Linear_MCP_Guideline.md, register AI usage
 update MEMORY/AGENTS as needed, commit/push/PR/Linear). The `.feature` contract (@s1..@s8) was
 written first and approved by the human (Daniel) before any TDD, including the 3 explicit
 decisions (new `UserController`, `user-not-found → 404`, `malformed token userId → 401`).
+# Mutación — ticket MAZ-176
+
+**Veredicto:** PASS
+**Score:** 12/12 killed = 100% (umbral: 80%)
+
+## Alcance
+
+- `src/domain/progress/value-objects/CompletedAt.ts`
+
+## Comando
+
+```bash
+npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"
+```
+
+## Mutantes sobrevivientes
+
+- Ninguno.
+
+## Nota
+
+La primera corrida obtuvo 83.33% con dos mutantes sobrevivientes de string
+literal en mensajes de error. Se agregaron aserciones explícitas de mensaje en
+`tests/domain/progress/value-objects/CompletedAt.test.ts` y la repetición quedó
+en 100%.
+
+
+---
+
+# AI Usage Log: MAZ-176 Progress Timestamp And Referential Integrity
+
+## Task / Problem
+
+Implement Linear ticket `MAZ-176`: reject invalid progress `completedAt`
+timestamps before persistence and add database referential integrity for
+progress/leaderboard user and level references.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user requested implementation of `MAZ-176` in a new worktree, with
+mandatory review of backend/client `AGENTS.md`, `MEMORY.md`,
+`Linear_MCP_Guideline.md`, AI usage logging, checks, commit, push, PR, and
+Linear updates. No secrets were pasted or committed.
+# AI Usage Log: MAZ-172 (M9/B1) — Backend: leaderboard best-score upsert (stop rejecting replays 422)
+
+## Task / Problem
+
+The leaderboard **rejected every replay**. `Leaderboard.submitEntry` threw
+`DuplicateEntryError` whenever the user already had an entry for the level, which
+`DomainErrorMapper` maps to HTTP 422. There was no "update if better" branch, so
+`Score.isHigherThan` was dead code and improved times could never be recorded.
+The DB constraint `@@unique([leaderboardId, userId])` enforces one entry per user,
+so the fix had to be an upsert, not a second insert. Once login becomes mandatory
+(MAZ-179) and players replay levels to improve, every second win would 422.
+
+Goal: turn `submitEntry` into a best-score upsert — replace the user's stored
+entry only when the new result is strictly better; otherwise keep the best as an
+idempotent no-op (never an error). Re-rank + truncate after an accepted
+improvement. Remove the duplicate-as-error path.
+
+## Tool and Model
+
+Claude Opus 4.8 via Claude Code CLI.
+
+## Prompt Used
+
+User requested starting MAZ-172 following the established team workflow (read both
+`AGENTS.md`, root `MEMORY.md`, `Linear_MCP_Guideline.md`, the M9 memory; new
+worktree; spec → Gherkin → TDD; ai-log + compile usage; commit/push/PR; update
+Linear), noting it is a refactor so all affected tickets/context must be reviewed.
 
 ## Agent Roles Used
 
@@ -3015,6 +3089,60 @@ decisions (new `UserController`, `user-not-found → 404`, `malformed token user
 | TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green→Refactor in one session: wrote the 2 test files first, ran to confirm RED (missing modules), implemented the use case + controller + route + wiring + Swagger, confirmed GREEN. | tests, src, this entry |
 | Judge (`.agents/judge.md`) | Referenced | Self-review against `docs/reglas_clean_arch.md`: dependency rule (application imports only domain/ports/shared-errors), simple-record DTO (no `Date`/entities), HTTP mapping only in framework, `@s → test` completeness. Verdict: PASS. | this entry, `specs/users-me-MAZ-174.spec.md` CA block |
 | Mutation Tester (`.agents/mutation.md`) | Referenced | Ran Stryker scoped to the 3 new files. First run 82.35% (3 survivors: 2 error-message literals + 1 `execute({})` object literal). Strengthened tests; second run **100% (17/17 killed)**. | `reports/mutation/index.html` |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Read and applied the requirement to create a local spec with purpose, scope, behavior, Clean Architecture contract, decisions, and acceptance criteria before code. | `specs/progress-integrity.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Read and applied the executable-contract rule by creating stable `@s1..@s3` scenarios from the Linear acceptance criteria. | `specs/progress-integrity.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Followed red-green-refactor: added failing tests for invalid timestamps and migration FKs, implemented the minimum domain/schema/migration changes, then reran focused and full checks. | tests listed below, commit |
+| Judge (`.agents/judge.md`) | Not used | No separate judge review was run in this session. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Referenced | Read mutation rules and ran scoped Stryker on the touched domain value object. Initial run found two surviving message mutants; tests were tightened and rerun to 100%. | `ai-log/2026-06-28-MAZ-176-mutation.md` |
+
+## Scenario Coverage (@s ↔ test)
+
+- @s1 → `tests/api/progress/completeLevel.test.ts` `should_return_422_and_skip_save_when_completed_at_is_invalid`; `tests/application/progress/CompleteLevelService.test.ts` `should_reject_completion_and_skip_save_when_completed_at_is_invalid`; `tests/domain/progress/value-objects/CompletedAt.test.ts` `should_throw_invalid_argument_when_date_is_invalid`
+- @s2 → `tests/application/progress/SyncProgressService.test.ts` `should_reject_sync_and_skip_save_when_completed_at_is_invalid`; `tests/domain/progress/value-objects/CompletedAt.test.ts` `should_throw_invalid_argument_when_date_is_invalid`
+- @s3 → `tests/infrastructure/database/PrismaMigrationIntegrity.test.ts` `should_define_user_and_level_foreign_keys_when_migration_is_inspected`; `should_cast_level_references_to_uuid_before_adding_level_foreign_keys`
+
+## Result Obtained
+
+- Added `CompletedAt` validation for invalid and future dates in the domain
+  value object.
+- Added tests proving complete-level and sync flows reject invalid timestamps
+  before persistence.
+- Added Prisma schema relations for user/level ownership integrity.
+- Added migration `20260628000000_add_progress_integrity` to cast level
+  references to UUID and add restrict FKs:
+  `leaderboard_entries.user_id`, `player_progress.user_id`,
+  `leaderboards.level_id`, and `completed_levels.level_id`.
+- Updated Swagger/OpenAPI to document Progress `422 INVALID_ARGUMENT` timestamp
+  responses.
+
+## Verification
+
+- `npm test -- --runInBand tests/domain/progress/value-objects/CompletedAt.test.ts tests/application/progress/CompleteLevelService.test.ts tests/application/progress/SyncProgressService.test.ts tests/api/progress/completeLevel.test.ts tests/infrastructure/database/PrismaMigrationIntegrity.test.ts` — passed.
+- `npm run db:generate` — passed.
+- `DATABASE_URL=postgresql://arrow_maze:arrow_maze@localhost:55432/arrow_maze npm run db:migrate` against temporary Postgres 16 — passed; all 3 migrations applied cleanly.
+- `npm run export-openapi` — passed.
+- `npm run verify` — passed; 65 suites / 411 tests.
+- `npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"` — passed; 12/12 killed, 100%.
+
+## Team Modifications Pending Human Review
+
+- Review the policy choice `ON DELETE RESTRICT` for new user/level FKs. It
+  prevents accidental orphaning and silent score/progress loss; explicit delete
+  cleanup can be added later if the team wants deletion workflows.
+- Existing databases with orphan rows or non-UUID `level_id` strings must clean
+  those rows before applying the migration.
+
+## Lessons / Limitations
+
+- Postgres requires compatible types for real FKs, so `level_id` columns had to
+  move from `varchar` to `uuid` to reference `levels.id`.
+- String-literal mutation survivors on public domain error messages were useful;
+  tests now pin those messages.
+| Spec Partner (`.agents/spec-partner.md`) | Used | Wrote the spec after reading `Leaderboard`, `ScoreEntry`, `Score`/`TimeSeconds` VOs, `SubmitScoreService`, `PrismaLeaderboardRepository`, `DomainErrorMapper`, and the existing tests. Captured the root cause, the upsert decision, and the CA contract. | `specs/backend-leaderboard-upsert-MAZ-172.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Used | Distilled 9 Gherkin scenarios (`@s1..@s9`) covering replace-if-better, no-op on worse/equal, faster-time tiebreak, ranking/truncation, single-entry-per-user, service-level upsert, and the persistence unique-constraint guarantee. | `specs/backend-leaderboard-upsert-MAZ-172.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red→Green→Refactor: wrote 13 failing domain tests (confirmed RED), implemented `ScoreEntry.isBetterThan` + the upsert in `Leaderboard.submitEntry` (GREEN), then refactored the replace step from `findIndex`/index-assign to `find`/`filter` to remove a dead `undefined` branch. Added application + infra tests. | tests, code, commit, `@s → test` map below |
+| Judge (`.agents/judge.md`) | Referenced | Applied the `docs/reglas_clean_arch.md` checklist within this session (dependency rule, domain purity, invariants in aggregate/entity, no HTTP semantics in domain). No separate adversarial judge session was run. | CA contract in `specs/backend-leaderboard-upsert-MAZ-172.spec.md` |
+| Mutation Tester (`.agents/mutation.md`) | Used | Ran `stryker` scoped to the two changed domain files. First run: 90.74% with 2 survivors on the new `filter((e) => e !== existing)` predicate (single-user tests couldn't distinguish "remove old" from "remove all"). Added `should_keep_other_users_entries_when_one_user_improves`; re-run: `Leaderboard.ts` 100%. | scores below |
 
 ## Scenario Coverage (@s ↔ test)
 
@@ -3028,6 +3156,36 @@ decisions (new `UserController`, `user-not-found → 404`, `malformed token user
 | @s6 — use case returns plain DTO | `should_return_profile_dto_when_user_exists` | `tests/application/identity/GetCurrentUserUseCase.test.ts` |
 | @s7 — use case throws NotFoundError | `should_throw_not_found_error_with_message_when_user_does_not_exist` | `tests/application/identity/GetCurrentUserUseCase.test.ts` |
 | @s8 — malformed userId → UnauthorizedError, repo not queried | `should_throw_unauthorized_error_with_message_and_not_query_repository_when_user_id_is_malformed` | `tests/application/identity/GetCurrentUserUseCase.test.ts` |
+| @s1 — better resubmission replaces | `should_replace_entry_when_resubmitted_score_is_better` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s2 — worse resubmission no-op | `should_keep_existing_entry_when_resubmitted_score_is_worse` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s3 — equal resubmission no-op | `should_keep_existing_entry_when_resubmitted_score_and_time_are_equal` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s4 — equal score, faster time replaces | `should_replace_entry_when_same_score_but_faster_time` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s5 — new user added + ranked/truncated | `should_limit_entries_when_max_capacity_reached` (existing) + `should_keep_other_users_entries_when_one_user_improves` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s6 — single entry per user | `should_keep_single_entry_per_user_when_resubmitted` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s7 — service accepts better resubmission | `should_save_updated_entry_when_better_score_resubmitted` | `tests/application/leaderboard/SubmitScoreService.test.ts` |
+| @s8 — service accepts worse resubmission without throwing | `should_save_without_throwing_when_worse_score_resubmitted` | `tests/application/leaderboard/SubmitScoreService.test.ts` |
+| @s9 — repo persists one row per user | `should_persist_a_single_row_per_user_when_entry_replaced` | `tests/infrastructure/leaderboard/PrismaLeaderboardRepository.test.ts` |
+| (support) `isBetterThan` truth table | `ScoreEntry.isBetterThan` describe block (5 tests) | `tests/domain/leaderboard/Leaderboard.test.ts` |
+
+## TDD Cycles
+
+**Batch 1 — domain upsert (RED → GREEN)**
+- RED: removed the `DuplicateEntryError` test, added 8 upsert tests + a 5-test
+  `isBetterThan` describe. `npx jest` → 13 failed (`isBetterThan is not a function`).
+- GREEN: added `ScoreEntry.isBetterThan` (higher score wins, tiebreak by faster
+  time — reuses `Score.isHigherThan` + `TimeSeconds.isFasterThan`); rewrote
+  `Leaderboard.submitEntry` to upsert (replace-if-better, else no-op); deleted the
+  now-dead `DuplicateEntryError` class and its import. 47/47 green.
+
+**Batch 2 — application + infra (RED → GREEN)**
+- Added `SubmitScoreService` tests for better/worse resubmission and a
+  `PrismaLeaderboardRepository` test asserting `createMany` emits exactly one row
+  per user after a replacement (unique constraint respected). 79/79 leaderboard.
+
+**Batch 3 — refactor + mutation hardening**
+- Refactored the replace step (`find`/`filter`, no dead branch, no non-null
+  assertion). Mutation surfaced 2 survivors on the `filter` predicate; added a
+  multi-user "one improves, others kept" test. `Leaderboard.ts` → 100%.
 
 ## Result Obtained
 
@@ -3070,6 +3228,61 @@ register/login tests were intentionally left untouched (additive `UserController
   dies when the fake records its input and the test asserts the controller forwards the
   token-derived `userId` — important because "userId from token, never from body" is the security
   invariant of every authed endpoint.
+- `specs/backend-leaderboard-upsert-MAZ-172.spec.md` — CA spec + contract
+- `specs/backend-leaderboard-upsert-MAZ-172.feature` — 9 Gherkin scenarios
+
+**Modified source files:**
+- `src/domain/leaderboard/Leaderboard.ts` — `submitEntry` is now a best-score
+  upsert; removed the duplicate-as-error path and `DuplicateEntryError` import
+- `src/domain/leaderboard/ScoreEntry.ts` — new `isBetterThan(other)` (kills the
+  dead `Score.isHigherThan`)
+- `src/domain/leaderboard/errors/LeaderboardErrors.ts` — deleted `DuplicateEntryError`
+
+**Modified test files:**
+- `tests/domain/leaderboard/Leaderboard.test.ts` — upsert + `isBetterThan` tests
+- `tests/application/leaderboard/SubmitScoreService.test.ts` — service upsert tests
+- `tests/infrastructure/leaderboard/PrismaLeaderboardRepository.test.ts` —
+  single-row-per-user constraint test
+
+**Unchanged on purpose:** `SubmitScoreService` (already constructs the entry and
+delegates to the aggregate — the rule belongs in the domain), `PrismaLeaderboardRepository.save`
+(delete-then-recreate already serializes the deduped aggregate), `DomainErrorMapper`,
+`LeaderboardController`, and the OpenAPI/Swagger contract (status codes and bodies
+are identical: better/worse/new all return 201; VO violations still 422).
+
+## Verification
+
+- `npm run verify` — GREEN: lint + typecheck + coverage (63 suites / 418 tests) + build (exit 0).
+- Scoped mutation (`stryker --mutate src/domain/leaderboard/{Leaderboard,ScoreEntry}.ts`):
+  90.74% overall, above the 80% break threshold. `Leaderboard.ts` reached 100%
+  after the multi-user test. The 3 remaining `ScoreEntry.ts` survivors are all on
+  the pre-existing `toProps()` `if (this.rank !== undefined)` line (out of scope
+  for this ticket; not touched by MAZ-172).
+
+## Team Modifications Pending Human Review
+
+1. **HTTP behavior change:** a worse/equal replay now returns **201** instead of
+   **422**. This is the intended fix and unblocks MAZ-184 (client replay UX); any
+   client that switched on the old 422 must be updated (the client currently
+   swallows the 422, so this is strictly safer).
+2. **`DuplicateEntryError` deleted.** It was dead after removing the throw and had
+   no genuine invalid-state caller. If a future ticket needs a true "duplicate"
+   error semantics, reintroduce it explicitly.
+3. **Idempotent no-op still calls `repo.save`.** A worse/equal resubmission
+   persists the (unchanged) aggregate rather than short-circuiting. Kept for
+   simplicity and because the save is a harmless re-serialization of the same
+   best; a future optimization could skip the write when nothing changed.
+
+## Lessons / Limitations
+
+- The `PrismaLeaderboardRepository` test mocks Prisma (no live Postgres in
+  `verify`), so it pins that the adapter emits exactly one row per user rather than
+  exercising a real unique index. A true DB-level constraint test would need an
+  integration harness (out of scope here).
+- Mutation caught a real gap: with a single user on the board, "remove the old
+  entry" and "remove all entries then re-push the new one" are observationally
+  identical. Only a multi-user scenario distinguishes them — a good reminder that
+  per-user logic needs multi-user tests.
 
 
 <!-- AI_LOG_ENTRIES_END -->

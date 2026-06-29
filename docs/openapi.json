@@ -480,6 +480,23 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Invalid completion timestamp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "INVALID_ARGUMENT",
+                    "message": "CompletedAt must be a valid date"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -574,6 +591,23 @@
                   "error": {
                     "code": "UNAUTHORIZED",
                     "message": "Invalid or expired token"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid completion timestamp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "INVALID_ARGUMENT",
+                    "message": "CompletedAt must be a valid date"
                   }
                 }
               }
@@ -1665,6 +1699,30 @@
           }
         }
       },
+      "BoardShapeInput": {
+        "type": "object",
+        "description": "Optional abstract board mask (Option A): a visual + authoring/placement mask, not a physical wall.",
+        "required": [
+          "type",
+          "cells"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CELL_MASK"
+            ]
+          },
+          "cells": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 600,
+            "items": {
+              "$ref": "#/components/schemas/PositionInput"
+            }
+          }
+        }
+      },
       "LevelDefinitionDto": {
         "type": "object",
         "required": [
@@ -1682,6 +1740,9 @@
           "attempts": {
             "type": "integer",
             "minimum": 1
+          },
+          "boardShape": {
+            "$ref": "#/components/schemas/BoardShapeInput"
           }
         }
       },
@@ -1727,6 +1788,9 @@
             "type": "integer",
             "minimum": 1,
             "nullable": true
+          },
+          "boardShape": {
+            "$ref": "#/components/schemas/BoardShapeInput"
           }
         }
       },

@@ -47,6 +47,14 @@ export class ScoreEntry extends Entity<EntryId> {
     return new ScoreEntry(props);
   }
 
+  // Best-score ordering: higher score wins; ties broken by faster time.
+  // Mirrors Leaderboard.rankEntries so ranking and upsert stay consistent.
+  isBetterThan(other: ScoreEntry): boolean {
+    if (this.score.isHigherThan(other.score)) return true;
+    if (other.score.isHigherThan(this.score)) return false;
+    return this.timeSeconds.isFasterThan(other.timeSeconds);
+  }
+
   withRank(rank: Rank): ScoreEntry {
     return ScoreEntry.create({ ...this.toProps(), rank });
   }

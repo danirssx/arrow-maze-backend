@@ -18,23 +18,26 @@ datasource db {
 }
 
 model User {
-  id           String   @id @db.Uuid
-  email        String   @unique @db.VarChar(255)
-  username     String   @unique @db.VarChar(30)
-  passwordHash String   @map("password_hash")
-  role         String   @default("USER") @db.VarChar(10)
-  status       String   @default("ACTIVE") @db.VarChar(10)
-  createdAt    DateTime @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime @map("updated_at") @db.Timestamptz(6)
+  id                 String             @id @db.Uuid
+  email              String             @unique @db.VarChar(255)
+  username           String             @unique @db.VarChar(30)
+  passwordHash       String             @map("password_hash")
+  role               String             @default("USER") @db.VarChar(10)
+  status             String             @default("ACTIVE") @db.VarChar(10)
+  createdAt          DateTime           @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @map("updated_at") @db.Timestamptz(6)
+  leaderboardEntries LeaderboardEntry[]
+  playerProgress     PlayerProgress?
 
   @@map("users")
 }
 
 model Leaderboard {
   id         String             @id @db.Uuid
-  levelId    String             @unique @map("level_id") @db.VarChar(255)
+  levelId    String             @unique @map("level_id") @db.Uuid
   maxEntries Int                @default(10) @map("max_entries")
   updatedAt  DateTime           @map("updated_at") @db.Timestamptz(6)
+  level      Level              @relation(fields: [levelId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   entries    LeaderboardEntry[]
 
   @@map("leaderboards")
@@ -44,7 +47,7 @@ model LeaderboardEntry {
   id               String      @id @db.Uuid
   leaderboardId    String      @map("leaderboard_id") @db.Uuid
   userId           String      @map("user_id") @db.Uuid
-  levelId          String      @map("level_id") @db.VarChar(255)
+  levelId          String      @map("level_id") @db.Uuid
   usernameSnapshot String      @map("username_snapshot") @db.VarChar(255)
   score            Int
   timeSeconds      Decimal     @map("time_seconds") @db.Decimal
@@ -52,6 +55,7 @@ model LeaderboardEntry {
   rank             Int?
   submittedAt      DateTime    @map("submitted_at") @db.Timestamptz(6)
   leaderboard      Leaderboard @relation(fields: [leaderboardId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user             User        @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
 
   @@unique([leaderboardId, userId])
   @@index([leaderboardId], map: "idx_leaderboard_entries_leaderboard_id")
@@ -63,6 +67,7 @@ model PlayerProgress {
   userId          String           @unique @map("user_id") @db.Uuid
   version         Int              @default(0)
   updatedAt       DateTime         @map("updated_at") @db.Timestamptz(6)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   completedLevels CompletedLevel[]
 
   @@map("player_progress")
@@ -71,13 +76,14 @@ model PlayerProgress {
 model CompletedLevel {
   id              String         @id @db.Uuid
   progressId      String         @map("progress_id") @db.Uuid
-  levelId         String         @map("level_id") @db.VarChar(255)
+  levelId         String         @map("level_id") @db.Uuid
   bestScore       Int            @map("best_score")
   bestTimeSeconds Decimal        @map("best_time_seconds") @db.Decimal
   bestMovesCount  Int            @map("best_moves_count")
   completedAt     DateTime       @map("completed_at") @db.Timestamptz(6)
   updatedAt       DateTime       @map("updated_at") @db.Timestamptz(6)
   progress        PlayerProgress @relation(fields: [progressId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  level           Level          @relation(fields: [levelId], references: [id], onDelete: Restrict, onUpdate: NoAction)
 
   @@unique([progressId, levelId])
   @@index([progressId], map: "idx_completed_levels_progress_id")
@@ -97,6 +103,8 @@ model Level {
   boardShape       Json?    @map("board_shape")
   createdAt        DateTime @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime @map("updated_at") @db.Timestamptz(6)
+  leaderboards     Leaderboard[]
+  completedLevels  CompletedLevel[]
 
   @@index([status], map: "idx_levels_status")
   @@map("levels")
