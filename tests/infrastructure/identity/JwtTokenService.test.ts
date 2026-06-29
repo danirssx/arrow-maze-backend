@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { JwtTokenService } from "../../../src/infrastructure/identity/JwtTokenService";
 import { UserRole } from "../../../src/domain/identity/enums/UserRole";
 import { UnauthorizedError } from "../../../src/shared/errors/ApplicationError";
@@ -48,6 +49,20 @@ describe("JwtTokenService", () => {
 
       // Act / Assert
       expect(() => service.verify(token)).toThrow(UnauthorizedError);
+    });
+  });
+
+  describe("configurable access TTL", () => {
+    it("should_apply_the_configured_expiry_window_instead_of_a_hardcoded_one", () => {
+      // Arrange
+      const shortService = new JwtTokenService(secret, "15m");
+
+      // Act
+      const token = shortService.generate(payload);
+      const decoded = jwt.decode(token) as { iat: number; exp: number };
+
+      // Assert
+      expect(decoded.exp - decoded.iat).toBe(15 * 60);
     });
   });
 });
