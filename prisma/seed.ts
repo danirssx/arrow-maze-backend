@@ -10,9 +10,11 @@
  * The seed is idempotent: every write is an upsert keyed by id (or by the
  * relevant unique constraint), so re-running it is safe.
  */
+import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { createPrismaClient } from "../src/infrastructure/database/PrismaClientProvider.js";
 import { loadAuthoredLevels } from "./seed-data/authoredLevels.js";
+import { DEMO_USER_CREDENTIALS, DEMO_PASSWORD_BCRYPT_COST } from "./seed-data/demoCredentials.js";
 
 /**
  * Base epoch for order-derived `createdAt`. `GET /levels` orders by `createdAt asc`,
@@ -31,14 +33,6 @@ function resolveSsl(): boolean {
 function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
-
-const DEMO_PASSWORD_HASH = "$2b$10$aa37iFFglWjt6nlwkyNV3OCnnZCXGnN2o81ujv6Yf3ZSzJKYhlnPq";
-
-const DEMO_USERS = [
-  { id: "660e8400-e29b-41d4-a716-446655440001", email: "demo@arrowmaze.test", username: "demo_player", createdDaysAgo: 6 },
-  { id: "660e8400-e29b-41d4-a716-446655440002", email: "mika@arrowmaze.test", username: "mika_arrows", createdDaysAgo: 5 },
-  { id: "660e8400-e29b-41d4-a716-446655440003", email: "noah@arrowmaze.test", username: "noah_escape", createdDaysAgo: 4 },
-];
 
 const DEMO_PROGRESS = {
   id: "770e8400-e29b-41d4-a716-446655440001",
@@ -121,11 +115,11 @@ async function main(): Promise<void> {
     }
     process.stdout.write(`Seeded ${catalogLevels.length} catalog levels from level-json\n`);
 
-    for (const user of DEMO_USERS) {
+    for (const user of DEMO_USER_CREDENTIALS) {
       const data = {
         email: user.email,
         username: user.username,
-        passwordHash: DEMO_PASSWORD_HASH,
+        passwordHash: await bcrypt.hash(user.password, DEMO_PASSWORD_BCRYPT_COST),
         role: "USER",
         status: "ACTIVE",
         updatedAt: now,
@@ -180,7 +174,7 @@ async function main(): Promise<void> {
         });
       }
     }
-    process.stdout.write(`Seeded ${DEMO_USERS.length} demo users, progress and ${DEMO_LEADERBOARDS.length} leaderboards\n`);
+    process.stdout.write(`Seeded ${DEMO_USER_CREDENTIALS.length} demo users, progress and ${DEMO_LEADERBOARDS.length} leaderboards\n`);
   } finally {
     await prisma.$disconnect();
   }
