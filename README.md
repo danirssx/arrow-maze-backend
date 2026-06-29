@@ -130,6 +130,29 @@ npm run db:setup     # migrate then seed (fresh database)
 During development, `npm run db:migrate:dev` (`prisma migrate dev`) creates a new
 migration from schema changes.
 
+The schema is tracked by **Prisma Migrate as a single `0_init` baseline** in
+`prisma/migrations/` (the legacy hand-written `001`–`005` SQL files are gone). A
+fresh database only needs `npm run db:setup` (`db:migrate` then `db:seed`).
+
+#### Demo credentials (local / dev only)
+
+`npm run db:seed` creates three demo users so the mandatory-login flow can be
+exercised on a seeded database. Their passwords are **documented, non-secret
+local/dev values** (defined in `prisma/seed-data/demoCredentials.ts`) hashed with
+bcrypt cost 12. **Never reuse them in production.**
+
+| Email | Username | Password |
+| --- | --- | --- |
+| `demo@arrowmaze.test` | `demo_player` | `ArrowDemo!Player` |
+| `mika@arrowmaze.test` | `mika_arrows` | `ArrowDemo!Mika` |
+| `noah@arrowmaze.test` | `noah_escape` | `ArrowDemo!Noah` |
+
+Log in via `POST /auth/login` with `{ "email": "demo@arrowmaze.test", "rawPassword":
+"ArrowDemo!Player" }`, then call authenticated endpoints (e.g. `GET /users/me`,
+`GET /progress/me`) with the returned `accessToken` as `Authorization: Bearer …`.
+The end-to-end `register → login → authenticated request` chain is verified by
+`tests/integration/authFlow.e2e.test.ts`.
+
 #### Authoring levels (JSON → DB → game)
 
 The published catalog is sourced **entirely** from JSON files in
