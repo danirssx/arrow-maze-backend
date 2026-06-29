@@ -30,12 +30,12 @@ export class User extends Entity<UserId> {
     email: Email,
     username: Username,
     passwordHash: PasswordHash,
-    role: UserRole = UserRole.USER
+    role: UserRole = UserRole.USER,
+    now: Date,
   ): User {
-    const now = new Date();
     const user = new User(id, email, username, passwordHash, role, UserStatus.ACTIVE, now, now);
     user.record(
-      new UserRegistered(id.value, email.value, username.value, role)
+      new UserRegistered(id.value, email.value, username.value, role, now)
     );
     return user;
   }
@@ -53,19 +53,19 @@ export class User extends Entity<UserId> {
     return new User(id, email, username, passwordHash, role, status, createdAt, updatedAt);
   }
 
-  changePassword(newHash: PasswordHash): void {
+  changePassword(newHash: PasswordHash, now: Date): void {
     this._passwordHash = newHash;
-    this._updatedAt = new Date();
-    this.record(new UserPasswordChanged(this.id.value));
+    this._updatedAt = now;
+    this.record(new UserPasswordChanged(this.id.value, now));
   }
 
-  suspend(): void {
+  suspend(now: Date): void {
     if (this._status === UserStatus.SUSPENDED) {
       throw new BusinessRuleViolationError("User is already suspended");
     }
     this._status = UserStatus.SUSPENDED;
-    this._updatedAt = new Date();
-    this.record(new UserSuspended(this.id.value));
+    this._updatedAt = now;
+    this.record(new UserSuspended(this.id.value, now));
   }
 
   get email(): Email { return this._email; }

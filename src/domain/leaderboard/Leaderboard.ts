@@ -34,13 +34,13 @@ export class Leaderboard extends Entity<LeaderboardId> {
     return new Leaderboard(props);
   }
 
-  static empty(id: LeaderboardId, levelId: LevelId, maxEntries: MaxLeaderboardEntries): Leaderboard {
+  static empty(id: LeaderboardId, levelId: LevelId, maxEntries: MaxLeaderboardEntries, now: Date): Leaderboard {
     return new Leaderboard({
       id,
       levelId,
       entries: [],
       maxEntries,
-      updatedAt: UpdatedAt.now(),
+      updatedAt: new UpdatedAt(now),
     });
   }
 
@@ -55,7 +55,7 @@ export class Leaderboard extends Entity<LeaderboardId> {
   // Best-score upsert: a user keeps a single entry per level. A resubmission
   // replaces the stored entry only when it is strictly better; a worse or equal
   // resubmission is an idempotent no-op (kept best, no event, no rank churn).
-  submitEntry(entry: ScoreEntry): void {
+  submitEntry(entry: ScoreEntry, now: Date): void {
     if (!entry.levelId.equals(this.levelId)) {
       throw new LeaderboardLevelMismatchError(entry.levelId.value, this.levelId.value);
     }
@@ -70,10 +70,10 @@ export class Leaderboard extends Entity<LeaderboardId> {
 
     this._entries.push(entry);
     this._entries = this.rankEntries(this._entries).slice(0, this.maxEntries.value);
-    this._updatedAt = UpdatedAt.now();
+    this._updatedAt = new UpdatedAt(now);
 
     this.record(
-      new LeaderboardUpdatedEvent(this.id.value, entry.id.value, entry.userId.value),
+      new LeaderboardUpdatedEvent(this.id.value, entry.id.value, entry.userId.value, now),
     );
   }
 

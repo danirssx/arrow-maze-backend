@@ -17,6 +17,9 @@ import {
 } from "../../../src/domain/errors/DomainError";
 import { BoardShape } from "../../../src/domain/level-catalog/value-objects/BoardShape";
 
+const FIXED_LEVEL_ID = "22222222-2222-4222-a222-222222222222";
+const FIXED_LEVEL_NOW = new Date("2024-01-15T10:00:00.000Z");
+
 // Subject to human review — domain aggregate test
 
 class AlwaysSolvablePolicy extends LevelSolvabilityPolicy {
@@ -38,12 +41,13 @@ const makeSolvableDefinition = () =>
 
 const makeDraftLevel = (def = makeSolvableDefinition()) =>
   Level.draft(
-    LevelId.generate(),
+    LevelId.create(FIXED_LEVEL_ID),
     LevelName.create("Test Level"),
     LevelDescription.create("A test level"),
     def,
     Difficulty.EASY,
-    LevelVersion.initial()
+    LevelVersion.initial(),
+    FIXED_LEVEL_NOW,
   );
 
 describe("Level", () => {
@@ -58,7 +62,7 @@ describe("Level", () => {
     const level = makeDraftLevel();
 
     // Act
-    level.publish(new AlwaysSolvablePolicy());
+    level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW);
 
     // Assert
     const events = level.pullDomainEvents();
@@ -74,7 +78,7 @@ describe("Level", () => {
     const level = makeDraftLevel();
 
     // Act
-    level.publish(new AlwaysSolvablePolicy());
+    level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW);
 
     // Assert
     expect(level.status).toBe(LevelStatus.PUBLISHED);
@@ -84,10 +88,10 @@ describe("Level", () => {
   it("should_throw_when_already_published_level_is_published_again", () => {
     // Arrange
     const level = makeDraftLevel();
-    level.publish(new AlwaysSolvablePolicy());
+    level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW);
 
     // Act / Assert
-    expect(() => level.publish(new AlwaysSolvablePolicy())).toThrow(
+    expect(() => level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW)).toThrow(
       BusinessRuleViolationError
     );
   });
@@ -97,7 +101,7 @@ describe("Level", () => {
     const level = makeDraftLevel();
 
     // Act / Assert
-    expect(() => level.publish(new NeverSolvablePolicy())).toThrow(
+    expect(() => level.publish(new NeverSolvablePolicy(), FIXED_LEVEL_NOW)).toThrow(
       BusinessRuleViolationError
     );
   });
@@ -105,7 +109,7 @@ describe("Level", () => {
   it("should_pull_domain_events_and_clear_them", () => {
     // Arrange
     const level = makeDraftLevel();
-    level.publish(new AlwaysSolvablePolicy());
+    level.publish(new AlwaysSolvablePolicy(), FIXED_LEVEL_NOW);
 
     // Act
     const first = level.pullDomainEvents();
@@ -130,12 +134,13 @@ describe("Level board shape (Option A)", () => {
 
   const draftWithShape = (shape: BoardShape) =>
     Level.draft(
-      LevelId.generate(),
+      LevelId.create(FIXED_LEVEL_ID),
       LevelName.create("Shaped"),
       LevelDescription.create("A shaped level"),
       shapedDefinition(),
       Difficulty.EASY,
       LevelVersion.initial(),
+      FIXED_LEVEL_NOW,
       undefined,
       shape
     );
@@ -174,7 +179,7 @@ describe("Level board shape (Option A)", () => {
     // Act / Assert
     expect(() =>
       Level.reconstitute(
-        LevelId.generate(),
+        LevelId.create(FIXED_LEVEL_ID),
         LevelName.create("Shaped"),
         LevelDescription.create("A shaped level"),
         shapedDefinition(),
@@ -187,5 +192,47 @@ describe("Level board shape (Option A)", () => {
         shape
       )
     ).toThrow(InvalidArgumentError);
+  });
+});
+
+// @s4 — injected clock
+describe("Level injected clock", () => {
+  const draftWithClock = (now = FIXED_LEVEL_NOW) =>
+    Level.draft(
+      LevelId.create(FIXED_LEVEL_ID),
+      LevelName.create("Test Level"),
+      LevelDescription.create("A test level"),
+      makeSolvableDefinition(),
+      Difficulty.EASY,
+      LevelVersion.initial(),
+      now,
+    );
+
+  it("should_set_createdAt_and_updatedAt_to_injected_now_when_drafted", () => {
+    const level = draftWithClock();
+    expect(level.createdAt).toBe(FIXED_LEVEL_NOW);
+    expect(level.updatedAt).toBe(FIXED_LEVEL_NOW);
+  });
+
+  it("should_set_updatedAt_to_injected_now_when_published", () => {
+    const publishNow = new Date("2024-01-16T10:00:00.000Z");
+    const level = draftWithClock();
+    level.publish(new AlwaysSolvablePolicy(), publishNow);
+    expect(level.updatedAt).toBe(publishNow);
+  });
+
+  it("should_set_updatedAt_to_injected_now_when_definition_updated", () => {
+    const updateNow = new Date("2024-01-17T10:00:00.000Z");
+    const level = draftWithClock();
+    level.updateDefinition(makeSolvableDefinition(), updateNow);
+    expect(level.updatedAt).toBe(updateNow);
+  });
+
+  it("should_set_updatedAt_to_injected_now_when_archived", () => {
+    const archiveNow = new Date("2024-01-18T10:00:00.000Z");
+    const level = draftWithClock();
+    level.publish(new AlwaysSolvablePolicy(), new Date("2024-01-16T10:00:00.000Z"));
+    level.archive(archiveNow);
+    expect(level.updatedAt).toBe(archiveNow);
   });
 });

@@ -14,6 +14,8 @@ import type { UseCase } from "../../aspects/UseCase.js";
 import type { LevelRepository } from "../ports/LevelRepository.js";
 import { parseEnumFromInput } from "../../../shared/parseEnum.js";
 import { ValidationError } from "../../../shared/errors/ApplicationError.js";
+import type { IdGenerator } from "../../ports/IdGenerator.js";
+import type { Clock } from "../../ports/Clock.js";
 
 export type PositionInput = { row: number; col: number };
 
@@ -42,10 +44,15 @@ export type CreateLevelInput = {
 export type CreateLevelOutput = { levelId: string };
 
 export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevelOutput> {
-  constructor(private readonly repo: LevelRepository) {}
+  constructor(
+    private readonly repo: LevelRepository,
+    private readonly idGenerator: IdGenerator,
+    private readonly clock: Clock,
+  ) {}
 
   async execute(input: CreateLevelInput): Promise<CreateLevelOutput> {
-    const id = LevelId.generate();
+    const id = LevelId.create(this.idGenerator.generate());
+    const now = this.clock.now();
     const difficulty = parseEnumFromInput(Difficulty, input.difficulty, 'difficulty');
     const arrows = input.arrows.map((arrow) => mapArrowInput(arrow));
     const boardShape =
@@ -57,6 +64,7 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
       LevelDefinition.create(arrows, input.attempts),
       difficulty,
       LevelVersion.initial(),
+      now,
       input.timeLimit ? TimeLimit.create(input.timeLimit) : undefined,
       boardShape
     );

@@ -1,6 +1,7 @@
 import type { UseCase } from '../../aspects/UseCase.js';
 import type { LeaderboardRepository } from '../ports/ILeaderboardRepository.js';
 import type { DomainEventBus } from '../../ports/DomainEventBus.js';
+import type { Clock } from '../../ports/Clock.js';
 import { Leaderboard } from '../../../domain/leaderboard/Leaderboard.js';
 import { ScoreEntry } from '../../../domain/leaderboard/ScoreEntry.js';
 import { EntryId } from '../../../domain/leaderboard/value-objects/EntryId.js';
@@ -31,10 +32,12 @@ export class SubmitScoreService implements UseCase<SubmitScoreInput, SubmitScore
   constructor(
     private readonly leaderboardRepository: LeaderboardRepository,
     private readonly eventBus: DomainEventBus,
+    private readonly clock: Clock,
   ) {}
 
   async execute(input: SubmitScoreInput): Promise<SubmitScoreOutput> {
     const levelId = LevelId.create(input.levelId);
+    const now = this.clock.now();
 
     let leaderboard = await this.leaderboardRepository.findByLevelId(levelId);
 
@@ -43,6 +46,7 @@ export class SubmitScoreService implements UseCase<SubmitScoreInput, SubmitScore
         LeaderboardId.create(input.leaderboardId),
         levelId,
         MaxLeaderboardEntries.DEFAULT,
+        now,
       );
     }
 
@@ -54,10 +58,10 @@ export class SubmitScoreService implements UseCase<SubmitScoreInput, SubmitScore
       score: new Score(input.score),
       timeSeconds: new TimeSeconds(input.timeSeconds),
       movesCount: new MoveCount(input.movesCount),
-      submittedAt: SubmittedAt.now(),
+      submittedAt: new SubmittedAt(now),
     });
 
-    leaderboard.submitEntry(entry);
+    leaderboard.submitEntry(entry, now);
 
     await this.leaderboardRepository.save(leaderboard);
     await this.eventBus.publishAll(leaderboard.domainEvents);

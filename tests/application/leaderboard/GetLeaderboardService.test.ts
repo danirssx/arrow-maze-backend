@@ -18,6 +18,7 @@ import { UserId } from '../../../src/domain/shared/UserId.js';
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const LEVEL_1 = '550e8400-e29b-41d4-a716-446655440010';
 const LEVEL_99 = '550e8400-e29b-41d4-a716-446655440099';
+const FIXED_NOW = new Date('2026-06-18T00:00:00Z');
 
 function makeRepo(leaderboard: Leaderboard | null): jest.Mocked<LeaderboardRepository> {
   return {
@@ -31,6 +32,7 @@ function makeLeaderboardWithEntry(): Leaderboard {
     new LeaderboardId('lb-1'),
     LevelId.create(LEVEL_1),
     new MaxLeaderboardEntries(10),
+    FIXED_NOW,
   );
   lb.submitEntry(
     ScoreEntry.create({
@@ -41,8 +43,9 @@ function makeLeaderboardWithEntry(): Leaderboard {
       score: new Score(100),
       timeSeconds: new TimeSeconds(30),
       movesCount: new MoveCount(15),
-      submittedAt: SubmittedAt.now(),
+      submittedAt: new SubmittedAt(FIXED_NOW),
     }),
+    FIXED_NOW,
   );
   return lb;
 }

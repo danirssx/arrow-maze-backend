@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { SubmitScoreService, type SubmitScoreInput } from '../../../src/application/leaderboard/use-cases/SubmitScoreService.js';
 import type { LeaderboardRepository } from '../../../src/application/leaderboard/ports/ILeaderboardRepository.js';
 import type { DomainEventBus } from '../../../src/application/ports/DomainEventBus.js';
+import type { Clock } from '../../../src/application/ports/Clock.js';
 import { InvalidArgumentError } from '../../../src/domain/errors/DomainError.js';
 import { Leaderboard } from '../../../src/domain/leaderboard/Leaderboard.js';
 import { ScoreEntry } from '../../../src/domain/leaderboard/ScoreEntry.js';
@@ -21,12 +22,18 @@ const LEVEL_1 = '550e8400-e29b-41d4-a716-446655440010';
 const LB_1 = '550e8400-e29b-41d4-a716-446655440020';
 const ENTRY_1 = '550e8400-e29b-41d4-a716-446655440030';
 const SEED_ENTRY = '550e8400-e29b-41d4-a716-446655440099';
+const FIXED_NOW = new Date('2026-06-18T00:00:00Z');
+
+class FakeClock implements Clock {
+  now(): Date { return FIXED_NOW; }
+}
 
 function makeExistingLeaderboard(score: number, timeSeconds = 30): Leaderboard {
   const board = Leaderboard.empty(
     LeaderboardId.create(LB_1),
     LevelId.create(LEVEL_1),
     new MaxLeaderboardEntries(10),
+    FIXED_NOW,
   );
   board.submitEntry(
     ScoreEntry.create({
@@ -37,8 +44,9 @@ function makeExistingLeaderboard(score: number, timeSeconds = 30): Leaderboard {
       score: new Score(score),
       timeSeconds: new TimeSeconds(timeSeconds),
       movesCount: new MoveCount(15),
-      submittedAt: SubmittedAt.now(),
+      submittedAt: new SubmittedAt(FIXED_NOW),
     }),
+    FIXED_NOW,
   );
   board.clearEvents();
   return board;
@@ -70,7 +78,7 @@ function makeEventBus(): jest.Mocked<DomainEventBus> {
 }
 
 function makeService(repo: LeaderboardRepository) {
-  return new SubmitScoreService(repo, makeEventBus());
+  return new SubmitScoreService(repo, makeEventBus(), new FakeClock());
 }
 
 describe('SubmitScoreService', () => {
@@ -99,6 +107,7 @@ describe('SubmitScoreService', () => {
         LeaderboardId.create(LB_1),
         LevelId.create(LEVEL_1),
         new MaxLeaderboardEntries(10),
+        FIXED_NOW,
       );
       const repo = makeRepo(existing);
       const service = makeService(repo);
@@ -134,7 +143,7 @@ describe('SubmitScoreService', () => {
     it('should_publish_domain_events_when_entry_submitted', async () => {
       const eventBus = makeEventBus();
       const repo = makeRepo();
-      const service = new SubmitScoreService(repo, eventBus);
+      const service = new SubmitScoreService(repo, eventBus, new FakeClock());
 
       await service.execute(makeInput());
 

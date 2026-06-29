@@ -10,8 +10,4 @@ export class CompletedAt {
       throw new InvalidArgumentError('CompletedAt cannot be in the future');
     }
   }
-
-  static now(): CompletedAt {
-    return new CompletedAt(new Date());
-  }
 }

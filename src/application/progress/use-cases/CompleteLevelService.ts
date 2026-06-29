@@ -1,9 +1,12 @@
 import type { UseCase } from '../../aspects/UseCase.js';
 import type { ProgressRepository } from '../ports/IProgressRepository.js';
 import type { DomainEventBus } from '../../ports/DomainEventBus.js';
+import type { IdGenerator } from '../../ports/IdGenerator.js';
+import type { Clock } from '../../ports/Clock.js';
 import { PlayerProgress } from '../../../domain/progress/PlayerProgress.js';
 import { LevelCompletionResult } from '../../../domain/progress/LevelCompletionResult.js';
 import { CompletedAt } from '../../../domain/progress/value-objects/CompletedAt.js';
+import { CompletedLevelId } from '../../../domain/progress/value-objects/CompletedLevelId.js';
 import { LevelId } from '../../../domain/shared/LevelId.js';
 import { LevelScore } from '../../../domain/progress/value-objects/LevelScore.js';
 import { ProgressId } from '../../../domain/progress/value-objects/ProgressId.js';
@@ -24,14 +27,17 @@ export class CompleteLevelService implements UseCase<CompleteLevelInput, Complet
   constructor(
     private readonly repo: ProgressRepository,
     private readonly eventBus: DomainEventBus,
+    private readonly idGenerator: IdGenerator,
+    private readonly clock: Clock,
   ) {}
 
   async execute(input: CompleteLevelInput): Promise<CompleteLevelOutput> {
     const userId = UserId.create(input.userId);
+    const now = this.clock.now();
     let progress = await this.repo.findByUserId(userId);
 
     if (progress === null) {
-      progress = PlayerProgress.empty(ProgressId.generate(), userId);
+      progress = PlayerProgress.empty(ProgressId.create(this.idGenerator.generate()), userId, now);
     }
 
     const result = new LevelCompletionResult(
@@ -40,7 +46,7 @@ export class CompleteLevelService implements UseCase<CompleteLevelInput, Complet
       new CompletedAt(new Date(input.completedAt)),
     );
 
-    progress.recordCompletion(result);
+    progress.recordCompletion(result, CompletedLevelId.create(this.idGenerator.generate()), now);
 
     await this.repo.save(progress);
     await this.eventBus.publishAll(progress.domainEvents);

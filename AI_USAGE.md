@@ -287,6 +287,50 @@ Compliance rules should live where agents cannot miss them: `AGENTS.md`, with a 
 
 ---
 
+# AI Usage Log: Agent Role Traceability Documentation
+
+## Task / Problem
+
+Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
+| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
+| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
+| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
+| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
+
+## Result Obtained
+
+Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
+
+## Verification
+
+- Documentation-only change; reviewed modified Markdown files.
+
+## Team Modifications Pending Human Review
+
+- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
+- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
+
+## Lessons / Limitations
+
+Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
+
+
+---
+
 # AI Log — AM-005 — Implement Identity application services
 
 **Date:** 2026-06-17
@@ -927,50 +971,6 @@ Typecheck clean.
 
 ---
 
-# AI Usage Log: Agent Role Traceability Documentation
-
-## Task / Problem
-
-Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
-| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
-| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
-| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
-| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
-
-## Result Obtained
-
-Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
-
-## Verification
-
-- Documentation-only change; reviewed modified Markdown files.
-
-## Team Modifications Pending Human Review
-
-- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
-- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
-
-## Lessons / Limitations
-
-Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
-
-
----
-
 # AI Log — Architecture Divergence Fixes
 
 **Date:** 2026-06-17  
@@ -1489,76 +1489,6 @@ User instructed to implement ticket AM-050 following the established workflow: r
 
 ---
 
-# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
-
-## Task / Problem
-
-Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
-
-- `ArrowSpec[]` level definitions.
-- Optional `attempts` with default 5.
-- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
-- OpenAPI and persistence updated for the new contract.
-
-## Tool and Model
-
-- Tool: Codex CLI coding agent.
-- Model: GPT-5 based Codex.
-
-## Prompt Used
-
-The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
-| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
-| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
-| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
-| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
-
-## Result Obtained
-
-- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
-- Replaced `LevelDefinition` with `{ arrows, attempts }`.
-- Replaced solvability logic with blocking-graph DAG detection.
-- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
-- Updated create/update/get level use cases and controller request handling.
-- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
-- Added migration `005_refactor_levels_to_arrow_specs.sql`.
-- Rewrote seed levels as Arrow Untangle examples.
-- Updated Swagger schemas and examples.
-- Rewrote Level Catalog tests for the new model.
-
-## Validation
-
-```sh
-npm run verify
-```
-
-Result: passed.
-
-- Lint: passed.
-- Typecheck: passed.
-- Test coverage: passed, 58 suites / 310 tests.
-- Build: passed.
-
-## Team Modifications Pending Human Review
-
-- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
-- Review production DB migration order before applying to an existing database.
-- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
-
-## Lessons / Limitations
-
-- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
-- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
-
-
----
-
 # AI Log — fix: add runtime enum guards via parseEnumFromInput / parseEnumFromDb
 
 **Date:** 2026-06-18
@@ -1984,6 +1914,76 @@ Continuation of critical bug fix session. User granted one-time merge permission
 ## Lessons / limitations
 
 - A missing `DomainEventBus` implementation is a silent runtime failure: TypeScript compiles fine, but any use case that calls `eventBus.publishAll()` would throw at startup when the dependency is injected. Always wire concrete infrastructure before registering routes.
+
+
+---
+
+# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
+
+## Task / Problem
+
+Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
+
+- `ArrowSpec[]` level definitions.
+- Optional `attempts` with default 5.
+- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
+- OpenAPI and persistence updated for the new contract.
+
+## Tool and Model
+
+- Tool: Codex CLI coding agent.
+- Model: GPT-5 based Codex.
+
+## Prompt Used
+
+The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
+| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
+| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
+| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
+| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
+
+## Result Obtained
+
+- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
+- Replaced `LevelDefinition` with `{ arrows, attempts }`.
+- Replaced solvability logic with blocking-graph DAG detection.
+- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
+- Updated create/update/get level use cases and controller request handling.
+- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
+- Added migration `005_refactor_levels_to_arrow_specs.sql`.
+- Rewrote seed levels as Arrow Untangle examples.
+- Updated Swagger schemas and examples.
+- Rewrote Level Catalog tests for the new model.
+
+## Validation
+
+```sh
+npm run verify
+```
+
+Result: passed.
+
+- Lint: passed.
+- Typecheck: passed.
+- Test coverage: passed, 58 suites / 310 tests.
+- Build: passed.
+
+## Team Modifications Pending Human Review
+
+- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
+- Review production DB migration order before applying to an existing database.
+- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
+
+## Lessons / Limitations
+
+- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
+- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
 
 
 ---
@@ -2981,6 +2981,186 @@ El único sobreviviente restante puede ser tratado por el `tdd-implementer` en l
 
 ---
 
+# AI Log — MAZ-155 / CA-002: Backend — Sacar generación de IDs y reloj real del dominio
+
+## Task / Problem
+
+CA-002: el dominio importaba `crypto` (para `randomUUID()`) y llamaba `new Date()` directamente en
+value-objects y agregados. Esto viola la regla de dependencias de Clean Architecture: el dominio
+no puede depender de infraestructura. El objetivo es que el dominio reciba IDs y timestamps como
+parámetros, delegando la generación a puertos en la capa de aplicación.
+
+## Tool and Model
+
+Claude Code — claude-sonnet-4-6
+
+## Commits
+
+| SHA | Descripción |
+|-----|-------------|
+| `268ebc2` | `refactor(domain): remove crypto and real clock from domain layer (CA-002)` — implementación completa |
+| `828f90d` | `fix(ca-002): address code review findings and rebase conflict resolutions` — 6 findings CONFIRMED + rebase contra develop (PRs #56–#59) |
+
+## Prompt Used
+
+Sesión continua sobre el branch `refactor/backend-id-clock-CA-002`. Se leyeron: AGENTS.md,
+MEMORY.md, todos los .md de `/docs`, el ai-log previo, los specs `specs/backend-id-clock-CA-002.*`
+y los archivos fuente involucrados. El contrato Gherkin fue aprobado por el humano antes de
+comenzar TDD. Implementación ejecutada en 6 batches (domain events → User → Level → progress
+domain → leaderboard domain → application layer + wiring).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Spec existente `specs/backend-id-clock-CA-002.spec.md` guió el diseño: dos puertos (`IdGenerator`, `Clock`) en `application/ports/`, adaptadores en `infrastructure/shared/` | `specs/backend-id-clock-CA-002.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Contrato Gherkin `specs/backend-id-clock-CA-002.feature` (11 escenarios @s1–@s11) aprobado por el humano antes de TDD | `specs/backend-id-clock-CA-002.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Ciclos Rojo→Verde por batch: escribir test fallido → implementar mínimo para verde → siguiente escenario. 421/421 tests verdes al cierre | tests/, src/, mapa @s → test abajo |
+| Judge (`.agents/judge.md`) | Used | APPROVED — todos los @s cubiertos, 0 violaciones arquitectónicas introducidas por CA-002 | `ai-log/2026-06-29-MAZ-155-CA-002-judge.md` |
+| Mutation Tester (`.agents/mutation.md`) | Used | PASS — 91.52% (205/224 killed) sobre 17 archivos diff, umbral 80% | `ai-log/2026-06-29-MAZ-155-CA-002-mutation.md` |
+
+## Scenario Coverage (@s ↔ test)
+
+- @s1 — dominio no importa `crypto` → verificado por `tsc --noEmit` (sin imports `crypto` en `src/domain`) + grep
+- @s2 — dominio no llama `new Date()` → verificado por `tsc --noEmit` + grep en `src/domain`
+- @s3 → `tests/domain/identity/User.test.ts` — describe "injected clock" — `should_set_createdAt_and_updatedAt_to_injected_now_when_registered`, `should_set_updatedAt_to_injected_now_when_password_is_changed`, `should_set_updatedAt_to_injected_now_when_suspended`
+- @s4 → `tests/domain/level-catalog/Level.test.ts` — describe "Level injected clock" — `should_set_createdAt_and_updatedAt_to_injected_now_when_drafted`, `should_set_updatedAt_to_injected_now_when_published`, `should_set_updatedAt_to_injected_now_when_definition_updated`, `should_set_updatedAt_to_injected_now_when_archived`
+- @s5 → `tests/domain/progress/PlayerProgress.test.ts` — describe "PlayerProgress injected clock (@s5)" — `should_use_injected_entry_id_when_recording_first_completion`, `should_set_updatedAt_to_injected_now_when_recording_completion`, `should_set_updatedAt_to_injected_now_when_empty_created`
+- @s6 → `tests/domain/leaderboard/Leaderboard.test.ts` — describe "Leaderboard injected clock (@s6)" — `should_set_updatedAt_to_injected_now_when_empty_leaderboard_created`, `should_set_updatedAt_to_injected_now_when_entry_submitted`; también `tests/domain/progress/PlayerProgress.test.ts` — describe "ProgressMergePolicy injected clock (@s6)" — `should_set_merged_updatedAt_to_injected_now`
+- @s7 → `tests/domain/DomainEvent.test.ts` — `should_store_injected_occurredOn_when_event_is_created`, `should_not_call_new_Date_internally_when_occurredOn_is_injected`
+- @s8 → `tests/application/identity/RegisterUserUseCase.test.ts` — `should_return_userId_when_registration_succeeds` verifica que `result.userId === FAKE_ID` (ID inyectado, no UUID aleatorio); `tests/application/level-catalog/CreateLevelUseCase.test.ts` — describe "@s8 — injected id generator and clock" — `should_use_injected_id_when_level_is_created`, `should_use_injected_clock_when_level_is_created`
+- @s9 → `tests/infrastructure/UuidIdGenerator.test.ts`
+- @s10 → `tests/infrastructure/SystemClock.test.ts`
+- @s11 → `npm run verify` → 454/454 GREEN (post-rebase contra develop); `npm run typecheck` → 0 errores
+
+## Result Obtained
+
+**Domain layer — eliminación de infraestructura:**
+- `src/domain/shared/DomainEvent.ts` — `occurredOn: Date` inyectado en constructor (eliminado `new Date()`)
+- `src/domain/identity/User.ts` — `register()` recibe `now: Date`; eliminado `new Date()`
+- `src/domain/identity/UserFactory.ts` — `create()` recibe `id: UserId` y `now: Date`
+- `src/domain/identity/events/*.ts` — `UserRegistered`, `UserPasswordChanged`, `UserSuspended`: `occurredOn` inyectado
+- `src/domain/leaderboard/Leaderboard.ts` — `empty()` y `submitEntry()` reciben `now: Date`
+- `src/domain/leaderboard/events/LeaderboardUpdatedEvent.ts` — `occurredOn` inyectado
+- `src/domain/leaderboard/value-objects/EntryId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/leaderboard/value-objects/LeaderboardId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/leaderboard/value-objects/SubmittedAt.ts` — eliminado `now()`
+- `src/domain/leaderboard/value-objects/UpdatedAt.ts` — eliminado `now()`
+- `src/domain/level-catalog/Level.ts` — `draft()`, `publish()`, `updateDefinition()`, `archive()` reciben `now: Date`
+- `src/domain/level-catalog/events/LevelPublished.ts` — `occurredOn` inyectado
+- `src/domain/progress/CompletedLevel.ts` — `withBetterScore()` recibe `now: Date`
+- `src/domain/progress/PlayerProgress.ts` — `empty()` recibe `now: Date`; `recordCompletion()` recibe `newEntryId: CompletedLevelId` y `now: Date`
+- `src/domain/progress/events/LevelCompletedEvent.ts`, `LevelBestScoreUpdatedEvent.ts` — `occurredOn` inyectado
+- `src/domain/progress/policies/ProgressMergePolicy.ts` — `merge()` recibe `now: Date`
+- `src/domain/progress/value-objects/CompletedAt.ts` — eliminado `now()`
+- `src/domain/progress/value-objects/CompletedLevelId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/progress/value-objects/ProgressId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/progress/value-objects/UpdatedAt.ts` — eliminado `now()`
+- `src/domain/shared/LevelId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/shared/UserId.ts` — eliminado `generate()` + import `crypto`
+
+**Application layer — puertos e inyección:**
+- `src/application/ports/IdGenerator.ts` — **New** — puerto `IdGenerator`
+- `src/application/ports/Clock.ts` — **New** — puerto `Clock`
+- `src/application/identity/use-cases/RegisterUserUseCase.ts` — inyecta `IdGenerator` + `Clock`
+- `src/application/leaderboard/use-cases/SubmitScoreService.ts` — inyecta `Clock`
+- `src/application/level-catalog/use-cases/ArchiveLevelUseCase.ts` — inyecta `Clock`
+- `src/application/level-catalog/use-cases/CreateLevelUseCase.ts` — inyecta `IdGenerator` + `Clock`
+- `src/application/level-catalog/use-cases/PublishLevelUseCase.ts` — inyecta `Clock`
+- `src/application/level-catalog/use-cases/UpdateLevelDefinitionUseCase.ts` — inyecta `Clock`
+- `src/application/progress/use-cases/CompleteLevelService.ts` — inyecta `IdGenerator` + `Clock`
+- `src/application/progress/use-cases/LoadProgressService.ts` — inyecta `IdGenerator` + `Clock`
+- `src/application/progress/use-cases/SyncProgressService.ts` — inyecta `IdGenerator` + `Clock`
+
+**Infrastructure layer — adaptadores:**
+- `src/infrastructure/shared/UuidIdGenerator.ts` — **New** — implementa `IdGenerator` con `crypto.randomUUID()`
+- `src/infrastructure/shared/SystemClock.ts` — **New** — implementa `Clock` con `new Date()`
+
+**Framework layer — wiring:**
+- `src/framework/app.ts` — instancia `UuidIdGenerator` y `SystemClock`; los inyecta en todos los use cases
+
+**Tests:**
+- `tests/domain/DomainEvent.test.ts` — **New** — @s7
+- `tests/infrastructure/UuidIdGenerator.test.ts` — **New** — @s9
+- `tests/infrastructure/SystemClock.test.ts` — **New** — @s10
+- `tests/domain/identity/User.test.ts` — @s3 describe block agregado
+- `tests/domain/identity/UserFactory.test.ts` — reescrito para IDs y clock inyectados
+- `tests/domain/identity/value-objects/UserId.test.ts` — eliminado describe `generate`
+- `tests/domain/level-catalog/Level.test.ts` — @s4 describe block; `LevelId.generate()` → `LevelId.create(FIXED_ID)`
+- `tests/domain/level-catalog/value-objects/LevelId.test.ts` — eliminado test `should_generate_a_valid_uuid`
+- `tests/domain/leaderboard/Leaderboard.test.ts` — @s6 describe block; `SubmittedAt.now()` → `new SubmittedAt(FIXED_NOW)`
+- `tests/domain/progress/PlayerProgress.test.ts` — @s5 y @s6 describe blocks; IDs y clock inyectados en toda la suite
+- `tests/application/identity/LoginUseCase.test.ts` — `makeActiveUser()` usa `UserId.create()` + `FIXED_NOW`
+- `tests/application/identity/RegisterUserUseCase.test.ts` — `FakeIdGenerator` + `FakeClock` inyectados
+- `tests/application/leaderboard/GetLeaderboardService.test.ts` — `Leaderboard.empty()` + `submitEntry()` con `FIXED_NOW`
+- `tests/application/leaderboard/SubmitScoreService.test.ts` — `FakeClock` inyectado
+- `tests/application/level-catalog/ArchiveLevelUseCase.test.ts` — `FakeClock` inyectado
+- `tests/application/level-catalog/CreateLevelUseCase.test.ts` — `FakeIdGenerator` + `FakeClock`; @s8 describe block
+- `tests/application/level-catalog/PublishLevelUseCase.test.ts` — `FakeClock` inyectado
+- `tests/application/level-catalog/UpdateLevelDefinitionUseCase.test.ts` — `FakeClock` inyectado
+- `tests/application/level-catalog/helpers/levelFixtures.ts` — `FIXED_LEVEL_NOW`; `Level.draft()`, `publish()`, `archive()` actualizados
+- `tests/application/progress/CompleteLevelService.test.ts` — `FakeIdGenerator` + `FakeClock`; `PlayerProgress.empty()` con `now`
+- `tests/application/progress/LoadProgressService.test.ts` — `FakeIdGenerator` + `FakeClock`
+- `tests/application/progress/SyncProgressService.test.ts` — `FakeIdGenerator` + `FakeClock`; `CompletedLevelId` + `now` en `recordCompletion()`
+- `tests/infrastructure/identity/PrismaUserRepository.test.ts` — `makeUser()` usa `UserId.create()` + `FIXED_NOW`
+
+**Specs:**
+- `specs/backend-id-clock-CA-002.spec.md` — **New**
+- `specs/backend-id-clock-CA-002.feature` — **New**
+
+## Code Review Findings (`/code-review --effort high`)
+
+3 ángulos independientes + verificador. 8 findings en total.
+
+### Corregidos en `828f90d`
+
+| ID | Severidad | Archivo | Fix |
+|----|-----------|---------|-----|
+| C8 | CONFIRMED | `src/domain/identity/UserFactory.ts` | `now: Date` (required) reordenado antes de `role = UserRole.USER` (defaulted) — evita API trampa |
+| C3 | CONFIRMED | `tests/application/identity/RegisterUserUseCase.test.ts` | 2 tests instanciaban `new RegisterUserUseCase(repo, hasher)` con `idGenerator`/`clock` undefined — pasados 4 args completos |
+| C7 | CONFIRMED | `tests/domain/level-catalog/Level.test.ts` | 6 llamadas `level.publish(policy)` sin `now` — `updatedAt` undefined silencioso — pasado `FIXED_LEVEL_NOW` |
+| C5 | CONFIRMED | `tests/infrastructure/progress/PrismaProgressRepository.test.ts` | `PlayerProgress.empty()` sin `now` — agregado `FIXED_NOW` |
+| C6 | CONFIRMED | `tests/infrastructure/leaderboard/PrismaLeaderboardRepository.test.ts` | `Leaderboard.empty()` sin `now` — agregado `FIXED_NOW` |
+| C4 | CONFIRMED | `tests/application/progress/SyncProgressService.test.ts` | `FakeIdGenerator.generate()` devolvía siempre el mismo UUID — reemplazado por counter para IDs únicos |
+
+### Pre-existing (no bloquean PR)
+
+| ID | Severidad | Decisión |
+|----|-----------|----------|
+| C1 | CONFIRMED | `SyncProgressService` — `publishAll([])` siempre vacío (pre-existing, requiere decisión de arquitectura) |
+| C2 | PLAUSIBLE | `SubmitScoreService` — `EntryId` debería generarse con `IdGenerator` (pre-existing) |
+
+## Verification
+
+- `npm run verify` → 454/454 tests GREEN; `npm run typecheck` → 0 errors; build PASSED (post-rebase)
+- **Judge** → APPROVED (`ai-log/2026-06-29-MAZ-155-CA-002-judge.md`)
+- **Mutation** → PASS 91.52% / 205 killed / 17 survived / 224 total (`ai-log/2026-06-29-MAZ-155-CA-002-mutation.md`)
+
+## Team Modifications Pending Human Review
+
+- La firma de `PlayerProgress.recordCompletion()` ahora requiere `CompletedLevelId` explícito. En
+  `SyncProgressService`, el idGenerator genera un nuevo ID por cada entrada del loop — si dos
+  entradas locales usan el mismo `levelId`, solo la primera gana (el map usa `levelId` como clave,
+  no el `entryId`). Comportamiento idéntico al anterior, pero ahora explícito.
+- `DomainEvent.occurredOn` es `Date`, no un VO. El equipo puede decidir envolverlo en un VO en el
+  futuro sin afectar la regla de dependencias.
+- Los tests de `RegisterUserUseCase` con 2 args (`new RegisterUserUseCase(repo, hasher)`) siguen
+  pasando porque los casos de error se lanzan antes de que se acceda al idGenerator/clock. Esto es
+  intencional (transpile-only), pero el equipo debería evaluar si prefiere hacerlo explícito.
+
+## Lessons / Limitations
+
+- La cascada de cambios es significativa (55+ archivos) pero completamente predecible: cada VO
+  con `generate()`/`now()` tiene exactamente un adaptador en infrastructure y exactamente un
+  FakeClock/FakeIdGenerator en sus tests.
+- Los DomainEvents heredan `occurredOn` del constructor base: un solo cambio en `DomainEvent.ts`
+  propagó correctamente a los 7 eventos concretos sin tocar cada evento.
+- La separación en batches (domain events → User → Level → progress → leaderboard → application)
+  permitió mantener los tests verdes en cada paso intermedio.
+
+
+---
+
 # AI Usage Log: MAZ-172 (M9/B1) — Backend: leaderboard best-score upsert (stop rejecting replays 422)
 
 ## Task / Problem
@@ -3209,35 +3389,6 @@ register/login tests were intentionally left untouched (additive `UserController
 
 ---
 
-# Mutación — ticket MAZ-176
-
-**Veredicto:** PASS
-**Score:** 12/12 killed = 100% (umbral: 80%)
-
-## Alcance
-
-- `src/domain/progress/value-objects/CompletedAt.ts`
-
-## Comando
-
-```bash
-npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"
-```
-
-## Mutantes sobrevivientes
-
-- Ninguno.
-
-## Nota
-
-La primera corrida obtuvo 83.33% con dos mutantes sobrevivientes de string
-literal en mensajes de error. Se agregaron aserciones explícitas de mensaje en
-`tests/domain/progress/value-objects/CompletedAt.test.ts` y la repetición quedó
-en 100%.
-
-
----
-
 # AI Usage Log: MAZ-176 Progress Timestamp And Referential Integrity
 
 ## Task / Problem
@@ -3310,6 +3461,223 @@ Linear updates. No secrets were pasted or committed.
   move from `varchar` to `uuid` to reference `levels.id`.
 - String-literal mutation survivors on public domain error messages were useful;
   tests now pin those messages.
+
+
+---
+
+# Mutación — ticket MAZ-176
+
+**Veredicto:** PASS
+**Score:** 12/12 killed = 100% (umbral: 80%)
+
+## Alcance
+
+- `src/domain/progress/value-objects/CompletedAt.ts`
+
+## Comando
+
+```bash
+npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"
+```
+
+## Mutantes sobrevivientes
+
+- Ninguno.
+
+## Nota
+
+La primera corrida obtuvo 83.33% con dos mutantes sobrevivientes de string
+literal en mensajes de error. Se agregaron aserciones explícitas de mensaje en
+`tests/domain/progress/value-objects/CompletedAt.test.ts` y la repetición quedó
+en 100%.
+
+
+---
+
+# Review — MAZ-155 / CA-002: Backend — Sacar generación de IDs y reloj real del dominio
+
+**Veredicto:** APPROVED
+
+Date: 2026-06-29
+Branch: `refactor/backend-id-clock-CA-002`
+Commits reviewed: `268ebc2` (impl) → `828f90d` (code review fixes + rebase resolution)
+
+---
+
+## Cobertura de escenarios (@s ↔ test)
+
+- @s1: [x] `rg "from 'crypto'" src/domain` → 0 matches. Verificado.
+- @s2: [x] `rg "new Date\(\)" src/domain` → 0 matches. Verificado.
+- @s3: [x] `tests/domain/identity/User.test.ts:179` — `should_set_createdAt_and_updatedAt_to_injected_now_when_registered`, `:199` — `should_set_updatedAt_to_injected_now_when_password_is_changed`, `:214` — `should_set_updatedAt_to_injected_now_when_suspended`
+- @s4: [x] `tests/domain/level-catalog/Level.test.ts:211` — `should_set_createdAt_and_updatedAt_to_injected_now_when_drafted`, `:217` published, `:224` definition updated, `:231` archived
+- @s5: [x] `tests/domain/progress/PlayerProgress.test.ts:192` — `should_use_injected_entry_id_when_recording_first_completion`, `:202` — `should_set_updatedAt_to_injected_now_when_recording_completion`, `:211` — `should_set_updatedAt_to_injected_now_when_empty_created`
+- @s6: [x] `tests/domain/leaderboard/Leaderboard.test.ts:402` — `should_set_updatedAt_to_injected_now_when_empty_leaderboard_created`, `:408` — `should_set_updatedAt_to_injected_now_when_entry_submitted`; `tests/domain/progress/PlayerProgress.test.ts:220` — ProgressMergePolicy injected clock
+- @s7: [x] `tests/domain/DomainEvent.test.ts:10` — `should_store_injected_occurredOn_when_event_is_created`, `:22` — `should_not_call_new_Date_internally_when_occurredOn_is_injected`
+- @s8: [x] `tests/application/identity/RegisterUserUseCase.test.ts:49` — `should_return_userId_when_registration_succeeds` (verifica `result.userId === FAKE_ID`); `tests/application/level-catalog/CreateLevelUseCase.test.ts:202` — `should_use_injected_id_when_level_is_created`, `:217` — `should_use_injected_clock_when_level_is_created`
+- @s9: [x] `tests/infrastructure/UuidIdGenerator.test.ts:8` — `should_return_valid_uuid_v4_when_generate_is_called`
+- @s10: [x] `tests/infrastructure/SystemClock.test.ts:4` — `SystemClock` suite — `should_return_a_Date_instance`
+- @s11: [x] `npm run verify` → 454/454 GREEN, 70 suites, 0 typecheck errors, build PASSED
+
+---
+
+## Disciplina TDD
+
+- ¿Producción sin test que la pida? NO — `IdGenerator.ts`, `Clock.ts`, `UuidIdGenerator.ts`, `SystemClock.ts` cubiertos por @s8–@s10. Cambios en agregados cubiertos por @s3–@s7.
+- ¿Evidencia de Rojo→Verde→Refactor? SÍ — ai-log `2026-06-24-MAZ-155-CA-002.md` documenta 6 batches de implementación con mapa `@s → test` completo.
+- `FakeIdGenerator` usa counter para IDs únicos (hallazgo C4 del code review, fixeado en `828f90d`).
+
+---
+
+## Regla de dependencia y calidad
+
+Checks arquitectónicos ejecutados:
+
+```
+rg "httpStatus|from 'crypto'|from '.*shared/errors/AppError'"  src/domain → 0 matches ✅
+rg "from '.*(infrastructure|framework)'"  src/domain src/application → 0 matches ✅
+rg "role !==|role ===|isAdmin|ADMIN"  src/framework → matches en LevelCatalogController.ts:45,76,101,115 y openApiSpec.ts — PRE-EXISTING (AM-012, no introducido por CA-002; alcance de CA-003)
+rg "createdAt: Date|updatedAt: Date|submittedAt: Date|completedAt: Date"  src/application → matches en LoadProgressService.ts, GetLeaderboardService.ts, GetLevelsUseCase.ts, GetLevelUseCase.ts — PRE-EXISTING (DTO types no modificados por CA-002; git show 268ebc2 lo confirma)
+```
+
+Ningún `new Date()` ni `from 'crypto'` fue agregado al dominio por este ticket.
+
+---
+
+## Checklist Clean Architecture / DDD
+
+- **Regla de dependencia**: PASS — 0 violations en domain/application tras grep exhaustivo
+- **Dominio independiente**: PASS — `src/domain` no importa `application`, `infrastructure`, `framework`, `AppError`, `crypto`, ni expone `httpStatus`
+- **Application solo orquesta**: PASS — `IdGenerator` y `Clock` son puertos (interfaces); use-cases solo coordinan y delegan; no hay reglas de negocio nuevas en application
+- **Repositorios: interfaz adentro, implementación afuera**: PASS — `IdGenerator` y `Clock` viven en `src/application/ports/`; `UuidIdGenerator` y `SystemClock` en `src/infrastructure/shared/`
+- **DTOs simples en fronteras**: PASS (para CA-002) — los `Date` en DTOs de output (`LoadProgressService`, `GetLeaderboardService`) son pre-existentes y no introducidos por este ticket; confirmado con `git show 268ebc2`
+- **Invariantes en VO/agregados**: PASS — no se movieron invariantes; la generación de IDs y timestamps pasó de estar en el dominio a ser inyectada, sin cambiar dónde viven las reglas de negocio
+- **Errores de dominio sin semántica HTTP**: PASS — out of scope; cubierto por CA-001
+- **MVVM**: N/A — ticket backend puro
+- **Impacto por capa declarado vs. real**: PASS
+  - Domain: ✅ eliminó `crypto` y `new Date()` de VOs y agregados, agregó `now: Date` params
+  - Application: ✅ dos nuevos puertos, 9 use-cases actualizados con DI
+  - Infrastructure: ✅ dos nuevos adaptadores
+  - Framework: ✅ solo wiring en `app.ts`
+
+---
+
+## Notas (pre-existing, no bloquean aprobación)
+
+1. `LevelCatalogController.ts:45,76,101,115` — `role !== 'ADMIN'` en controller. Lógica de autorización que debería vivir en application o domain. Pre-existing de AM-012. Candidato para CA-003.
+2. `LoadProgressService.ts`, `GetLeaderboardService.ts`, `GetLevelsUseCase.ts`, `GetLevelUseCase.ts` — output DTOs exponen `Date`. Viola "DTOs simples" del template. Pre-existing. Candidato para ticket CA separado (serializar a ISO string antes de cruzar frontera a framework).
+
+---
+
+## Commits Conventional
+
+- `268ebc2 refactor(domain): remove crypto and real clock from domain layer (CA-002)` ✅
+- `828f90d fix(ca-002): address code review findings and rebase conflict resolutions` ✅
+
+## Entrada ai-log presente
+
+- `ai-log/2026-06-24-MAZ-155-CA-002.md` — presente y completa con mapa @s→test ✅
+
+
+---
+
+# Mutación — ticket MAZ-155 (CA-002)
+
+**Veredicto:** PASS
+**Score:** 205/224 killed = 91.52% (umbral: 80%)
+**Fecha:** 2026-06-29
+**Branch:** `refactor/backend-id-clock-CA-002`
+**Pasada:** 1
+
+## Resumen por archivo
+
+| Archivo | Score total | Score cubierto | Killed | Survived | No cov | Errors |
+|---------|-------------|----------------|--------|----------|--------|--------|
+| **All files** | **91.52%** | **92.34%** | **205** | **17** | **2** | **0** |
+| RegisterUserUseCase.ts | 80.00% | 80.00% | 8 | 2 | 0 | 0 |
+| SubmitScoreService.ts | 100.00% | 100.00% | 6 | 0 | 0 | 0 |
+| ArchiveLevelUseCase.ts | 83.33% | 83.33% | 5 | 1 | 0 | 0 |
+| CreateLevelUseCase.ts | 70.59% | 80.00% | 12 | 3 | 2 | 0 |
+| PublishLevelUseCase.ts | 83.33% | 83.33% | 5 | 1 | 0 | 0 |
+| UpdateLevelDefinitionUseCase.ts | 83.33% | 83.33% | 5 | 1 | 0 | 0 |
+| CompleteLevelService.ts | 100.00% | 100.00% | 5 | 0 | 0 | 0 |
+| LoadProgressService.ts | 100.00% | 100.00% | 9 | 0 | 0 | 0 |
+| SyncProgressService.ts | 100.00% | 100.00% | 6 | 0 | 0 | 0 |
+| User.ts | 95.00% | 95.00% | 19 | 1 | 0 | 0 |
+| UserFactory.ts | 100.00% | 100.00% | 1 | 0 | 0 | 0 |
+| Leaderboard.ts | 100.00% | 100.00% | 38 | 0 | 0 | 0 |
+| Level.ts | 85.45% | 85.45% | 47 | 8 | 0 | 0 |
+| ProgressMergePolicy.ts | 100.00% | 100.00% | 14 | 0 | 0 | 0 |
+| CompletedLevel.ts | 100.00% | 100.00% | 4 | 0 | 0 | 0 |
+| PlayerProgress.ts | 100.00% | 100.00% | 21 | 0 | 0 | 0 |
+| DomainEvent.ts | n/a (no mutants) | — | 0 | 0 | 0 | 0 |
+
+## Mutantes sobrevivientes (17)
+
+Todos son pre-existentes — ninguno fue introducido por CA-002.
+
+### Patrón 1 — StringLiteral (12 survivors): error messages sin verificación exacta
+
+Los tests verifican que se lanza el error del tipo correcto pero no el mensaje exacto. Este es el patrón más común de sobreviviente y existía antes de CA-002.
+
+| Archivo | Línea | Mutación | Test que corrió |
+|---------|-------|----------|-----------------|
+| `RegisterUserUseCase.ts:37` | StringLiteral | `"Email already registered"` → `""` | `should_throw_conflict_error_when_email_already_exists` |
+| `RegisterUserUseCase.ts:41` | StringLiteral | `"Username already taken"` → `""` | `should_throw_conflict_error_when_username_already_taken` |
+| `ArchiveLevelUseCase.ts:19` | StringLiteral | `` `Level not found: ...` `` → ` `` ` | `should_throw_not_found_when_level_does_not_exist` |
+| `CreateLevelUseCase.ts:56` | StringLiteral | `'difficulty'` → `""` en `parseEnumFromInput` | 12 tests |
+| `CreateLevelUseCase.ts:88` | StringLiteral | `"direction"` → `""` en `parseEnumFromInput` | 12 tests |
+| `PublishLevelUseCase.ts:21` | StringLiteral | `Level not found: ...` → `` | `should_throw_not_found_when_level_does_not_exist` |
+| `UpdateLevelDefinitionUseCase.ts:28` | StringLiteral | `Level not found: ...` → `` | `should_throw_not_found_when_level_does_not_exist` |
+| `User.ts:64` | StringLiteral | `"User is already suspended"` → `""` | `should_throw_business_rule_violation_when_suspending_already_suspended_user` |
+| `Level.ts:103` | StringLiteral | `"Level has an arrow cell outside the board shape mask"` → `""` | 4 tests |
+| `Level.ts:110` | StringLiteral | `"Only draft levels can be published"` → `""` | `should_throw_when_already_published_level_is_published_again` |
+| `Level.ts:114` | StringLiteral | `"Level definition contains a circular arrow blocking dependency"` → `""` | 2 tests |
+| `Level.ts:127` | StringLiteral | `"Only draft levels can have their definition updated"` → `""` | `should_throw_when_updating_definition_of_published_level` |
+| `Level.ts:136` | StringLiteral | `"Only published levels can be archived"` → `""` | `should_throw_when_draft_level_is_archived` |
+
+**Falta para matarlos**: tests que verifiquen el mensaje exacto (`.message === "..."`) además del tipo de error.
+
+### Patrón 2 — ConditionalExpression / BlockStatement (4 survivors)
+
+| Archivo | Línea | Mutación | Problema |
+|---------|-------|----------|---------|
+| `CreateLevelUseCase.ts:85` | ConditionalExpression | `if (input.direction === undefined)` → `if (false)` | No hay test que pase `direction: undefined` y espere ValidationError |
+| `Level.ts:148` | BlockStatement | `get timeLimit()` → `{}` (retorna undefined siempre) | Ningún test lee `level.timeLimit` directamente |
+| `Level.ts:152` | ConditionalExpression | `get isDraft` → `return true` | Solo 1 test verifica `isDraft`; no hay test con nivel publicado chequeando `isDraft === false` |
+| `Level.ts:153` | ConditionalExpression | `get isPublished` → `return true` | Solo 1 test verifica `isPublished`; no hay test con nivel draft chequeando `isPublished === false` |
+
+### No Coverage (2)
+
+| Archivo | Línea | Tipo |
+|---------|-------|------|
+| `CreateLevelUseCase.ts:85` | BlockStatement | `if (input.direction === undefined) { throw ... }` — path no ejecutado por ningún test |
+| `CreateLevelUseCase.ts:86` | StringLiteral | mismo path |
+
+---
+
+## Análisis de cobertura para CA-002
+
+Los cambios específicos de CA-002 (ports `IdGenerator`/`Clock`, inyección en use-cases, eliminación de `crypto`/`new Date()` del dominio) están cubiertos correctamente:
+
+- `PlayerProgress.ts`: **100%** ✅
+- `Leaderboard.ts`: **100%** ✅
+- `ProgressMergePolicy.ts`: **100%** ✅
+- `CompletedLevel.ts`: **100%** ✅
+- `LoadProgressService.ts`: **100%** ✅
+- `SyncProgressService.ts`: **100%** ✅
+- `CompleteLevelService.ts`: **100%** ✅
+- `SubmitScoreService.ts`: **100%** ✅
+- `UserFactory.ts`: **100%** ✅
+
+Los sobrevivientes viven en código pre-existente (error messages, getters de Level) no modificado por CA-002.
+
+---
+
+## Acción requerida
+
+Score 91.52% por encima del umbral 80%. Veredicto: **PASS**.
+
+Los 17 sobrevivientes pueden ser objetivo del `tdd-implementer` en un ticket separado si se desea mejorar la cobertura de mensajes de error y los getters de `Level`. No bloquean el merge de CA-002.
 
 
 ---

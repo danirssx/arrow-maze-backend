@@ -14,6 +14,7 @@ import { Position } from "../../../../src/domain/level-catalog/value-objects/Pos
 import type { LevelRepository } from "../../../../src/application/level-catalog/ports/LevelRepository";
 
 export const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
+export const FIXED_LEVEL_NOW = new Date("2024-01-15T10:00:00.000Z");
 
 export function makeSolvableDefinition(): LevelDefinition {
   return LevelDefinition.create([
@@ -28,20 +29,21 @@ export function makeDraftLevel(id = VALID_UUID): Level {
     LevelDescription.create("A test level"),
     makeSolvableDefinition(),
     Difficulty.EASY,
-    LevelVersion.initial()
+    LevelVersion.initial(),
+    FIXED_LEVEL_NOW
   );
 }
 
 export function makePublishedLevel(id = VALID_UUID): Level {
   const level = makeDraftLevel(id);
-  level.publish(new LevelSolvabilityPolicy());
+  level.publish(new LevelSolvabilityPolicy(), FIXED_LEVEL_NOW);
   level.pullDomainEvents();
   return level;
 }
 
 export function makeArchivedLevel(id = VALID_UUID): Level {
   const level = makePublishedLevel(id);
-  level.archive();
+  level.archive(FIXED_LEVEL_NOW);
   return level;
 }
 
@@ -71,6 +73,7 @@ export function makeShapedDraftLevel(id = VALID_UUID): Level {
     definition,
     Difficulty.EASY,
     LevelVersion.initial(),
+    FIXED_LEVEL_NOW,
     undefined,
     makeBoardShape()
   );
@@ -78,7 +81,7 @@ export function makeShapedDraftLevel(id = VALID_UUID): Level {
 
 export function makeShapedPublishedLevel(id = VALID_UUID): Level {
   const level = makeShapedDraftLevel(id);
-  level.publish(new LevelSolvabilityPolicy());
+  level.publish(new LevelSolvabilityPolicy(), FIXED_LEVEL_NOW);
   level.pullDomainEvents();
   return level;
 }

@@ -24,6 +24,7 @@ const LB_1 = '550e8400-e29b-41d4-a716-446655440020';
 const ENTRY_1 = '550e8400-e29b-41d4-a716-446655440030';
 const ENTRY_2 = '550e8400-e29b-41d4-a716-446655440031';
 const ENTRY_3 = '550e8400-e29b-41d4-a716-446655440032';
+const FIXED_LB_NOW = new Date('2024-01-15T10:00:00.000Z');
 
 function makeEntry(overrides?: {
   entryId?: string;
@@ -40,7 +41,7 @@ function makeEntry(overrides?: {
     score: new Score(overrides?.score ?? 100),
     timeSeconds: new TimeSeconds(overrides?.timeSeconds ?? 30),
     movesCount: new MoveCount(15),
-    submittedAt: SubmittedAt.now(),
+    submittedAt: new SubmittedAt(FIXED_LB_NOW),
   });
 }
 
@@ -49,6 +50,7 @@ function makeLeaderboard(maxEntries = 10): Leaderboard {
     LeaderboardId.create(LB_1),
     LevelId.create(LEVEL_1),
     new MaxLeaderboardEntries(maxEntries),
+    FIXED_LB_NOW,
   );
 }
 
@@ -58,7 +60,7 @@ describe('Leaderboard', () => {
       const leaderboard = makeLeaderboard();
       const entry = makeEntry();
 
-      leaderboard.submitEntry(entry);
+      leaderboard.submitEntry(entry, FIXED_LB_NOW);
 
       expect(leaderboard.entries).toHaveLength(1);
     });
@@ -67,7 +69,7 @@ describe('Leaderboard', () => {
       const leaderboard = makeLeaderboard();
       const entry = makeEntry();
 
-      leaderboard.submitEntry(entry);
+      leaderboard.submitEntry(entry, FIXED_LB_NOW);
 
       expect(leaderboard.entries[0]?.rank?.value).toBe(1);
     });
@@ -76,7 +78,7 @@ describe('Leaderboard', () => {
       const leaderboard = makeLeaderboard();
       const entry = makeEntry();
 
-      leaderboard.submitEntry(entry);
+      leaderboard.submitEntry(entry, FIXED_LB_NOW);
 
       expect(leaderboard.domainEvents).toHaveLength(1);
       expect(leaderboard.domainEvents[0]).toBeInstanceOf(LeaderboardUpdatedEvent);
@@ -87,8 +89,8 @@ describe('Leaderboard', () => {
       const lowScore = makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 50 });
       const highScore = makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 200 });
 
-      leaderboard.submitEntry(lowScore);
-      leaderboard.submitEntry(highScore);
+      leaderboard.submitEntry(lowScore, FIXED_LB_NOW);
+      leaderboard.submitEntry(highScore, FIXED_LB_NOW);
 
       expect(leaderboard.entries[0]?.score.value).toBe(200);
       expect(leaderboard.entries[0]?.rank?.value).toBe(1);
@@ -99,8 +101,8 @@ describe('Leaderboard', () => {
       const slower = makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 });
       const faster = makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 100, timeSeconds: 20 });
 
-      leaderboard.submitEntry(slower);
-      leaderboard.submitEntry(faster);
+      leaderboard.submitEntry(slower, FIXED_LB_NOW);
+      leaderboard.submitEntry(faster, FIXED_LB_NOW);
 
       expect(leaderboard.entries[0]?.timeSeconds.value).toBe(20);
       expect(leaderboard.entries[0]?.rank?.value).toBe(1);
@@ -108,9 +110,9 @@ describe('Leaderboard', () => {
 
     it('should_limit_entries_when_max_capacity_reached', () => {
       const leaderboard = makeLeaderboard(2);
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 50 }));
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 80 }));
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_3, userId: USER_3, score: 200 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 50 }), FIXED_LB_NOW);
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 80 }), FIXED_LB_NOW);
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_3, userId: USER_3, score: 200 }), FIXED_LB_NOW);
 
       expect(leaderboard.entries).toHaveLength(2);
       expect(leaderboard.entries[0]?.score.value).toBe(200);
@@ -120,15 +122,15 @@ describe('Leaderboard', () => {
       const leaderboard = makeLeaderboard();
       const wrongLevel = makeEntry({ levelId: LEVEL_99 });
 
-      expect(() => leaderboard.submitEntry(wrongLevel)).toThrow(LeaderboardLevelMismatchError);
+      expect(() => leaderboard.submitEntry(wrongLevel, FIXED_LB_NOW)).toThrow(LeaderboardLevelMismatchError);
     });
 
     // --- MAZ-172: best-score upsert (replaces the old duplicate-as-error path) ---
     it('should_replace_entry_when_resubmitted_score_is_better', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 }), FIXED_LB_NOW);
 
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200, timeSeconds: 50 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200, timeSeconds: 50 }), FIXED_LB_NOW);
 
       expect(leaderboard.entries).toHaveLength(1);
       expect(leaderboard.entries[0]?.score.value).toBe(200);
@@ -137,10 +139,10 @@ describe('Leaderboard', () => {
 
     it('should_keep_existing_entry_when_resubmitted_score_is_worse', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200, timeSeconds: 30 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200, timeSeconds: 30 }), FIXED_LB_NOW);
 
       // Worse score even though the time is faster: score dominates, so this is a no-op.
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 10 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 10 }), FIXED_LB_NOW);
 
       expect(leaderboard.entries).toHaveLength(1);
       expect(leaderboard.entries[0]?.score.value).toBe(200);
@@ -149,9 +151,9 @@ describe('Leaderboard', () => {
 
     it('should_keep_existing_entry_when_resubmitted_score_and_time_are_equal', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 30 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 30 }), FIXED_LB_NOW);
 
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 30 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 30 }), FIXED_LB_NOW);
 
       expect(leaderboard.entries).toHaveLength(1);
       expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_1);
@@ -159,9 +161,9 @@ describe('Leaderboard', () => {
 
     it('should_replace_entry_when_same_score_but_faster_time', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 }), FIXED_LB_NOW);
 
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 20 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 20 }), FIXED_LB_NOW);
 
       expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_2);
       expect(leaderboard.entries[0]?.timeSeconds.value).toBe(20);
@@ -169,9 +171,9 @@ describe('Leaderboard', () => {
 
     it('should_keep_single_entry_per_user_when_resubmitted', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }), FIXED_LB_NOW);
 
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200 }), FIXED_LB_NOW);
 
       const userEntries = leaderboard.entries.filter((e) => e.userId.value === USER_1);
       expect(userEntries).toHaveLength(1);
@@ -179,10 +181,10 @@ describe('Leaderboard', () => {
 
     it('should_keep_other_users_entries_when_one_user_improves', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }));
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 150 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }), FIXED_LB_NOW);
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 150 }), FIXED_LB_NOW);
 
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_3, userId: USER_1, score: 300 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_3, userId: USER_1, score: 300 }), FIXED_LB_NOW);
 
       expect(leaderboard.entries).toHaveLength(2);
       expect(leaderboard.entries.find((e) => e.userId.value === USER_2)?.score.value).toBe(150);
@@ -191,10 +193,10 @@ describe('Leaderboard', () => {
 
     it('should_record_event_when_resubmission_is_better', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }), FIXED_LB_NOW);
       leaderboard.clearEvents();
 
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200 }), FIXED_LB_NOW);
 
       expect(leaderboard.domainEvents).toHaveLength(1);
       expect(leaderboard.domainEvents[0]).toBeInstanceOf(LeaderboardUpdatedEvent);
@@ -202,20 +204,20 @@ describe('Leaderboard', () => {
 
     it('should_not_record_event_when_resubmission_is_a_no_op', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200 }), FIXED_LB_NOW);
       leaderboard.clearEvents();
 
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100 }), FIXED_LB_NOW);
 
       expect(leaderboard.domainEvents).toHaveLength(0);
     });
 
     it('should_not_bump_updated_at_when_resubmission_is_a_no_op', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200 }), FIXED_LB_NOW);
       const updatedAtBefore = leaderboard.updatedAt.value;
 
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100 }), FIXED_LB_NOW);
 
       expect(leaderboard.updatedAt.value).toBe(updatedAtBefore);
     });
@@ -392,5 +394,21 @@ describe('Leaderboard', () => {
       const username = new UsernameSnapshot('PlayerOne');
       expect(username.toString()).toBe('PlayerOne');
     });
+  });
+});
+
+// @s6 — Leaderboard injected clock
+describe('Leaderboard injected clock (@s6)', () => {
+  it('should_set_updatedAt_to_injected_now_when_empty_leaderboard_created', () => {
+    const now = FIXED_LB_NOW;
+    const lb = Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10), now);
+    expect(lb.updatedAt.value).toBe(now);
+  });
+
+  it('should_set_updatedAt_to_injected_now_when_entry_submitted', () => {
+    const submitNow = new Date('2024-01-16T10:00:00.000Z');
+    const lb = Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10), FIXED_LB_NOW);
+    lb.submitEntry(makeEntry(), submitNow);
+    expect(lb.updatedAt.value).toBe(submitNow);
   });
 });

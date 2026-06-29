@@ -8,6 +8,8 @@ import type { LoadProgressInput, LoadProgressOutput } from '../../../src/applica
 import type { SyncProgressInput, SyncProgressOutput } from '../../../src/application/progress/use-cases/SyncProgressService.js';
 import type { TokenPayload, TokenService } from '../../../src/application/identity/ports/TokenService.js';
 import type { DomainEventBus } from '../../../src/application/ports/DomainEventBus.js';
+import type { IdGenerator } from '../../../src/application/ports/IdGenerator.js';
+import type { Clock } from '../../../src/application/ports/Clock.js';
 import type { DomainEvent } from '../../../src/domain/shared/DomainEvent.js';
 import type { PlayerProgress } from '../../../src/domain/progress/PlayerProgress.js';
 import type { UserId } from '../../../src/domain/shared/UserId.js';
@@ -52,6 +54,16 @@ class SpyProgressRepository implements ProgressRepository {
 
 class SpyEventBus implements DomainEventBus {
   async publishAll(_events: ReadonlyArray<DomainEvent>): Promise<void> {}
+}
+
+const FIXED_COMPLETE_NOW = new Date('2026-06-18T00:00:00Z');
+
+class FakeIdGeneratorForComplete implements IdGenerator {
+  generate(): string { return '550e8400-e29b-41d4-a716-446655440099'; }
+}
+
+class FakeClockForComplete implements Clock {
+  now(): Date { return FIXED_COMPLETE_NOW; }
 }
 
 class ValidUuidTokenService implements TokenService {
@@ -118,7 +130,7 @@ describe('POST /progress/levels/:levelId/complete', () => {
   it('should_return_422_and_skip_save_when_completed_at_is_invalid', async () => {
     // Arrange
     const repo = new SpyProgressRepository();
-    const completeLevelService = new CompleteLevelService(repo, new SpyEventBus());
+    const completeLevelService = new CompleteLevelService(repo, new SpyEventBus(), new FakeIdGeneratorForComplete(), new FakeClockForComplete());
     const app = createProgressTestApp(
       new FakeLoadUseCase(), completeLevelService,
       new FakeSyncUseCase(), new ValidUuidTokenService(),

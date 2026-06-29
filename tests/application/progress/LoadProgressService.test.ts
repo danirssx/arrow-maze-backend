@@ -1,12 +1,16 @@
 import { jest } from '@jest/globals';
 import { LoadProgressService } from '../../../src/application/progress/use-cases/LoadProgressService.js';
 import type { ProgressRepository } from '../../../src/application/progress/ports/IProgressRepository.js';
+import type { IdGenerator } from '../../../src/application/ports/IdGenerator.js';
+import type { Clock } from '../../../src/application/ports/Clock.js';
 import { PlayerProgress } from '../../../src/domain/progress/PlayerProgress.js';
 import { ProgressId } from '../../../src/domain/progress/value-objects/ProgressId.js';
 import { UserId } from '../../../src/domain/shared/UserId.js';
 
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const PROGRESS_1 = '550e8400-e29b-41d4-a716-446655440020';
+const FAKE_PROGRESS_ID = '550e8400-e29b-41d4-a716-446655440099';
+const FIXED_NOW = new Date('2026-06-18T00:00:00Z');
 
 class FakeProgressRepository implements ProgressRepository {
   stored: PlayerProgress | null = null;
@@ -14,10 +18,18 @@ class FakeProgressRepository implements ProgressRepository {
   async save(progress: PlayerProgress): Promise<void> { this.stored = progress; }
 }
 
+class FakeIdGenerator implements IdGenerator {
+  generate(): string { return FAKE_PROGRESS_ID; }
+}
+
+class FakeClock implements Clock {
+  now(): Date { return FIXED_NOW; }
+}
+
 describe('LoadProgressService', () => {
   it('should_return_empty_progress_when_none_exists', async () => {
     const repo = new FakeProgressRepository();
-    const service = new LoadProgressService(repo);
+    const service = new LoadProgressService(repo, new FakeIdGenerator(), new FakeClock());
 
     const result = await service.execute({ userId: USER_1 });
 
@@ -29,7 +41,7 @@ describe('LoadProgressService', () => {
 
   it('should_persist_new_empty_progress_when_none_exists', async () => {
     const repo = new FakeProgressRepository();
-    const service = new LoadProgressService(repo);
+    const service = new LoadProgressService(repo, new FakeIdGenerator(), new FakeClock());
 
     await service.execute({ userId: USER_1 });
 
@@ -39,9 +51,9 @@ describe('LoadProgressService', () => {
 
   it('should_return_existing_progress_when_found', async () => {
     const repo = new FakeProgressRepository();
-    const existing = PlayerProgress.empty(ProgressId.create(PROGRESS_1), UserId.create(USER_1));
+    const existing = PlayerProgress.empty(ProgressId.create(PROGRESS_1), UserId.create(USER_1), FIXED_NOW);
     repo.stored = existing;
-    const service = new LoadProgressService(repo);
+    const service = new LoadProgressService(repo, new FakeIdGenerator(), new FakeClock());
 
     const result = await service.execute({ userId: USER_1 });
 

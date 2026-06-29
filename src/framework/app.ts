@@ -28,6 +28,8 @@ import { PrismaLeaderboardRepository } from "../infrastructure/leaderboard/Prism
 import { PrismaLevelRepository } from "../infrastructure/level-catalog/PrismaLevelRepository.js";
 import { LevelSolvabilityPolicy } from "../domain/level-catalog/LevelSolvabilityPolicy.js";
 import { InMemoryEventBus } from "../infrastructure/events/InMemoryEventBus.js";
+import { UuidIdGenerator } from "../infrastructure/shared/UuidIdGenerator.js";
+import { SystemClock } from "../infrastructure/shared/SystemClock.js";
 import { createPrismaClient } from "../infrastructure/database/PrismaClientProvider.js";
 import { ConsoleLogger } from "../infrastructure/logging/ConsoleLogger.js";
 import { loadEnvironment } from "./config/environment.js";
@@ -58,13 +60,16 @@ export function createApp() {
   const unitOfWork = new PrismaUnitOfWork(prisma);
   const eventBus = new InMemoryEventBus(logger);
 
+  const idGenerator = new UuidIdGenerator();
+  const clock = new SystemClock();
+
   const progressRepository = new PrismaProgressRepository(prisma);
   const leaderboardRepository = new PrismaLeaderboardRepository(prisma);
   const levelRepository = new PrismaLevelRepository(prisma);
   const solvabilityPolicy = new LevelSolvabilityPolicy();
 
   const registerUseCase = new TransactionDecorator(
-    new UseCaseLoggingDecorator("RegisterUserUseCase", new RegisterUserUseCase(userRepository, passwordHasher), logger),
+    new UseCaseLoggingDecorator("RegisterUserUseCase", new RegisterUserUseCase(userRepository, passwordHasher, idGenerator, clock), logger),
     unitOfWork
   );
   const loginUseCase = new UseCaseLoggingDecorator(
@@ -80,17 +85,17 @@ export function createApp() {
 
   const loadProgressUseCase = new UseCaseLoggingDecorator(
     "LoadProgressService",
-    new LoadProgressService(progressRepository),
+    new LoadProgressService(progressRepository, idGenerator, clock),
     logger
   );
   const completeLevelUseCase = new UseCaseLoggingDecorator(
     "CompleteLevelService",
-    new CompleteLevelService(progressRepository, eventBus),
+    new CompleteLevelService(progressRepository, eventBus, idGenerator, clock),
     logger
   );
   const syncProgressUseCase = new UseCaseLoggingDecorator(
     "SyncProgressService",
-    new SyncProgressService(progressRepository, eventBus),
+    new SyncProgressService(progressRepository, eventBus, idGenerator, clock),
     logger
   );
 
@@ -101,7 +106,7 @@ export function createApp() {
   );
   const submitScoreUseCase = new UseCaseLoggingDecorator(
     "SubmitScoreService",
-    new SubmitScoreService(leaderboardRepository, eventBus),
+    new SubmitScoreService(leaderboardRepository, eventBus, clock),
     logger
   );
 
@@ -116,19 +121,19 @@ export function createApp() {
     logger
   );
   const createLevelUseCase = new TransactionDecorator(
-    new UseCaseLoggingDecorator("CreateLevelUseCase", new CreateLevelUseCase(levelRepository), logger),
+    new UseCaseLoggingDecorator("CreateLevelUseCase", new CreateLevelUseCase(levelRepository, idGenerator, clock), logger),
     unitOfWork
   );
   const updateDefinitionUseCase = new TransactionDecorator(
-    new UseCaseLoggingDecorator("UpdateLevelDefinitionUseCase", new UpdateLevelDefinitionUseCase(levelRepository), logger),
+    new UseCaseLoggingDecorator("UpdateLevelDefinitionUseCase", new UpdateLevelDefinitionUseCase(levelRepository, clock), logger),
     unitOfWork
   );
   const publishLevelUseCase = new TransactionDecorator(
-    new UseCaseLoggingDecorator("PublishLevelUseCase", new PublishLevelUseCase(levelRepository, solvabilityPolicy), logger),
+    new UseCaseLoggingDecorator("PublishLevelUseCase", new PublishLevelUseCase(levelRepository, solvabilityPolicy, clock), logger),
     unitOfWork
   );
   const archiveLevelUseCase = new TransactionDecorator(
-    new UseCaseLoggingDecorator("ArchiveLevelUseCase", new ArchiveLevelUseCase(levelRepository), logger),
+    new UseCaseLoggingDecorator("ArchiveLevelUseCase", new ArchiveLevelUseCase(levelRepository, clock), logger),
     unitOfWork
   );
 

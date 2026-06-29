@@ -24,6 +24,7 @@ const LB_1 = "550e8400-e29b-41d4-a716-446655440020";
 const USER_1 = "550e8400-e29b-41d4-a716-446655440001";
 const ENTRY_1 = "550e8400-e29b-41d4-a716-446655440030";
 const ENTRY_2 = "550e8400-e29b-41d4-a716-446655440031";
+const FIXED_NOW = new Date("2026-01-01T00:00:00Z");
 
 type LeaderboardDelegate = { findUnique: jest.Mock };
 type TxDelegates = {
@@ -52,7 +53,7 @@ function makeWritePrisma(tx: TxDelegates): PrismaClient {
 }
 
 function makeEmptyLeaderboard(): Leaderboard {
-  return Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10));
+  return Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10), FIXED_NOW);
 }
 
 function makeLeaderboardWithEntry(): Leaderboard {
@@ -80,7 +81,7 @@ function makeLeaderboardAfterReplacement(): Leaderboard {
   // Same user submits twice (better the second time). The aggregate keeps one
   // entry per user, so the repository must persist exactly one row for that user
   // — honoring @@unique([leaderboardId, userId]).
-  const board = Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10));
+  const board = Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10), FIXED_NOW);
   board.submitEntry(
     ScoreEntry.create({
       id: EntryId.create(ENTRY_1),
@@ -92,6 +93,7 @@ function makeLeaderboardAfterReplacement(): Leaderboard {
       movesCount: new MoveCount(8),
       submittedAt: new SubmittedAt(new Date("2026-01-01T00:00:00Z")),
     }),
+    FIXED_NOW,
   );
   board.submitEntry(
     ScoreEntry.create({
@@ -104,6 +106,7 @@ function makeLeaderboardAfterReplacement(): Leaderboard {
       movesCount: new MoveCount(5),
       submittedAt: new SubmittedAt(new Date("2026-01-02T00:00:00Z")),
     }),
+    FIXED_NOW,
   );
   return board;
 }
