@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express";
 
 import { LoginUseCase } from "../application/identity/use-cases/LoginUseCase.js";
 import { RegisterUserUseCase } from "../application/identity/use-cases/RegisterUserUseCase.js";
+import { GetCurrentUserUseCase } from "../application/identity/use-cases/GetCurrentUserUseCase.js";
 import { CompleteLevelService } from "../application/progress/use-cases/CompleteLevelService.js";
 import { LoadProgressService } from "../application/progress/use-cases/LoadProgressService.js";
 import { SyncProgressService } from "../application/progress/use-cases/SyncProgressService.js";
@@ -34,10 +35,12 @@ import { createAuthMiddleware } from "./middleware/authMiddleware.js";
 import { createErrorMiddleware } from "./errors/errorMiddleware.js";
 import { notFoundMiddleware } from "./errors/notFoundMiddleware.js";
 import { IdentityController } from "./identity/IdentityController.js";
+import { UserController } from "./identity/UserController.js";
 import { ProgressController } from "./progress/ProgressController.js";
 import { LeaderboardController } from "./leaderboard/LeaderboardController.js";
 import { LevelCatalogController } from "./level-catalog/LevelCatalogController.js";
 import { createIdentityRouter } from "./identity/identityRoutes.js";
+import { createUserRouter } from "./identity/userRoutes.js";
 import { createProgressRouter } from "./progress/progressRoutes.js";
 import { createLeaderboardRouter } from "./leaderboard/leaderboardRoutes.js";
 import { createLevelCatalogRouter } from "./level-catalog/levelCatalogRoutes.js";
@@ -67,6 +70,11 @@ export function createApp() {
   const loginUseCase = new UseCaseLoggingDecorator(
     "LoginUseCase",
     new LoginUseCase(userRepository, passwordHasher, tokenService),
+    logger
+  );
+  const getCurrentUserUseCase = new UseCaseLoggingDecorator(
+    "GetCurrentUserUseCase",
+    new GetCurrentUserUseCase(userRepository),
     logger
   );
 
@@ -125,6 +133,7 @@ export function createApp() {
   );
 
   const identityController = new IdentityController(registerUseCase, loginUseCase);
+  const userController = new UserController(getCurrentUserUseCase);
   const progressController = new ProgressController(loadProgressUseCase, completeLevelUseCase, syncProgressUseCase);
   const leaderboardController = new LeaderboardController(submitScoreUseCase, getLeaderboardUseCase);
   const levelCatalogController = new LevelCatalogController(
@@ -145,6 +154,7 @@ export function createApp() {
   app.use(express.json());
   app.use(createHealthRouter());
   app.use(createIdentityRouter(identityController));
+  app.use(createUserRouter(userController, authMiddleware));
   app.use(createProgressRouter(progressController, authMiddleware));
   app.use(createLeaderboardRouter(leaderboardController, authMiddleware));
   app.use(createLevelCatalogRouter(levelCatalogController, authMiddleware));

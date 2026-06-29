@@ -2979,6 +2979,99 @@ Score por encima del umbral (80%). Veredicto: **PASS**.
 El único sobreviviente restante puede ser tratado por el `tdd-implementer` en la siguiente iteración si se desea llegar al 100% en `LevelScore`. No bloquea el merge.
 
 
+---
+
+# AI Usage Log: MAZ-174 — Expose GET /users/me (current authenticated user)
+
+## Task / Problem
+
+The Identity API had no current-user endpoint. `PrismaUserRepository.findById` existed but
+was wired to no route, so a mobile client could not validate a persisted JWT or re-hydrate
+the user on relaunch — a blocker for the M9 mandatory-login work (`MAZ-179`). The original
+M1 ticket (`MAZ-78` / AM-007) listed `GET /users/me` in scope but it was never delivered.
+
+Goal: add `GET /users/me`, protected by the existing Bearer auth middleware, returning the
+authenticated user's profile (`userId`, `email`, `username`, `role`) derived strictly from
+the token, never leaking the password hash.
+
+## Tool and Model
+
+Claude Opus 4.8 (1M context) via Claude Code CLI.
+
+## Prompt Used
+
+User requested starting MAZ-174 following the team workflow (review both AGENTS.md, work in a
+new worktree, review root MEMORY.md + Linear_MCP_Guideline.md, register AI usage, run all checks,
+update MEMORY/AGENTS as needed, commit/push/PR/Linear). The `.feature` contract (@s1..@s8) was
+written first and approved by the human (Daniel) before any TDD, including the 3 explicit
+decisions (new `UserController`, `user-not-found → 404`, `malformed token userId → 401`).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the role discipline from AGENTS.md §0.2 (no separate `.agents/` session). Distilled the M9 audit finding into a Clean Architecture spec with the mandatory CA contract block. | `specs/users-me-MAZ-174.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Authored the executable contract: 8 `@s` scenarios (API + use-case + architecture), presented for the single human gate before TDD. | `specs/users-me-MAZ-174.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green→Refactor in one session: wrote the 2 test files first, ran to confirm RED (missing modules), implemented the use case + controller + route + wiring + Swagger, confirmed GREEN. | tests, src, this entry |
+| Judge (`.agents/judge.md`) | Referenced | Self-review against `docs/reglas_clean_arch.md`: dependency rule (application imports only domain/ports/shared-errors), simple-record DTO (no `Date`/entities), HTTP mapping only in framework, `@s → test` completeness. Verdict: PASS. | this entry, `specs/users-me-MAZ-174.spec.md` CA block |
+| Mutation Tester (`.agents/mutation.md`) | Referenced | Ran Stryker scoped to the 3 new files. First run 82.35% (3 survivors: 2 error-message literals + 1 `execute({})` object literal). Strengthened tests; second run **100% (17/17 killed)**. | `reports/mutation/index.html` |
+
+## Scenario Coverage (@s ↔ test)
+
+| Scenario | Test | File |
+|----------|------|------|
+| @s1 — valid token → 200 profile (+ forwards token userId) | `should_return_200_with_profile_and_forward_token_user_id_when_token_is_valid` | `tests/api/identity/getCurrentUser.test.ts` |
+| @s2 — no passwordHash in response | `should_not_expose_password_hash_in_response` / `should_not_expose_password_hash_in_output` | `tests/api/identity/getCurrentUser.test.ts`, `tests/application/identity/GetCurrentUserUseCase.test.ts` |
+| @s3 — missing token → 401 | `should_return_401_when_no_token_provided` | `tests/api/identity/getCurrentUser.test.ts` |
+| @s4 — invalid token → 401 | `should_return_401_when_token_is_invalid` | `tests/api/identity/getCurrentUser.test.ts` |
+| @s5 — user not found → 404 | `should_return_404_when_user_not_found` | `tests/api/identity/getCurrentUser.test.ts` |
+| @s6 — use case returns plain DTO | `should_return_profile_dto_when_user_exists` | `tests/application/identity/GetCurrentUserUseCase.test.ts` |
+| @s7 — use case throws NotFoundError | `should_throw_not_found_error_with_message_when_user_does_not_exist` | `tests/application/identity/GetCurrentUserUseCase.test.ts` |
+| @s8 — malformed userId → UnauthorizedError, repo not queried | `should_throw_unauthorized_error_with_message_and_not_query_repository_when_user_id_is_malformed` | `tests/application/identity/GetCurrentUserUseCase.test.ts` |
+
+## Result Obtained
+
+**New files:**
+- `src/application/identity/use-cases/GetCurrentUserUseCase.ts` — loads the user via the `UserRepository` port; returns `{ userId, email, username, role }`; `NotFoundError` if missing; `UnauthorizedError` (no repo query) on a malformed token userId.
+- `src/framework/identity/UserController.ts` — `me()` reads `userId` from `AuthenticatedRequest.user`, returns 200 envelope.
+- `src/framework/identity/userRoutes.ts` — `createUserRouter(controller, authMiddleware)` mounting `GET /users/me`.
+- `specs/users-me-MAZ-174.spec.md`, `specs/users-me-MAZ-174.feature`.
+- `tests/application/identity/GetCurrentUserUseCase.test.ts`, `tests/api/identity/getCurrentUser.test.ts`, `tests/helpers/createUserTestApp.ts`.
+
+**Modified files:**
+- `src/framework/app.ts` — wire `GetCurrentUserUseCase` (logging decorator) + `UserController` + mount `createUserRouter` behind `authMiddleware`.
+- `src/framework/swagger/openApiSpec.ts` — `/users/me` path (200/401/404) + `CurrentUserResponse` schema.
+- `README.md` — endpoint list adds `GET /users/me`.
+
+No domain change. No new top-level folder. `IdentityController`, `createTestApp`, and the
+register/login tests were intentionally left untouched (additive `UserController`).
+
+## Verification
+
+- `npm run verify` — lint 0, typecheck 0, **65 suites / 412 tests passing**, build clean (dist emitted).
+- Scoped mutation (Stryker) on the 3 new files: **100% (17/17 killed)**.
+
+## Team Modifications Pending Human Review
+
+1. **`user not found` → 404 (not 401).** Approved this session. Open alternative noted in the spec:
+   if the team prefers the client's planned 401→logout (MAZ-180) to auto-trigger on a deleted
+   account, flip the use case to `UnauthorizedError`.
+2. **`email` is returned in the self-profile DTO.** It is the token owner's own data; confirm it
+   is acceptable for account display.
+3. **No refresh/logout here.** Session lifetime (refresh-token rotation) is `MAZ-175`; this slice
+   only adds the read endpoint.
+
+## Lessons / Limitations
+
+- New git worktrees have no `node_modules`; symlinking the sibling checkout's `node_modules`
+  broke ts-jest's ESM transform resolution. A real `npm ci` in the worktree is the reliable path
+  (Prisma client generates via the `postinstall`). Run jest with `--experimental-vm-modules`.
+- The API tests use a fake use case, so the `execute({ userId })` → `execute({})` mutant only
+  dies when the fake records its input and the test asserts the controller forwards the
+  token-derived `userId` — important because "userId from token, never from body" is the security
+  invariant of every authed endpoint.
+
+
 <!-- AI_LOG_ENTRIES_END -->
 
 ## Critical Evaluation
