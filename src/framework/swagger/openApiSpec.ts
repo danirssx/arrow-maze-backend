@@ -142,6 +142,50 @@ export const openApiSpec = {
         },
       },
     },
+    '/users/me': {
+      get: {
+        summary: 'Get the authenticated user profile',
+        tags: ['Identity'],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': {
+            description: 'Authenticated user profile',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/CurrentUserResponse' },
+                example: {
+                  status: 'success',
+                  data: {
+                    userId: '550e8400-e29b-41d4-a716-446655440000',
+                    email: 'player@example.com',
+                    username: 'arrow_player',
+                    role: 'USER',
+                  },
+                },
+              },
+            },
+          },
+          '401': {
+            description: 'Missing, invalid or expired token',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } },
+              },
+            },
+          },
+          '404': {
+            description: 'Authenticated user no longer exists',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'NOT_FOUND', message: 'User not found' } },
+              },
+            },
+          },
+        },
+      },
+    },
     '/leaderboard/scores': {
       post: {
         summary: 'Submit a player score to the leaderboard',
@@ -282,6 +326,15 @@ export const openApiSpec = {
               },
             },
           },
+          '422': {
+            description: 'Invalid completion timestamp',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'INVALID_ARGUMENT', message: 'CompletedAt must be a valid date' } },
+              },
+            },
+          },
           '401': {
             description: 'Unauthorized',
             content: {
@@ -351,6 +404,15 @@ export const openApiSpec = {
               'application/json': {
                 schema: { $ref: '#/components/schemas/ErrorResponse' },
                 example: { status: 'error', error: { code: 'BAD_REQUEST', message: 'completedLevels must be an array' } },
+              },
+            },
+          },
+          '422': {
+            description: 'Invalid completion timestamp',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'INVALID_ARGUMENT', message: 'CompletedAt must be a valid date' } },
               },
             },
           },
@@ -801,6 +863,23 @@ export const openApiSpec = {
             properties: {
               accessToken: { type: 'string' },
               userId: { type: 'string', format: 'uuid' },
+              username: { type: 'string' },
+              role: { type: 'string', enum: ['USER', 'ADMIN'] },
+            },
+          },
+        },
+      },
+      CurrentUserResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: {
+            type: 'object',
+            required: ['userId', 'email', 'username', 'role'],
+            properties: {
+              userId: { type: 'string', format: 'uuid' },
+              email: { type: 'string', format: 'email' },
               username: { type: 'string' },
               role: { type: 'string', enum: ['USER', 'ADMIN'] },
             },

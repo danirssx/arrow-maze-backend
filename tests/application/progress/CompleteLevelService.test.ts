@@ -13,8 +13,9 @@ const PROGRESS_1 = '550e8400-e29b-41d4-a716-446655440020';
 
 class FakeProgressRepository implements ProgressRepository {
   stored: PlayerProgress | null = null;
+  saveCount = 0;
   async findByUserId(_userId: UserId): Promise<PlayerProgress | null> { return this.stored; }
-  async save(progress: PlayerProgress): Promise<void> { this.stored = progress; }
+  async save(progress: PlayerProgress): Promise<void> { this.saveCount += 1; this.stored = progress; }
 }
 
 class FakeEventBus implements DomainEventBus {
@@ -74,5 +75,16 @@ describe('CompleteLevelService', () => {
     await service.execute({ ...VALID_INPUT, score: 50 });
 
     expect(repo.stored!.completedLevels[0].bestScore.score).toBe(500);
+  });
+
+  it('should_reject_completion_and_skip_save_when_completed_at_is_invalid', async () => {
+    const repo = new FakeProgressRepository();
+    const bus = new FakeEventBus();
+    const service = new CompleteLevelService(repo, bus);
+
+    await expect(service.execute({ ...VALID_INPUT, completedAt: 'not-a-date' })).rejects.toThrow();
+
+    expect(repo.saveCount).toBe(0);
+    expect(bus.published).toHaveLength(0);
   });
 });
