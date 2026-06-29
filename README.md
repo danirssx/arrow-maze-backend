@@ -177,6 +177,7 @@ GET  /health
 GET  /docs
 POST /auth/register
 POST /auth/login
+GET  /users/me
 POST /leaderboard/scores
 GET  /leaderboard/:levelId
 GET  /progress/me
