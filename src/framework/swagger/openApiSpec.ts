@@ -282,6 +282,15 @@ export const openApiSpec = {
               },
             },
           },
+          '422': {
+            description: 'Invalid completion timestamp',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'INVALID_ARGUMENT', message: 'CompletedAt must be a valid date' } },
+              },
+            },
+          },
           '401': {
             description: 'Unauthorized',
             content: {
@@ -351,6 +360,15 @@ export const openApiSpec = {
               'application/json': {
                 schema: { $ref: '#/components/schemas/ErrorResponse' },
                 example: { status: 'error', error: { code: 'BAD_REQUEST', message: 'completedLevels must be an array' } },
+              },
+            },
+          },
+          '422': {
+            description: 'Invalid completion timestamp',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'INVALID_ARGUMENT', message: 'CompletedAt must be a valid date' } },
               },
             },
           },
