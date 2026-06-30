@@ -12,6 +12,7 @@ class FakeClock implements Clock {
 }
 
 const NEW_DEFINITION = {
+  actorRole: "ADMIN",
   attempts: 3,
   arrows: [
     { id: "b", color: "#56D879", path: [{ row: -1, col: 0 }, { row: 0, col: 0 }], direction: "DOWN" },
@@ -55,5 +56,18 @@ describe("UpdateLevelDefinitionUseCase", () => {
     await expect(
       useCase.execute({ levelId: VALID_UUID, ...NEW_DEFINITION })
     ).rejects.toBeInstanceOf(BusinessRuleViolationError);
+  });
+
+  it("should_throw_forbidden_and_not_load_level_when_actor_is_not_admin", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makeDraftLevel(VALID_UUID));
+    const useCase = new UpdateLevelDefinitionUseCase(repo, new FakeClock());
+
+    // Act / Assert
+    await expect(
+      useCase.execute({ levelId: VALID_UUID, ...NEW_DEFINITION, actorRole: "USER" })
+    ).rejects.toThrow("Admin access required");
+    expect(repo.savedLevels).toHaveLength(0);
   });
 });

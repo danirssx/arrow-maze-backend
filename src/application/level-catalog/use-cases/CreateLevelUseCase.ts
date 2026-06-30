@@ -16,6 +16,7 @@ import { parseEnumFromInput } from "../../../shared/parseEnum.js";
 import { ValidationError } from "../../../shared/errors/ApplicationError.js";
 import type { IdGenerator } from "../../ports/IdGenerator.js";
 import type { Clock } from "../../ports/Clock.js";
+import { assertAdminActor } from "./authorizeLevelCatalogMutation.js";
 
 export type PositionInput = { row: number; col: number };
 
@@ -32,6 +33,7 @@ export type BoardShapeInput = {
 };
 
 export type CreateLevelInput = {
+  actorRole: string;
   name: string;
   description: string;
   difficulty: string;
@@ -51,6 +53,8 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
   ) {}
 
   async execute(input: CreateLevelInput): Promise<CreateLevelOutput> {
+    assertAdminActor(input.actorRole);
+
     const id = LevelId.create(this.idGenerator.generate());
     const now = this.clock.now();
     const difficulty = parseEnumFromInput(Difficulty, input.difficulty, 'difficulty');

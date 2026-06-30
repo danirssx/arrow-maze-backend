@@ -19,6 +19,7 @@ class FakeClock implements Clock {
 }
 
 const VALID_INPUT = {
+  actorRole: "ADMIN",
   name: "Arrow Level 1",
   description: "A simple level",
   difficulty: "EASY",
@@ -108,8 +109,21 @@ describe("CreateLevelUseCase", () => {
     ).rejects.toThrow(ValidationError);
   });
 
+  it("should_throw_forbidden_and_not_persist_when_actor_is_not_admin", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    const useCase = new CreateLevelUseCase(repo, new FakeIdGenerator(), new FakeClock());
+
+    // Act / Assert
+    await expect(
+      useCase.execute({ ...VALID_INPUT, actorRole: "USER" })
+    ).rejects.toThrow("Admin access required");
+    expect(repo.savedLevels).toHaveLength(0);
+  });
+
   describe("board shape (Option A)", () => {
     const SHAPED_INPUT = {
+      actorRole: "ADMIN",
       name: "Shaped Level",
       description: "An abstract shaped level",
       difficulty: "EASY",

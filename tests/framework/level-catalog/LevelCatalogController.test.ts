@@ -50,6 +50,22 @@ function makeController() {
   );
 }
 
+function makeControllerWithOverrides(overrides: {
+  createLevelUseCase?: UseCase<CreateLevelInput, CreateLevelOutput>;
+  updateDefinitionUseCase?: UseCase<UpdateLevelDefinitionInput, UpdateLevelDefinitionOutput>;
+  publishLevelUseCase?: UseCase<PublishLevelInput, PublishLevelOutput>;
+  archiveLevelUseCase?: UseCase<ArchiveLevelInput, ArchiveLevelOutput>;
+} = {}) {
+  return new LevelCatalogController(
+    fakeUseCase<GetLevelsInput, GetLevelsOutput>({ levels: [] }),
+    fakeUseCase<GetLevelInput, GetLevelOutput>({ level: LEVEL_DETAIL }),
+    overrides.createLevelUseCase ?? fakeUseCase<CreateLevelInput, CreateLevelOutput>({ levelId: 'new-id' }),
+    overrides.updateDefinitionUseCase ?? fakeUseCase<UpdateLevelDefinitionInput, UpdateLevelDefinitionOutput>({ levelId: 'l-1' }),
+    overrides.publishLevelUseCase ?? fakeUseCase<PublishLevelInput, PublishLevelOutput>({ levelId: 'l-1' }),
+    overrides.archiveLevelUseCase ?? fakeUseCase<ArchiveLevelInput, ArchiveLevelOutput>({ levelId: 'l-1' }),
+  );
+}
+
 describe('LevelCatalogController', () => {
   describe('listLevels', () => {
     it('should_return_200_with_levels_list_when_called', async () => {
@@ -108,9 +124,11 @@ describe('LevelCatalogController', () => {
   });
 
   describe('updateDefinition', () => {
-    it('should_return_403_when_user_is_not_admin', async () => {
+    it('should_forward_forbidden_when_application_rejects_non_admin_update', async () => {
       // Arrange
-      const controller = makeController();
+      const updateDefinitionUseCase = fakeUseCase<UpdateLevelDefinitionInput, UpdateLevelDefinitionOutput>({ levelId: 'l-1' });
+      (updateDefinitionUseCase.execute as jest.Mock).mockRejectedValue(new ForbiddenError('Admin access required'));
+      const controller = makeControllerWithOverrides({ updateDefinitionUseCase });
       const req = { ...USER_REQ, params: { levelId: 'l-1' }, body: { arrows: [] } } as unknown as Request;
       const res = makeRes();
       const next = makeNext();
@@ -119,6 +137,11 @@ describe('LevelCatalogController', () => {
       await controller.updateDefinition(req, res, next);
 
       // Assert
+      expect(updateDefinitionUseCase.execute).toHaveBeenCalledWith({
+        actorRole: 'USER',
+        levelId: 'l-1',
+        arrows: [],
+      });
       expect(next).toHaveBeenCalledWith(expect.any(ForbiddenError));
     });
 
@@ -157,9 +180,11 @@ describe('LevelCatalogController', () => {
   });
 
   describe('publishLevel', () => {
-    it('should_return_403_when_user_is_not_admin', async () => {
+    it('should_forward_forbidden_when_application_rejects_non_admin_publish', async () => {
       // Arrange
-      const controller = makeController();
+      const publishLevelUseCase = fakeUseCase<PublishLevelInput, PublishLevelOutput>({ levelId: 'l-1' });
+      (publishLevelUseCase.execute as jest.Mock).mockRejectedValue(new ForbiddenError('Admin access required'));
+      const controller = makeControllerWithOverrides({ publishLevelUseCase });
       const req = { ...USER_REQ, params: { levelId: 'l-1' } } as unknown as Request;
       const res = makeRes();
       const next = makeNext();
@@ -168,6 +193,7 @@ describe('LevelCatalogController', () => {
       await controller.publishLevel(req, res, next);
 
       // Assert
+      expect(publishLevelUseCase.execute).toHaveBeenCalledWith({ actorRole: 'USER', levelId: 'l-1' });
       expect(next).toHaveBeenCalledWith(expect.any(ForbiddenError));
     });
 
@@ -188,9 +214,11 @@ describe('LevelCatalogController', () => {
   });
 
   describe('archiveLevel', () => {
-    it('should_return_403_when_user_is_not_admin', async () => {
+    it('should_forward_forbidden_when_application_rejects_non_admin_archive', async () => {
       // Arrange
-      const controller = makeController();
+      const archiveLevelUseCase = fakeUseCase<ArchiveLevelInput, ArchiveLevelOutput>({ levelId: 'l-1' });
+      (archiveLevelUseCase.execute as jest.Mock).mockRejectedValue(new ForbiddenError('Admin access required'));
+      const controller = makeControllerWithOverrides({ archiveLevelUseCase });
       const req = { ...USER_REQ, params: { levelId: 'l-1' } } as unknown as Request;
       const res = makeRes();
       const next = makeNext();
@@ -199,6 +227,7 @@ describe('LevelCatalogController', () => {
       await controller.archiveLevel(req, res, next);
 
       // Assert
+      expect(archiveLevelUseCase.execute).toHaveBeenCalledWith({ actorRole: 'USER', levelId: 'l-1' });
       expect(next).toHaveBeenCalledWith(expect.any(ForbiddenError));
     });
 

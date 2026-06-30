@@ -287,50 +287,6 @@ Compliance rules should live where agents cannot miss them: `AGENTS.md`, with a 
 
 ---
 
-# AI Usage Log: Agent Role Traceability Documentation
-
-## Task / Problem
-
-Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
-| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
-| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
-| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
-| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
-
-## Result Obtained
-
-Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
-
-## Verification
-
-- Documentation-only change; reviewed modified Markdown files.
-
-## Team Modifications Pending Human Review
-
-- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
-- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
-
-## Lessons / Limitations
-
-Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
-
-
----
-
 # AI Log — AM-005 — Implement Identity application services
 
 **Date:** 2026-06-17
@@ -971,6 +927,50 @@ Typecheck clean.
 
 ---
 
+# AI Usage Log: Agent Role Traceability Documentation
+
+## Task / Problem
+
+Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
+| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
+| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
+| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
+| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
+
+## Result Obtained
+
+Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
+
+## Verification
+
+- Documentation-only change; reviewed modified Markdown files.
+
+## Team Modifications Pending Human Review
+
+- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
+- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
+
+## Lessons / Limitations
+
+Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
+
+
+---
+
 # AI Log — Architecture Divergence Fixes
 
 **Date:** 2026-06-17  
@@ -1489,6 +1489,76 @@ User instructed to implement ticket AM-050 following the established workflow: r
 
 ---
 
+# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
+
+## Task / Problem
+
+Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
+
+- `ArrowSpec[]` level definitions.
+- Optional `attempts` with default 5.
+- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
+- OpenAPI and persistence updated for the new contract.
+
+## Tool and Model
+
+- Tool: Codex CLI coding agent.
+- Model: GPT-5 based Codex.
+
+## Prompt Used
+
+The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
+| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
+| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
+| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
+| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
+
+## Result Obtained
+
+- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
+- Replaced `LevelDefinition` with `{ arrows, attempts }`.
+- Replaced solvability logic with blocking-graph DAG detection.
+- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
+- Updated create/update/get level use cases and controller request handling.
+- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
+- Added migration `005_refactor_levels_to_arrow_specs.sql`.
+- Rewrote seed levels as Arrow Untangle examples.
+- Updated Swagger schemas and examples.
+- Rewrote Level Catalog tests for the new model.
+
+## Validation
+
+```sh
+npm run verify
+```
+
+Result: passed.
+
+- Lint: passed.
+- Typecheck: passed.
+- Test coverage: passed, 58 suites / 310 tests.
+- Build: passed.
+
+## Team Modifications Pending Human Review
+
+- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
+- Review production DB migration order before applying to an existing database.
+- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
+
+## Lessons / Limitations
+
+- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
+- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
+
+
+---
+
 # AI Log — fix: add runtime enum guards via parseEnumFromInput / parseEnumFromDb
 
 **Date:** 2026-06-18
@@ -1914,76 +1984,6 @@ Continuation of critical bug fix session. User granted one-time merge permission
 ## Lessons / limitations
 
 - A missing `DomainEventBus` implementation is a silent runtime failure: TypeScript compiles fine, but any use case that calls `eventBus.publishAll()` would throw at startup when the dependency is injected. Always wire concrete infrastructure before registering routes.
-
-
----
-
-# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
-
-## Task / Problem
-
-Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
-
-- `ArrowSpec[]` level definitions.
-- Optional `attempts` with default 5.
-- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
-- OpenAPI and persistence updated for the new contract.
-
-## Tool and Model
-
-- Tool: Codex CLI coding agent.
-- Model: GPT-5 based Codex.
-
-## Prompt Used
-
-The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
-| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
-| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
-| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
-| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
-
-## Result Obtained
-
-- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
-- Replaced `LevelDefinition` with `{ arrows, attempts }`.
-- Replaced solvability logic with blocking-graph DAG detection.
-- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
-- Updated create/update/get level use cases and controller request handling.
-- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
-- Added migration `005_refactor_levels_to_arrow_specs.sql`.
-- Rewrote seed levels as Arrow Untangle examples.
-- Updated Swagger schemas and examples.
-- Rewrote Level Catalog tests for the new model.
-
-## Validation
-
-```sh
-npm run verify
-```
-
-Result: passed.
-
-- Lint: passed.
-- Typecheck: passed.
-- Test coverage: passed, 58 suites / 310 tests.
-- Build: passed.
-
-## Team Modifications Pending Human Review
-
-- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
-- Review production DB migration order before applying to an existing database.
-- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
-
-## Lessons / Limitations
-
-- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
-- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
 
 
 ---
@@ -3850,6 +3850,93 @@ lives in the framework controller. The security defect is therefore best handled
 as a Clean Architecture refactor that preserves the HTTP contract while moving
 authorization into the application boundary. TDD implementation is intentionally
 blocked until the executable contract is approved.
+
+
+---
+
+# AI Usage Log: MAZ-177 Level catalog admin authorization implementation
+
+## Task / Problem
+
+Implement backend ticket `MAZ-177`: level-catalog mutation endpoints must remain
+authenticated and require ADMIN authorization, with the authorization decision
+enforced in the application layer instead of the framework controller.
+
+## Tool and Model
+
+Codex CLI / GPT-5.
+
+## Prompt Used
+
+The user asked to continue closing milestone M9 after MAZ-187/MAZ-180 were
+merged to `develop`, following both repository `AGENTS.md` files, root
+`MEMORY.md`, `Linear_MCP_Guideline.md`, fresh worktrees, AI usage logging,
+checks, commit/push/PR, Linear updates, and review of affected tickets.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Used the existing MAZ-177 spec to preserve scope and architecture constraints. No separate agent session was run. | `specs/level-catalog-admin-authorization.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing Gherkin scenarios as the executable contract for tests. No separate planner session was run. | `specs/level-catalog-admin-authorization.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Added/updated focused tests for application authorization, API behavior, and architecture boundary before implementation was verified. | tests listed in the scenario coverage map |
+| Judge (`.agents/judge.md`) | Not used | No separate judge review session was run in this turn. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Full mutation testing was not run for this slice. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test coverage |
+| --- | --- |
+| `@s1` anonymous users cannot mutate | `tests/api/level-catalog/createLevel.test.ts` -> anonymous create/update/publish/archive assertions |
+| `@s2` non-admin users cannot mutate | `tests/api/level-catalog/createLevel.test.ts` -> user create/update/publish/archive assertions; application use-case forbidden tests |
+| `@s3` admin users can create | `tests/api/level-catalog/createLevel.test.ts` -> `should_return_201_with_levelId_when_admin_creates_a_valid_level`; `tests/application/level-catalog/CreateLevelUseCase.test.ts` |
+| `@s4` admin users can update definition | `tests/api/level-catalog/createLevel.test.ts` -> `should_return_200_when_admin_updates_level_definition`; `tests/application/level-catalog/UpdateLevelDefinitionUseCase.test.ts` |
+| `@s5` admin users can publish | `tests/api/level-catalog/createLevel.test.ts` -> `should_return_200_when_admin_publishes_level`; `tests/application/level-catalog/PublishLevelUseCase.test.ts` |
+| `@s6` admin users can archive | `tests/api/level-catalog/createLevel.test.ts` -> `should_return_200_when_admin_archives_level`; `tests/application/level-catalog/ArchiveLevelUseCase.test.ts` |
+| `@s7` authorization outside framework adapter | `tests/architecture/levelCatalogAuthorizationBoundary.test.ts`; `tests/framework/level-catalog/LevelCatalogController.test.ts` |
+
+## Result Obtained
+
+- Added `assertAdminActor` in application level-catalog use cases.
+- Added `actorRole` primitive input to create/update/publish/archive level use
+  cases and reject non-admin actors before repository mutation.
+- Removed `ForbiddenError`/`ADMIN` decisions from `LevelCatalogController`.
+- Kept framework responsibility limited to parsing transport data and passing
+  the authenticated actor role into the application input.
+- Added API coverage for anonymous, USER, and ADMIN behavior across all
+  mutation endpoints.
+- Added architecture coverage to prevent framework-level ADMIN checks from
+  returning.
+
+## Verification
+
+- `npm ci`
+- `npm run typecheck` GREEN
+- Focused tests GREEN:
+  `tests/application/level-catalog/CreateLevelUseCase.test.ts`,
+  `tests/application/level-catalog/UpdateLevelDefinitionUseCase.test.ts`,
+  `tests/application/level-catalog/PublishLevelUseCase.test.ts`,
+  `tests/application/level-catalog/ArchiveLevelUseCase.test.ts`,
+  `tests/framework/level-catalog/LevelCatalogController.test.ts`,
+  `tests/api/level-catalog/createLevel.test.ts`,
+  `tests/architecture/levelCatalogAuthorizationBoundary.test.ts`
+- Full `npm run verify` GREEN: lint, typecheck, coverage, build; 73 suites /
+  475 tests.
+
+## Team Modifications Pending Human Review
+
+- Review whether the `actorRole` primitive should later become a shared
+  application actor DTO for broader CA-003 work.
+- Review the architecture test wording if the team later introduces an approved
+  application authorization abstraction.
+
+## Lessons / Limitations
+
+- This slice fixes the level-catalog part only; broader role policy cleanup
+  remains a separate architecture topic if the team wants it.
+- No OpenAPI change was needed because the HTTP status contract was already
+  documented as admin-only; the behavioral owner moved from controller to
+  application.
 
 
 ---
