@@ -1,6 +1,8 @@
 import { jest } from '@jest/globals';
 import { GetLeaderboardService } from '../../../src/application/leaderboard/use-cases/GetLeaderboardService.js';
 import type { LeaderboardRepository } from '../../../src/application/leaderboard/ports/ILeaderboardRepository.js';
+import type { LevelRepository } from '../../../src/application/level-catalog/ports/LevelRepository.js';
+import type { Level } from '../../../src/domain/level-catalog/Level.js';
 import { NotFoundError } from '../../../src/shared/errors/ApplicationError.js';
 import { Leaderboard } from '../../../src/domain/leaderboard/Leaderboard.js';
 import { ScoreEntry } from '../../../src/domain/leaderboard/ScoreEntry.js';
@@ -24,6 +26,14 @@ function makeRepo(leaderboard: Leaderboard | null): jest.Mocked<LeaderboardRepos
   return {
     findByLevelId: jest.fn().mockResolvedValue(leaderboard),
     save: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
+function makeLevelRepo(level: Level | null = {} as Level): jest.Mocked<LevelRepository> {
+  return {
+    save: jest.fn().mockResolvedValue(undefined),
+    findById: jest.fn().mockResolvedValue(level),
+    findAllPublished: jest.fn().mockResolvedValue([]),
   };
 }
 
@@ -54,7 +64,7 @@ describe('GetLeaderboardService', () => {
   describe('execute', () => {
     it('should_return_leaderboard_dto_when_leaderboard_exists', async () => {
       const leaderboard = makeLeaderboardWithEntry();
-      const service = new GetLeaderboardService(makeRepo(leaderboard));
+      const service = new GetLeaderboardService(makeRepo(leaderboard), makeLevelRepo());
 
       const result = await service.execute({ levelId: LEVEL_1 });
 
@@ -65,7 +75,7 @@ describe('GetLeaderboardService', () => {
 
     it('should_return_entry_with_rank_when_leaderboard_has_entries', async () => {
       const leaderboard = makeLeaderboardWithEntry();
-      const service = new GetLeaderboardService(makeRepo(leaderboard));
+      const service = new GetLeaderboardService(makeRepo(leaderboard), makeLevelRepo());
 
       const result = await service.execute({ levelId: LEVEL_1 });
 
@@ -73,8 +83,16 @@ describe('GetLeaderboardService', () => {
       expect(result.entries[0]?.score).toBe(100);
     });
 
-    it('should_throw_not_found_when_leaderboard_does_not_exist', async () => {
-      const service = new GetLeaderboardService(makeRepo(null));
+    it('should_return_empty_entries_when_known_level_has_no_leaderboard', async () => {
+      const service = new GetLeaderboardService(makeRepo(null), makeLevelRepo({ id: LevelId.create(LEVEL_99) } as Level));
+
+      const result = await service.execute({ levelId: LEVEL_99 });
+
+      expect(result).toEqual({ levelId: LEVEL_99, entries: [] });
+    });
+
+    it('should_throw_not_found_when_level_does_not_exist', async () => {
+      const service = new GetLeaderboardService(makeRepo(null), makeLevelRepo(null));
 
       await expect(service.execute({ levelId: LEVEL_99 })).rejects.toThrow(NotFoundError);
     });

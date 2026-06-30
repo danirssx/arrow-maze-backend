@@ -235,6 +235,74 @@
         }
       }
     },
+    "/users/me": {
+      "get": {
+        "summary": "Get the authenticated user profile",
+        "tags": [
+          "Identity"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated user profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                },
+                "example": {
+                  "status": "success",
+                  "data": {
+                    "userId": "550e8400-e29b-41d4-a716-446655440000",
+                    "email": "player@example.com",
+                    "username": "arrow_player",
+                    "role": "USER"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid or expired token"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Authenticated user no longer exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "User not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/leaderboard/scores": {
       "post": {
         "summary": "Submit a player score to the leaderboard",
@@ -254,10 +322,7 @@
                 "$ref": "#/components/schemas/SubmitScoreRequest"
               },
               "example": {
-                "leaderboardId": "550e8400-e29b-41d4-a716-446655440001",
-                "entryId": "550e8400-e29b-41d4-a716-446655440002",
                 "levelId": "550e8400-e29b-41d4-a716-446655440020",
-                "usernameSnapshot": "arrow_player",
                 "score": 1500,
                 "timeSeconds": 45,
                 "movesCount": 30
@@ -291,7 +356,7 @@
                   "status": "error",
                   "error": {
                     "code": "BAD_REQUEST",
-                    "message": "leaderboardId, entryId, levelId, usernameSnapshot, score, timeSeconds and movesCount are required"
+                    "message": "levelId, score, timeSeconds and movesCount are required"
                   }
                 }
               }
@@ -1471,32 +1536,62 @@
           }
         }
       },
+      "CurrentUserResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "data"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "userId",
+              "email",
+              "username",
+              "role"
+            ],
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "username": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "USER",
+                  "ADMIN"
+                ]
+              }
+            }
+          }
+        }
+      },
       "SubmitScoreRequest": {
         "type": "object",
         "required": [
-          "leaderboardId",
-          "entryId",
           "levelId",
-          "usernameSnapshot",
           "score",
           "timeSeconds",
           "movesCount"
         ],
         "properties": {
-          "leaderboardId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "entryId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "levelId": {
             "type": "string",
             "format": "uuid"
-          },
-          "usernameSnapshot": {
-            "type": "string"
           },
           "score": {
             "type": "integer",
@@ -2045,10 +2140,8 @@
           "data": {
             "type": "object",
             "required": [
-              "leaderboardId",
               "levelId",
-              "entries",
-              "updatedAt"
+              "entries"
             ],
             "properties": {
               "leaderboardId": {

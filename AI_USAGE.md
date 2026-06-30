@@ -287,50 +287,6 @@ Compliance rules should live where agents cannot miss them: `AGENTS.md`, with a 
 
 ---
 
-# AI Usage Log: Agent Role Traceability Documentation
-
-## Task / Problem
-
-Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
-| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
-| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
-| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
-| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
-
-## Result Obtained
-
-Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
-
-## Verification
-
-- Documentation-only change; reviewed modified Markdown files.
-
-## Team Modifications Pending Human Review
-
-- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
-- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
-
-## Lessons / Limitations
-
-Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
-
-
----
-
 # AI Log — AM-005 — Implement Identity application services
 
 **Date:** 2026-06-17
@@ -971,6 +927,50 @@ Typecheck clean.
 
 ---
 
+# AI Usage Log: Agent Role Traceability Documentation
+
+## Task / Problem
+
+Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
+| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
+| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
+| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
+| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
+
+## Result Obtained
+
+Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
+
+## Verification
+
+- Documentation-only change; reviewed modified Markdown files.
+
+## Team Modifications Pending Human Review
+
+- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
+- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
+
+## Lessons / Limitations
+
+Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
+
+
+---
+
 # AI Log — Architecture Divergence Fixes
 
 **Date:** 2026-06-17  
@@ -1489,6 +1489,76 @@ User instructed to implement ticket AM-050 following the established workflow: r
 
 ---
 
+# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
+
+## Task / Problem
+
+Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
+
+- `ArrowSpec[]` level definitions.
+- Optional `attempts` with default 5.
+- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
+- OpenAPI and persistence updated for the new contract.
+
+## Tool and Model
+
+- Tool: Codex CLI coding agent.
+- Model: GPT-5 based Codex.
+
+## Prompt Used
+
+The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
+| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
+| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
+| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
+| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
+
+## Result Obtained
+
+- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
+- Replaced `LevelDefinition` with `{ arrows, attempts }`.
+- Replaced solvability logic with blocking-graph DAG detection.
+- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
+- Updated create/update/get level use cases and controller request handling.
+- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
+- Added migration `005_refactor_levels_to_arrow_specs.sql`.
+- Rewrote seed levels as Arrow Untangle examples.
+- Updated Swagger schemas and examples.
+- Rewrote Level Catalog tests for the new model.
+
+## Validation
+
+```sh
+npm run verify
+```
+
+Result: passed.
+
+- Lint: passed.
+- Typecheck: passed.
+- Test coverage: passed, 58 suites / 310 tests.
+- Build: passed.
+
+## Team Modifications Pending Human Review
+
+- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
+- Review production DB migration order before applying to an existing database.
+- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
+
+## Lessons / Limitations
+
+- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
+- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
+
+
+---
+
 # AI Log — fix: add runtime enum guards via parseEnumFromInput / parseEnumFromDb
 
 **Date:** 2026-06-18
@@ -1914,76 +1984,6 @@ Continuation of critical bug fix session. User granted one-time merge permission
 ## Lessons / limitations
 
 - A missing `DomainEventBus` implementation is a silent runtime failure: TypeScript compiles fine, but any use case that calls `eventBus.publishAll()` would throw at startup when the dependency is injected. Always wire concrete infrastructure before registering routes.
-
-
----
-
-# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
-
-## Task / Problem
-
-Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
-
-- `ArrowSpec[]` level definitions.
-- Optional `attempts` with default 5.
-- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
-- OpenAPI and persistence updated for the new contract.
-
-## Tool and Model
-
-- Tool: Codex CLI coding agent.
-- Model: GPT-5 based Codex.
-
-## Prompt Used
-
-The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
-| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
-| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
-| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
-| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
-
-## Result Obtained
-
-- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
-- Replaced `LevelDefinition` with `{ arrows, attempts }`.
-- Replaced solvability logic with blocking-graph DAG detection.
-- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
-- Updated create/update/get level use cases and controller request handling.
-- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
-- Added migration `005_refactor_levels_to_arrow_specs.sql`.
-- Rewrote seed levels as Arrow Untangle examples.
-- Updated Swagger schemas and examples.
-- Rewrote Level Catalog tests for the new model.
-
-## Validation
-
-```sh
-npm run verify
-```
-
-Result: passed.
-
-- Lint: passed.
-- Typecheck: passed.
-- Test coverage: passed, 58 suites / 310 tests.
-- Build: passed.
-
-## Team Modifications Pending Human Review
-
-- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
-- Review production DB migration order before applying to an existing database.
-- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
-
-## Lessons / Limitations
-
-- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
-- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
 
 
 ---
@@ -3766,6 +3766,72 @@ The current backend already has the domain pieces needed for server-owned ids
 precedent for resolving the authenticated user by token `userId`. The remaining
 work is a contract/application refactor, but TDD implementation is intentionally
 blocked until the executable contract is approved.
+
+
+---
+
+# AI Log — MAZ-173 Leaderboard submit/read contract hardening
+
+Date: 2026-06-29
+Ticket: MAZ-173
+
+## Task / Problem
+
+Implement the backend leaderboard contract that had previously landed only as planning/spec work. The backend needed to stop trusting client-owned leaderboard ids, entry ids, user ids, and username snapshots, while returning an empty leaderboard for known scoreless levels.
+
+## Tool and Model
+
+OpenAI Codex CLI, GPT-5 coding agent.
+
+## Prompt Used
+
+User requested completing the remaining M9 closure work after auditing that MAZ-173 was contract-only in `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing MAZ-173 backend contract spec. | `specs/leaderboard-submit-read-contract.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing `@s1..@s7` scenarios as the executable contract. | `specs/leaderboard-submit-read-contract.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Implemented against application/API/OpenAPI tests for slim submit and known-empty reads. | Tests listed in `@s → test` map |
+| Judge (`.agents/judge.md`) | Not used | No separate judge session was run in this pass. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Mutation testing was not run during this pass. | N/A |
+
+## Result Obtained
+
+- Slimmed `SubmitScoreInput` to authenticated `userId` plus gameplay facts.
+- Updated `LeaderboardController` to parse only `levelId`, `score`, `timeSeconds`, and `movesCount`; spoofed id/username fields are ignored.
+- Updated `SubmitScoreService` to load the authenticated user, validate the level, generate server-owned `LeaderboardId`/`EntryId`, and use the persisted username snapshot.
+- Updated `GetLeaderboardService` to return `{ levelId, entries: [] }` for known scoreless levels without creating a leaderboard row, while keeping `404` for unknown levels.
+- Updated OpenAPI source and generated `docs/openapi.json` for the slim submit schema and empty leaderboard response.
+
+## @s → Test Map
+
+| Scenario | Concrete tests |
+| --- | --- |
+| `@s1` Authenticated slim submit stores server-owned ids and username | `tests/application/leaderboard/SubmitScoreService.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s2` Spoofed identity fields ignored | `tests/framework/leaderboard/LeaderboardController.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s3` Anonymous/invalid submit rejected | `tests/api/leaderboard/submitScore.test.ts` |
+| `@s4` Submit requires gameplay fields | `tests/api/leaderboard/submitScore.test.ts`, `tests/framework/leaderboard/LeaderboardController.test.ts` |
+| `@s5` Known scoreless level returns empty leaderboard | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s6` Unknown level returns not found | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s7` OpenAPI documents slim submit contract | `tests/framework/swagger/openApiSpec.test.ts` |
+
+## Verification
+
+- `npm run typecheck` passed.
+- Targeted leaderboard tests passed: 5 suites, 31 tests.
+- `npm run verify` passed: 72 suites, 467 tests.
+
+## Team Modifications Pending Human Review
+
+- Review the decision to keep stale-token missing users as `404`, preserving the current MAZ-174 behavior.
+- Review client compatibility: old clients sending extra id/username fields will not break, but those fields are ignored.
+
+## Lessons / Limitations
+
+- The original MAZ-173 work in `develop` was planning-only; implementation required wiring existing user and level repositories into the leaderboard use cases.
+- Full mutation testing was not run in this pass.
 
 
 ---

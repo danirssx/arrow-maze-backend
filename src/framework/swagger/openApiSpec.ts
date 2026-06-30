@@ -197,10 +197,7 @@ export const openApiSpec = {
             'application/json': {
               schema: { $ref: '#/components/schemas/SubmitScoreRequest' },
               example: {
-                leaderboardId: '550e8400-e29b-41d4-a716-446655440001',
-                entryId: '550e8400-e29b-41d4-a716-446655440002',
                 levelId: '550e8400-e29b-41d4-a716-446655440020',
-                usernameSnapshot: 'arrow_player',
                 score: 1500,
                 timeSeconds: 45,
                 movesCount: 30,
@@ -223,7 +220,7 @@ export const openApiSpec = {
             content: {
               'application/json': {
                 schema: { $ref: '#/components/schemas/ErrorResponse' },
-                example: { status: 'error', error: { code: 'BAD_REQUEST', message: 'leaderboardId, entryId, levelId, usernameSnapshot, score, timeSeconds and movesCount are required' } },
+                example: { status: 'error', error: { code: 'BAD_REQUEST', message: 'levelId, score, timeSeconds and movesCount are required' } },
               },
             },
           },
@@ -888,12 +885,9 @@ export const openApiSpec = {
       },
       SubmitScoreRequest: {
         type: 'object',
-        required: ['leaderboardId', 'entryId', 'levelId', 'usernameSnapshot', 'score', 'timeSeconds', 'movesCount'],
+        required: ['levelId', 'score', 'timeSeconds', 'movesCount'],
         properties: {
-          leaderboardId: { type: 'string', format: 'uuid' },
-          entryId: { type: 'string', format: 'uuid' },
           levelId: { type: 'string', format: 'uuid' },
-          usernameSnapshot: { type: 'string' },
           score: { type: 'integer', minimum: 0 },
           timeSeconds: { type: 'number', minimum: 0.001 },
           movesCount: { type: 'integer', minimum: 1 },
@@ -1102,7 +1096,7 @@ export const openApiSpec = {
           status: { type: 'string', enum: ['success'] },
           data: {
             type: 'object',
-            required: ['leaderboardId', 'levelId', 'entries', 'updatedAt'],
+            required: ['levelId', 'entries'],
             properties: {
               leaderboardId: { type: 'string', format: 'uuid' },
               levelId: { type: 'string', format: 'uuid' },

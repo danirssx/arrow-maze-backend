@@ -15,24 +15,19 @@ export class LeaderboardController {
 
   async submitScore(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { leaderboardId, entryId, levelId, usernameSnapshot, score, timeSeconds, movesCount } =
-        req.body as Record<string, unknown>;
+      const { levelId, score, timeSeconds, movesCount } = req.body as Record<string, unknown>;
 
-      if (!leaderboardId || !entryId || !levelId || !usernameSnapshot ||
-          score === undefined || timeSeconds === undefined || movesCount === undefined) {
+      if (!levelId || score === undefined || timeSeconds === undefined || movesCount === undefined) {
         throw new BadRequestError(
-          'leaderboardId, entryId, levelId, usernameSnapshot, score, timeSeconds and movesCount are required',
+          'levelId, score, timeSeconds and movesCount are required',
         );
       }
 
       const userId = (req as AuthenticatedRequest).user.userId;
 
       await this.submitScoreUseCase.execute({
-        leaderboardId: String(leaderboardId),
-        entryId: String(entryId),
         userId,
         levelId: String(levelId),
-        usernameSnapshot: String(usernameSnapshot),
         score: Number(score),
         timeSeconds: Number(timeSeconds),
         movesCount: Number(movesCount),
