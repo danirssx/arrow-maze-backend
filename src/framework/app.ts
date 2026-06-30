@@ -5,6 +5,8 @@ import swaggerUi from "swagger-ui-express";
 
 import { LoginUseCase } from "../application/identity/use-cases/LoginUseCase.js";
 import { RegisterUserUseCase } from "../application/identity/use-cases/RegisterUserUseCase.js";
+import { LogoutUseCase } from "../application/identity/use-cases/LogoutUseCase.js";
+import { RefreshAccessTokenUseCase } from "../application/identity/use-cases/RefreshAccessTokenUseCase.js";
 import { GetCurrentUserUseCase } from "../application/identity/use-cases/GetCurrentUserUseCase.js";
 import { CompleteLevelService } from "../application/progress/use-cases/CompleteLevelService.js";
 import { LoadProgressService } from "../application/progress/use-cases/LoadProgressService.js";
@@ -23,6 +25,8 @@ import { BcryptPasswordHasher } from "../infrastructure/identity/BcryptPasswordH
 import { JwtTokenService } from "../infrastructure/identity/JwtTokenService.js";
 import { PrismaUnitOfWork } from "../infrastructure/database/PrismaUnitOfWork.js";
 import { PrismaUserRepository } from "../infrastructure/identity/PrismaUserRepository.js";
+import { CryptoRefreshTokenGenerator } from "../infrastructure/identity/CryptoRefreshTokenGenerator.js";
+import { PrismaRefreshTokenRepository } from "../infrastructure/identity/PrismaRefreshTokenRepository.js";
 import { PrismaProgressRepository } from "../infrastructure/progress/PrismaProgressRepository.js";
 import { PrismaLeaderboardRepository } from "../infrastructure/leaderboard/PrismaLeaderboardRepository.js";
 import { PrismaLevelRepository } from "../infrastructure/level-catalog/PrismaLevelRepository.js";
@@ -55,13 +59,16 @@ export function createApp() {
 
   const prisma = createPrismaClient(environment.databaseUrl, { ssl: environment.databaseSsl });
   const userRepository = new PrismaUserRepository(prisma);
+  const refreshTokenRepository = new PrismaRefreshTokenRepository(prisma);
+  const refreshTokenGenerator = new CryptoRefreshTokenGenerator();
   const passwordHasher = new BcryptPasswordHasher();
-  const tokenService = new JwtTokenService(environment.jwtSecret);
+  const tokenService = new JwtTokenService(environment.jwtSecret, environment.jwtAccessExpiresIn);
   const unitOfWork = new PrismaUnitOfWork(prisma);
   const eventBus = new InMemoryEventBus(logger);
 
   const idGenerator = new UuidIdGenerator();
   const clock = new SystemClock();
+  const refreshTtlMs = environment.refreshTokenTtlDays * 24 * 60 * 60 * 1000;
 
   const progressRepository = new PrismaProgressRepository(prisma);
   const leaderboardRepository = new PrismaLeaderboardRepository(prisma);
@@ -72,10 +79,46 @@ export function createApp() {
     new UseCaseLoggingDecorator("RegisterUserUseCase", new RegisterUserUseCase(userRepository, passwordHasher, idGenerator, clock), logger),
     unitOfWork
   );
-  const loginUseCase = new UseCaseLoggingDecorator(
-    "LoginUseCase",
-    new LoginUseCase(userRepository, passwordHasher, tokenService),
-    logger
+  const loginUseCase = new TransactionDecorator(
+    new UseCaseLoggingDecorator(
+      "LoginUseCase",
+      new LoginUseCase(
+        userRepository,
+        passwordHasher,
+        tokenService,
+        refreshTokenRepository,
+        refreshTokenGenerator,
+        idGenerator,
+        clock,
+        refreshTtlMs,
+      ),
+      logger
+    ),
+    unitOfWork
+  );
+  const refreshUseCase = new TransactionDecorator(
+    new UseCaseLoggingDecorator(
+      "RefreshAccessTokenUseCase",
+      new RefreshAccessTokenUseCase(
+        refreshTokenRepository,
+        userRepository,
+        refreshTokenGenerator,
+        tokenService,
+        idGenerator,
+        clock,
+        refreshTtlMs,
+      ),
+      logger
+    ),
+    unitOfWork
+  );
+  const logoutUseCase = new TransactionDecorator(
+    new UseCaseLoggingDecorator(
+      "LogoutUseCase",
+      new LogoutUseCase(refreshTokenRepository, refreshTokenGenerator, clock),
+      logger
+    ),
+    unitOfWork
   );
   const getCurrentUserUseCase = new UseCaseLoggingDecorator(
     "GetCurrentUserUseCase",
@@ -137,7 +180,7 @@ export function createApp() {
     unitOfWork
   );
 
-  const identityController = new IdentityController(registerUseCase, loginUseCase);
+  const identityController = new IdentityController(registerUseCase, loginUseCase, refreshUseCase, logoutUseCase);
   const userController = new UserController(getCurrentUserUseCase);
   const progressController = new ProgressController(loadProgressUseCase, completeLevelUseCase, syncProgressUseCase);
   const leaderboardController = new LeaderboardController(submitScoreUseCase, getLeaderboardUseCase);

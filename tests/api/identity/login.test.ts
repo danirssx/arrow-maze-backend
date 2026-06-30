@@ -14,6 +14,7 @@ class FakeRegisterUseCase implements UseCase<RegisterUserInput, RegisterUserOutp
 class FakeLoginUseCase implements UseCase<LoginInput, LoginOutput> {
   result: LoginOutput = {
     accessToken: "fake.jwt.token",
+    refreshToken: "fake.refresh.token",
     userId: "550e8400-e29b-41d4-a716-446655440000",
     username: "alice",
     role: "USER"
@@ -40,6 +41,7 @@ describe("POST /auth/login", () => {
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("success");
     expect(res.body.data.accessToken).toBe("fake.jwt.token");
+    expect(res.body.data.refreshToken).toBe("fake.refresh.token");
     expect(res.body.data.username).toBe("alice");
     expect(res.body.data.role).toBe("USER");
   });

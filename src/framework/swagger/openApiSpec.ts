@@ -104,6 +104,7 @@ export const openApiSpec = {
                   status: 'success',
                   data: {
                     accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc1MDIwMDAwMH0.signature',
+                    refreshToken: 'b9f1c2e3a4d5...opaque-base64url',
                     userId: '550e8400-e29b-41d4-a716-446655440000',
                     username: 'arrow_player',
                     role: 'USER',
@@ -136,6 +137,88 @@ export const openApiSpec = {
               'application/json': {
                 schema: { $ref: '#/components/schemas/ErrorResponse' },
                 example: { status: 'error', error: { code: 'FORBIDDEN', message: 'Account is suspended' } },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/auth/refresh': {
+      post: {
+        summary: 'Exchange a refresh token for a new access + rotated refresh token',
+        tags: ['Identity'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/RefreshRequest' },
+              example: { refreshToken: 'b9f1c2e3a4d5...opaque-base64url' },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Token rotated',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/RefreshResponse' },
+                example: {
+                  status: 'success',
+                  data: { accessToken: 'eyJ...new.access', refreshToken: 'c0d1e2...new-opaque' },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Missing refreshToken',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'BAD_REQUEST', message: 'refreshToken is required' } },
+              },
+            },
+          },
+          '401': {
+            description: 'Invalid, expired, or revoked refresh token',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'UNAUTHORIZED', message: 'Invalid refresh token' } },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/auth/logout': {
+      post: {
+        summary: 'Revoke a refresh token (idempotent)',
+        tags: ['Identity'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/RefreshRequest' },
+              example: { refreshToken: 'b9f1c2e3a4d5...opaque-base64url' },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Logged out (token revoked if it existed)',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/SuccessResponse' },
+                example: { status: 'success', data: null },
+              },
+            },
+          },
+          '400': {
+            description: 'Missing refreshToken',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'BAD_REQUEST', message: 'refreshToken is required' } },
               },
             },
           },
@@ -856,12 +939,35 @@ export const openApiSpec = {
           status: { type: 'string', enum: ['success'] },
           data: {
             type: 'object',
-            required: ['accessToken', 'userId', 'username', 'role'],
+            required: ['accessToken', 'refreshToken', 'userId', 'username', 'role'],
             properties: {
               accessToken: { type: 'string' },
+              refreshToken: { type: 'string' },
               userId: { type: 'string', format: 'uuid' },
               username: { type: 'string' },
               role: { type: 'string', enum: ['USER', 'ADMIN'] },
+            },
+          },
+        },
+      },
+      RefreshRequest: {
+        type: 'object',
+        required: ['refreshToken'],
+        properties: {
+          refreshToken: { type: 'string' },
+        },
+      },
+      RefreshResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: {
+            type: 'object',
+            required: ['accessToken', 'refreshToken'],
+            properties: {
+              accessToken: { type: 'string' },
+              refreshToken: { type: 'string' },
             },
           },
         },

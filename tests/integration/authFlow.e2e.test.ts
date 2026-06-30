@@ -3,9 +3,14 @@ import request from "supertest";
 
 import { RegisterUserUseCase } from "../../src/application/identity/use-cases/RegisterUserUseCase.js";
 import { LoginUseCase } from "../../src/application/identity/use-cases/LoginUseCase.js";
+import { LogoutUseCase } from "../../src/application/identity/use-cases/LogoutUseCase.js";
+import { RefreshAccessTokenUseCase } from "../../src/application/identity/use-cases/RefreshAccessTokenUseCase.js";
 import { GetCurrentUserUseCase } from "../../src/application/identity/use-cases/GetCurrentUserUseCase.js";
+import type { RefreshTokenGenerator } from "../../src/application/identity/ports/RefreshTokenGenerator.js";
+import type { RefreshTokenRepository } from "../../src/application/identity/ports/RefreshTokenRepository.js";
 import type { UserRepository } from "../../src/application/identity/ports/UserRepository.js";
 import { BcryptPasswordHasher } from "../../src/infrastructure/identity/BcryptPasswordHasher.js";
+import { CryptoRefreshTokenGenerator } from "../../src/infrastructure/identity/CryptoRefreshTokenGenerator.js";
 import { JwtTokenService } from "../../src/infrastructure/identity/JwtTokenService.js";
 import { UuidIdGenerator } from "../../src/infrastructure/shared/UuidIdGenerator.js";
 import { SystemClock } from "../../src/infrastructure/shared/SystemClock.js";
@@ -17,6 +22,7 @@ import { createUserRouter } from "../../src/framework/identity/userRoutes.js";
 import { createAuthMiddleware } from "../../src/framework/middleware/authMiddleware.js";
 import { createErrorMiddleware } from "../../src/framework/errors/errorMiddleware.js";
 import type { User } from "../../src/domain/identity/User.js";
+import type { RefreshToken } from "../../src/domain/identity/RefreshToken.js";
 import type { Email } from "../../src/domain/identity/value-objects/Email.js";
 import type { Username } from "../../src/domain/identity/value-objects/Username.js";
 import type { UserId } from "../../src/domain/shared/UserId.js";
@@ -54,18 +60,60 @@ class InMemoryUserRepository implements UserRepository {
   }
 }
 
+class InMemoryRefreshTokenRepository implements RefreshTokenRepository {
+  private readonly tokens = new Map<string, RefreshToken>();
+
+  async save(token: RefreshToken): Promise<void> {
+    this.tokens.set(token.id.value, token);
+  }
+
+  async findByHash(tokenHash: string): Promise<RefreshToken | null> {
+    return [...this.tokens.values()].find((token) => token.tokenHash === tokenHash) ?? null;
+  }
+
+  async revokeAllForUser(userId: UserId, now: Date): Promise<void> {
+    for (const token of this.tokens.values()) {
+      if (token.userId.value === userId.value) token.revoke(now);
+    }
+  }
+}
+
 function buildAuthApp() {
   const repository = new InMemoryUserRepository();
+  const refreshTokenRepository = new InMemoryRefreshTokenRepository();
+  const refreshTokenGenerator: RefreshTokenGenerator = new CryptoRefreshTokenGenerator();
   const hasher = new BcryptPasswordHasher(12);
   const tokenService = new JwtTokenService("e2e-test-secret");
+  const idGenerator = new UuidIdGenerator();
+  const clock = new SystemClock();
+  const refreshTtlMs = 30 * 24 * 60 * 60 * 1000;
 
-  const registerUseCase = new RegisterUserUseCase(repository, hasher, new UuidIdGenerator(), new SystemClock());
-  const loginUseCase = new LoginUseCase(repository, hasher, tokenService);
+  const registerUseCase = new RegisterUserUseCase(repository, hasher, idGenerator, clock);
+  const loginUseCase = new LoginUseCase(
+    repository,
+    hasher,
+    tokenService,
+    refreshTokenRepository,
+    refreshTokenGenerator,
+    idGenerator,
+    clock,
+    refreshTtlMs,
+  );
+  const refreshUseCase = new RefreshAccessTokenUseCase(
+    refreshTokenRepository,
+    repository,
+    refreshTokenGenerator,
+    tokenService,
+    idGenerator,
+    clock,
+    refreshTtlMs,
+  );
+  const logoutUseCase = new LogoutUseCase(refreshTokenRepository, refreshTokenGenerator, clock);
   const getCurrentUserUseCase = new GetCurrentUserUseCase(repository);
 
   const app = express();
   app.use(express.json());
-  app.use(createIdentityRouter(new IdentityController(registerUseCase, loginUseCase)));
+  app.use(createIdentityRouter(new IdentityController(registerUseCase, loginUseCase, refreshUseCase, logoutUseCase)));
   app.use(createUserRouter(new UserController(getCurrentUserUseCase), createAuthMiddleware(tokenService)));
   app.use(createErrorMiddleware(new ConsoleLogger()));
   return app;
@@ -99,8 +147,18 @@ describe("Auth E2E — register, login, authenticated request", () => {
     // Assert — login
     expect(loginRes.status).toBe(200);
     const token = loginRes.body.data.accessToken;
+    const refreshToken = loginRes.body.data.refreshToken;
     expect(typeof token).toBe("string");
+    expect(typeof refreshToken).toBe("string");
     expect(loginRes.body.data.username).toBe(CREDENTIALS.username);
+
+    // Act — refresh access with the issued refresh token
+    const refreshRes = await request(app).post("/auth/refresh").send({ refreshToken });
+
+    // Assert — refresh
+    expect(refreshRes.status).toBe(200);
+    expect(typeof refreshRes.body.data.accessToken).toBe("string");
+    expect(typeof refreshRes.body.data.refreshToken).toBe("string");
 
     // Act — authenticated request with the issued token
     const meRes = await request(app).get("/users/me").set("Authorization", `Bearer ${token}`);

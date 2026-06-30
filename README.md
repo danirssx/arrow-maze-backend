@@ -96,7 +96,15 @@ Copy `.env.example` to `.env` and fill in your values (never commit `.env`):
 DATABASE_URL=postgresql://user:pass@localhost:5432/arrow_maze
 JWT_SECRET=your-secret-here
 PORT=3000
+# Optional auth token lifetimes:
+JWT_ACCESS_EXPIRES_IN=15m
+REFRESH_TOKEN_TTL_DAYS=30
 ```
+
+Auth issues a short-lived **access token** plus a long-lived, rotating, revocable
+**refresh token** stored only as a hash. `POST /auth/refresh` exchanges a refresh
+token for a new access token and rotates the refresh token. `POST /auth/logout`
+revokes a refresh token.
 
 ### Run locally
 
@@ -200,6 +208,8 @@ GET  /health
 GET  /docs
 POST /auth/register
 POST /auth/login
+POST /auth/refresh
+POST /auth/logout
 GET  /users/me
 POST /leaderboard/scores
 GET  /leaderboard/:levelId

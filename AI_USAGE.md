@@ -3778,6 +3778,14 @@ Ticket: MAZ-173
 ## Task / Problem
 
 Implement the backend leaderboard contract that had previously landed only as planning/spec work. The backend needed to stop trusting client-owned leaderboard ids, entry ids, user ids, and username snapshots, while returning an empty leaderboard for known scoreless levels.
+# AI Log — MAZ-175 Refresh-token rotation and logout
+
+Date: 2026-06-29
+Ticket: MAZ-175
+
+## Task / Problem
+
+Reapply the backend refresh-token rotation and server-side logout slice on top of the current `develop` branch without losing later M9 work. The previous MAZ-175 branch was stale and would have removed MAZ-178 demo credential and auth E2E assets if merged directly.
 
 ## Tool and Model
 
@@ -3786,6 +3794,7 @@ OpenAI Codex CLI, GPT-5 coding agent.
 ## Prompt Used
 
 User requested completing the remaining M9 closure work after auditing that MAZ-173 was contract-only in `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
+User requested completing the remaining M9 closure work after auditing that MAZ-175 was missing from backend `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
 
 ## Agent Roles Used
 
@@ -3804,6 +3813,22 @@ User requested completing the remaining M9 closure work after auditing that MAZ-
 - Updated `SubmitScoreService` to load the authenticated user, validate the level, generate server-owned `LeaderboardId`/`EntryId`, and use the persisted username snapshot.
 - Updated `GetLeaderboardService` to return `{ levelId, entries: [] }` for known scoreless levels without creating a leaderboard row, while keeping `404` for unknown levels.
 - Updated OpenAPI source and generated `docs/openapi.json` for the slim submit schema and empty leaderboard response.
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing approved refresh-token spec and preserved its scope while reapplying on current `develop`. | `specs/refresh-token-MAZ-175.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing Gherkin scenarios as the executable contract. | `specs/refresh-token-MAZ-175.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Reapplied production code against concrete tests and ran targeted tests before full verify. | Tests listed in `@s → test` map |
+| Judge (`.agents/judge.md`) | Not used | No separate judge session was run in this pass. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Referenced | Started `npm run mutation`, but stopped the full run because Stryker estimated hours for the full backend suite. | Console run: interrupted at 143/1250 mutants |
+
+## Result Obtained
+
+- Added a `RefreshToken` domain entity and `RefreshTokenId` value object.
+- Added application ports for refresh-token persistence and generation.
+- Extended login to issue and persist a hashed opaque refresh token.
+- Added refresh-token rotation with reuse detection and family revocation.
+- Added idempotent logout/revocation.
+- Added Prisma `refresh_tokens` model and migration.
+- Added `/auth/refresh` and `/auth/logout` routes, controller methods, Swagger/OpenAPI documentation, environment variables, and README notes.
+- Preserved MAZ-178 demo credentials and auth E2E tests from current `develop`.
 
 ## @s → Test Map
 
@@ -3816,6 +3841,13 @@ User requested completing the remaining M9 closure work after auditing that MAZ-
 | `@s5` Known scoreless level returns empty leaderboard | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
 | `@s6` Unknown level returns not found | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
 | `@s7` OpenAPI documents slim submit contract | `tests/framework/swagger/openApiSpec.test.ts` |
+| `@s1` Login issues access + refresh token | `tests/application/identity/LoginUseCase.test.ts`, `tests/api/identity/login.test.ts`, `tests/integration/authFlow.e2e.test.ts` |
+| `@s2` Refresh rotates the token | `tests/application/identity/RefreshAccessTokenUseCase.test.ts`, `tests/api/identity/refresh.test.ts`, `tests/integration/authFlow.e2e.test.ts` |
+| `@s3` Expired refresh token is rejected | `tests/application/identity/RefreshAccessTokenUseCase.test.ts` |
+| `@s4` Unknown refresh token is rejected | `tests/application/identity/RefreshAccessTokenUseCase.test.ts`, `tests/api/identity/refresh.test.ts` |
+| `@s5` Reused revoked token revokes the family | `tests/application/identity/RefreshAccessTokenUseCase.test.ts` |
+| `@s6` Logout revokes refresh token | `tests/application/identity/LogoutUseCase.test.ts`, `tests/api/identity/logout.test.ts` |
+| `@s7` Active only when not revoked or expired | `tests/domain/identity/RefreshToken.test.ts` |
 
 ## Verification
 
@@ -3832,6 +3864,20 @@ User requested completing the remaining M9 closure work after auditing that MAZ-
 
 - The original MAZ-173 work in `develop` was planning-only; implementation required wiring existing user and level repositories into the leaderboard use cases.
 - Full mutation testing was not run in this pass.
+- Targeted auth tests passed: 8 suites, 38 tests.
+- `npm run verify` passed: 80 suites, 503 tests.
+- `npm run mutation` was attempted and interrupted at 143/1250 mutants because the estimated remaining time was still over one hour and not practical for this pass.
+
+## Team Modifications Pending Human Review
+
+- Review the new `RefreshToken` domain entity because AGENTS requires human approval for new entities/pattern-impacting design.
+- Review the access-token default TTL (`JWT_ACCESS_EXPIRES_IN=15m`) against deployment expectations.
+- Apply Prisma migration in the target environment before deploying the client refresh-and-retry flow.
+
+## Lessons / Limitations
+
+- The old MAZ-175 branch was not safe to merge because it was based before later M9 work; reapplying the changes on top of current `develop` avoided regressions.
+- Full mutation testing remains pending for the final M9 closure gate.
 
 
 ---
