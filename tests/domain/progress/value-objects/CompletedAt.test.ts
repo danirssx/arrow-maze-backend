@@ -22,12 +22,28 @@ describe("CompletedAt", () => {
     expect(() => new CompletedAt(invalidDate)).toThrow("CompletedAt must be a valid date");
   });
 
-  it("should_throw_invalid_argument_when_date_is_in_the_future", () => {
-    // Arrange
-    const futureDate = new Date(Date.now() + 60_000);
+  it("should_accept_when_date_is_slightly_in_the_future_within_skew_tolerance", () => {
+    // Arrange — a mobile device clock one minute ahead of the server is tolerated
+    const slightlyFuture = new Date(Date.now() + 60_000);
 
     // Act / Assert
-    expect(() => new CompletedAt(futureDate)).toThrow(InvalidArgumentError);
-    expect(() => new CompletedAt(futureDate)).toThrow("CompletedAt cannot be in the future");
+    expect(() => new CompletedAt(slightlyFuture)).not.toThrow();
+  });
+
+  it("should_accept_when_date_is_at_the_skew_tolerance_boundary", () => {
+    // Arrange — exactly at the tolerance is still accepted (inclusive boundary)
+    const atBoundary = new Date(Date.now() + CompletedAt.CLOCK_SKEW_TOLERANCE_MS);
+
+    // Act / Assert
+    expect(() => new CompletedAt(atBoundary)).not.toThrow();
+  });
+
+  it("should_throw_invalid_argument_when_date_is_far_in_the_future", () => {
+    // Arrange — beyond the tolerated skew window is a clearly invalid timestamp
+    const farFuture = new Date(Date.now() + CompletedAt.CLOCK_SKEW_TOLERANCE_MS + 60_000);
+
+    // Act / Assert
+    expect(() => new CompletedAt(farFuture)).toThrow(InvalidArgumentError);
+    expect(() => new CompletedAt(farFuture)).toThrow("CompletedAt is too far in the future");
   });
 });
