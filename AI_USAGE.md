@@ -3389,6 +3389,35 @@ register/login tests were intentionally left untouched (additive `UserController
 
 ---
 
+# Mutación — ticket MAZ-176
+
+**Veredicto:** PASS
+**Score:** 12/12 killed = 100% (umbral: 80%)
+
+## Alcance
+
+- `src/domain/progress/value-objects/CompletedAt.ts`
+
+## Comando
+
+```bash
+npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"
+```
+
+## Mutantes sobrevivientes
+
+- Ninguno.
+
+## Nota
+
+La primera corrida obtuvo 83.33% con dos mutantes sobrevivientes de string
+literal en mensajes de error. Se agregaron aserciones explícitas de mensaje en
+`tests/domain/progress/value-objects/CompletedAt.test.ts` y la repetición quedó
+en 100%.
+
+
+---
+
 # AI Usage Log: MAZ-176 Progress Timestamp And Referential Integrity
 
 ## Task / Problem
@@ -3461,35 +3490,6 @@ Linear updates. No secrets were pasted or committed.
   move from `varchar` to `uuid` to reference `levels.id`.
 - String-literal mutation survivors on public domain error messages were useful;
   tests now pin those messages.
-
-
----
-
-# Mutación — ticket MAZ-176
-
-**Veredicto:** PASS
-**Score:** 12/12 killed = 100% (umbral: 80%)
-
-## Alcance
-
-- `src/domain/progress/value-objects/CompletedAt.ts`
-
-## Comando
-
-```bash
-npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"
-```
-
-## Mutantes sobrevivientes
-
-- Ninguno.
-
-## Nota
-
-La primera corrida obtuvo 83.33% con dos mutantes sobrevivientes de string
-literal en mensajes de error. Se agregaron aserciones explícitas de mensaje en
-`tests/domain/progress/value-objects/CompletedAt.test.ts` y la repetición quedó
-en 100%.
 
 
 ---
@@ -3833,72 +3833,6 @@ that does not require the CA pipeline.
 
 ---
 
-# AI Log — MAZ-173 Leaderboard submit/read contract hardening
-
-Date: 2026-06-29
-Ticket: MAZ-173
-
-## Task / Problem
-
-Implement the backend leaderboard contract that had previously landed only as planning/spec work. The backend needed to stop trusting client-owned leaderboard ids, entry ids, user ids, and username snapshots, while returning an empty leaderboard for known scoreless levels.
-
-## Tool and Model
-
-OpenAI Codex CLI, GPT-5 coding agent.
-
-## Prompt Used
-
-User requested completing the remaining M9 closure work after auditing that MAZ-173 was contract-only in `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing MAZ-173 backend contract spec. | `specs/leaderboard-submit-read-contract.spec.md` |
-| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing `@s1..@s7` scenarios as the executable contract. | `specs/leaderboard-submit-read-contract.feature` |
-| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Implemented against application/API/OpenAPI tests for slim submit and known-empty reads. | Tests listed in `@s → test` map |
-| Judge (`.agents/judge.md`) | Not used | No separate judge session was run in this pass. | N/A |
-| Mutation Tester (`.agents/mutation.md`) | Not used | Mutation testing was not run during this pass. | N/A |
-
-## Result Obtained
-
-- Slimmed `SubmitScoreInput` to authenticated `userId` plus gameplay facts.
-- Updated `LeaderboardController` to parse only `levelId`, `score`, `timeSeconds`, and `movesCount`; spoofed id/username fields are ignored.
-- Updated `SubmitScoreService` to load the authenticated user, validate the level, generate server-owned `LeaderboardId`/`EntryId`, and use the persisted username snapshot.
-- Updated `GetLeaderboardService` to return `{ levelId, entries: [] }` for known scoreless levels without creating a leaderboard row, while keeping `404` for unknown levels.
-- Updated OpenAPI source and generated `docs/openapi.json` for the slim submit schema and empty leaderboard response.
-
-## @s → Test Map
-
-| Scenario | Concrete tests |
-| --- | --- |
-| `@s1` Authenticated slim submit stores server-owned ids and username | `tests/application/leaderboard/SubmitScoreService.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
-| `@s2` Spoofed identity fields ignored | `tests/framework/leaderboard/LeaderboardController.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
-| `@s3` Anonymous/invalid submit rejected | `tests/api/leaderboard/submitScore.test.ts` |
-| `@s4` Submit requires gameplay fields | `tests/api/leaderboard/submitScore.test.ts`, `tests/framework/leaderboard/LeaderboardController.test.ts` |
-| `@s5` Known scoreless level returns empty leaderboard | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
-| `@s6` Unknown level returns not found | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
-| `@s7` OpenAPI documents slim submit contract | `tests/framework/swagger/openApiSpec.test.ts` |
-
-## Verification
-
-- `npm run typecheck` passed.
-- Targeted leaderboard tests passed: 5 suites, 31 tests.
-- `npm run verify` passed: 72 suites, 467 tests.
-
-## Team Modifications Pending Human Review
-
-- Review the decision to keep stale-token missing users as `404`, preserving the current MAZ-174 behavior.
-- Review client compatibility: old clients sending extra id/username fields will not break, but those fields are ignored.
-
-## Lessons / Limitations
-
-- The original MAZ-173 work in `develop` was planning-only; implementation required wiring existing user and level repositories into the leaderboard use cases.
-- Full mutation testing was not run in this pass.
-
-
----
-
 # AI Usage Log: MAZ-173 Leaderboard Submit/Read Contract Planning
 
 ## Task / Problem
@@ -3987,6 +3921,72 @@ blocked until the executable contract is approved.
 
 ---
 
+# AI Log — MAZ-173 Leaderboard submit/read contract hardening
+
+Date: 2026-06-29
+Ticket: MAZ-173
+
+## Task / Problem
+
+Implement the backend leaderboard contract that had previously landed only as planning/spec work. The backend needed to stop trusting client-owned leaderboard ids, entry ids, user ids, and username snapshots, while returning an empty leaderboard for known scoreless levels.
+
+## Tool and Model
+
+OpenAI Codex CLI, GPT-5 coding agent.
+
+## Prompt Used
+
+User requested completing the remaining M9 closure work after auditing that MAZ-173 was contract-only in `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing MAZ-173 backend contract spec. | `specs/leaderboard-submit-read-contract.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing `@s1..@s7` scenarios as the executable contract. | `specs/leaderboard-submit-read-contract.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Implemented against application/API/OpenAPI tests for slim submit and known-empty reads. | Tests listed in `@s → test` map |
+| Judge (`.agents/judge.md`) | Not used | No separate judge session was run in this pass. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Mutation testing was not run during this pass. | N/A |
+
+## Result Obtained
+
+- Slimmed `SubmitScoreInput` to authenticated `userId` plus gameplay facts.
+- Updated `LeaderboardController` to parse only `levelId`, `score`, `timeSeconds`, and `movesCount`; spoofed id/username fields are ignored.
+- Updated `SubmitScoreService` to load the authenticated user, validate the level, generate server-owned `LeaderboardId`/`EntryId`, and use the persisted username snapshot.
+- Updated `GetLeaderboardService` to return `{ levelId, entries: [] }` for known scoreless levels without creating a leaderboard row, while keeping `404` for unknown levels.
+- Updated OpenAPI source and generated `docs/openapi.json` for the slim submit schema and empty leaderboard response.
+
+## @s → Test Map
+
+| Scenario | Concrete tests |
+| --- | --- |
+| `@s1` Authenticated slim submit stores server-owned ids and username | `tests/application/leaderboard/SubmitScoreService.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s2` Spoofed identity fields ignored | `tests/framework/leaderboard/LeaderboardController.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s3` Anonymous/invalid submit rejected | `tests/api/leaderboard/submitScore.test.ts` |
+| `@s4` Submit requires gameplay fields | `tests/api/leaderboard/submitScore.test.ts`, `tests/framework/leaderboard/LeaderboardController.test.ts` |
+| `@s5` Known scoreless level returns empty leaderboard | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s6` Unknown level returns not found | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s7` OpenAPI documents slim submit contract | `tests/framework/swagger/openApiSpec.test.ts` |
+
+## Verification
+
+- `npm run typecheck` passed.
+- Targeted leaderboard tests passed: 5 suites, 31 tests.
+- `npm run verify` passed: 72 suites, 467 tests.
+
+## Team Modifications Pending Human Review
+
+- Review the decision to keep stale-token missing users as `404`, preserving the current MAZ-174 behavior.
+- Review client compatibility: old clients sending extra id/username fields will not break, but those fields are ignored.
+
+## Lessons / Limitations
+
+- The original MAZ-173 work in `develop` was planning-only; implementation required wiring existing user and level repositories into the leaderboard use cases.
+- Full mutation testing was not run in this pass.
+
+
+---
+
 # AI Log — MAZ-175 Refresh-token rotation and logout
 
 Date: 2026-06-29
@@ -4054,6 +4054,90 @@ User requested completing the remaining M9 closure work after auditing that MAZ-
 
 - The old MAZ-175 branch was not safe to merge because it was based before later M9 work; reapplying the changes on top of current `develop` avoided regressions.
 - Full mutation testing remains pending for the final M9 closure gate.
+
+
+---
+
+# AI Usage Log: MAZ-177 Backend Level Catalog Admin Authorization Planning
+
+## Task / Problem
+
+Prepare MAZ-177 for implementation: enforce ADMIN authorization for
+level-catalog mutations without leaving role decisions in framework controllers.
+The ticket is still in Linear Backlog and no approved executable contract existed
+in the repository, so production TDD work is blocked until the human approval
+gate is satisfied.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked Codex to work MAZ-177, review backend/client AGENTS.md,
+MEMORY.md, Linear guidance, AI usage logging, affected tickets, create a new
+worktree, and follow commit/PR/Linear rules. Local Linear was queried through
+the configured environment variable without printing secrets.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Read and applied the rule that source-touching work needs a spec with behavior, HTTP contract, Clean Architecture contract, edge cases, decisions, and open questions. | `specs/level-catalog-admin-authorization.spec.md`, Linear MAZ-177 |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Read and applied the rule that a Gherkin `.feature` with stable `@s` tags is the executable contract before TDD. No new Linear tickets were created because MAZ-177 already exists. | `specs/level-catalog-admin-authorization.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Read and applied the precondition that no production code may be written until the executable contract is approved and the ticket is approved for implementation. | Blocked before `src`/`tests` edits |
+| Judge (`.agents/judge.md`) | Referenced | Read and applied the requirement that source-touching tickets include a Clean Architecture contract with per-layer impact before implementation. | `specs/level-catalog-admin-authorization.spec.md` |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No production code was changed, so mutation testing is not applicable yet. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+Pending implementation after human approval:
+
+- @s1 -> pending
+- @s2 -> pending
+- @s3 -> pending
+- @s4 -> pending
+- @s5 -> pending
+- @s6 -> pending
+- @s7 -> pending
+
+## Result Obtained
+
+- Created a new backend worktree at `worktrees/am-MAZ-177` on branch
+  `refactor/backend-admin-level-auth-MAZ-177`.
+- Queried Linear MAZ-177 and confirmed it is in Backlog with `repo:backend`,
+  `type:refactor`, and `layer:application` labels.
+- Reviewed current backend code and found the existing implementation already
+  performs ADMIN checks in `LevelCatalogController`, which means MAZ-177 should
+  move/enforce authorization in application code rather than add another
+  framework check.
+- Added `specs/level-catalog-admin-authorization.spec.md`.
+- Added `specs/level-catalog-admin-authorization.feature` with scenarios
+  `@s1` through `@s7`.
+
+## Verification
+
+- `npm ci` (required because the new worktree did not have `node_modules`; the
+  first sandboxed attempt was blocked by Prisma cache permissions, then rerun
+  with approval)
+- `npm run verify` - passed: lint, typecheck, coverage, and build; 63 test
+  suites / 403 tests passed.
+
+## Team Modifications Pending Human Review
+
+- Approve or change `specs/level-catalog-admin-authorization.feature`.
+- Move MAZ-177 from Backlog to Todo/In Progress according to the team Linear
+  workflow before TDD implementation starts.
+- Confirm whether MAZ-177 fully covers the level-catalog portion of MAZ-156
+  (CA-003) or should remain a narrower defect fix.
+
+## Lessons / Limitations
+
+The current backend already protects level-catalog mutations, but the protection
+lives in the framework controller. The security defect is therefore best handled
+as a Clean Architecture refactor that preserves the HTTP contract while moving
+authorization into the application boundary. TDD implementation is intentionally
+blocked until the executable contract is approved.
 
 
 ---
@@ -4141,90 +4225,6 @@ checks, commit/push/PR, Linear updates, and review of affected tickets.
 - No OpenAPI change was needed because the HTTP status contract was already
   documented as admin-only; the behavioral owner moved from controller to
   application.
-
-
----
-
-# AI Usage Log: MAZ-177 Backend Level Catalog Admin Authorization Planning
-
-## Task / Problem
-
-Prepare MAZ-177 for implementation: enforce ADMIN authorization for
-level-catalog mutations without leaving role decisions in framework controllers.
-The ticket is still in Linear Backlog and no approved executable contract existed
-in the repository, so production TDD work is blocked until the human approval
-gate is satisfied.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked Codex to work MAZ-177, review backend/client AGENTS.md,
-MEMORY.md, Linear guidance, AI usage logging, affected tickets, create a new
-worktree, and follow commit/PR/Linear rules. Local Linear was queried through
-the configured environment variable without printing secrets.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner (`.agents/spec-partner.md`) | Referenced | Read and applied the rule that source-touching work needs a spec with behavior, HTTP contract, Clean Architecture contract, edge cases, decisions, and open questions. | `specs/level-catalog-admin-authorization.spec.md`, Linear MAZ-177 |
-| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Read and applied the rule that a Gherkin `.feature` with stable `@s` tags is the executable contract before TDD. No new Linear tickets were created because MAZ-177 already exists. | `specs/level-catalog-admin-authorization.feature` |
-| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Read and applied the precondition that no production code may be written until the executable contract is approved and the ticket is approved for implementation. | Blocked before `src`/`tests` edits |
-| Judge (`.agents/judge.md`) | Referenced | Read and applied the requirement that source-touching tickets include a Clean Architecture contract with per-layer impact before implementation. | `specs/level-catalog-admin-authorization.spec.md` |
-| Mutation Tester (`.agents/mutation.md`) | Not used | No production code was changed, so mutation testing is not applicable yet. | N/A |
-
-## Scenario Coverage (@s -> test)
-
-Pending implementation after human approval:
-
-- @s1 -> pending
-- @s2 -> pending
-- @s3 -> pending
-- @s4 -> pending
-- @s5 -> pending
-- @s6 -> pending
-- @s7 -> pending
-
-## Result Obtained
-
-- Created a new backend worktree at `worktrees/am-MAZ-177` on branch
-  `refactor/backend-admin-level-auth-MAZ-177`.
-- Queried Linear MAZ-177 and confirmed it is in Backlog with `repo:backend`,
-  `type:refactor`, and `layer:application` labels.
-- Reviewed current backend code and found the existing implementation already
-  performs ADMIN checks in `LevelCatalogController`, which means MAZ-177 should
-  move/enforce authorization in application code rather than add another
-  framework check.
-- Added `specs/level-catalog-admin-authorization.spec.md`.
-- Added `specs/level-catalog-admin-authorization.feature` with scenarios
-  `@s1` through `@s7`.
-
-## Verification
-
-- `npm ci` (required because the new worktree did not have `node_modules`; the
-  first sandboxed attempt was blocked by Prisma cache permissions, then rerun
-  with approval)
-- `npm run verify` - passed: lint, typecheck, coverage, and build; 63 test
-  suites / 403 tests passed.
-
-## Team Modifications Pending Human Review
-
-- Approve or change `specs/level-catalog-admin-authorization.feature`.
-- Move MAZ-177 from Backlog to Todo/In Progress according to the team Linear
-  workflow before TDD implementation starts.
-- Confirm whether MAZ-177 fully covers the level-catalog portion of MAZ-156
-  (CA-003) or should remain a narrower defect fix.
-
-## Lessons / Limitations
-
-The current backend already protects level-catalog mutations, but the protection
-lives in the framework controller. The security defect is therefore best handled
-as a Clean Architecture refactor that preserves the HTTP contract while moving
-authorization into the application boundary. TDD implementation is intentionally
-blocked until the executable contract is approved.
 
 
 ---
@@ -4333,6 +4333,56 @@ checks, commit/push/PR, Linear update, and a context review of affected tickets.
 
 ---
 
+# Mutación — MAZ-158 (CA-005)
+
+**Veredicto:** PASS
+**Score:** 50/54 killed = 92.59% (umbral: 80%)
+
+## Alcance del run
+
+Archivos de `src/application` tocados por CA-005 (no se tocó `src/domain`):
+
+```
+src/application/leaderboard/ports/LeaderboardRepository.ts
+src/application/leaderboard/use-cases/GetLeaderboardService.ts
+src/application/leaderboard/use-cases/SubmitScoreService.ts
+src/application/progress/ports/ProgressRepository.ts
+src/application/progress/use-cases/CompleteLevelService.ts
+src/application/progress/use-cases/LoadProgressService.ts
+src/application/progress/use-cases/SyncProgressService.ts
+```
+
+Los archivos de ports (LeaderboardRepository.ts, ProgressRepository.ts) son interfaces TypeScript puras — Stryker no genera mutantes sobre declaraciones de tipo. Los use-cases de progress alcanzaron 100%.
+
+## Resultados por archivo
+
+| Archivo | Score | Killed | Survived |
+|---------|-------|--------|----------|
+| `GetLeaderboardService.ts` | 88.24% | 15 | 2 |
+| `SubmitScoreService.ts` | 88.24% | 15 | 2 |
+| `CompleteLevelService.ts` | 100% | 5 | 0 |
+| `LoadProgressService.ts` | 100% | 9 | 0 |
+| `SyncProgressService.ts` | 100% | 6 | 0 |
+| **Total** | **92.59%** | **50** | **4** |
+
+## Mutantes sobrevivientes
+
+Los 4 son `StringLiteral` en mensajes de error. Todos **pre-existentes** — CA-005 solo cambió el path del import en estos archivos, no tocó la lógica.
+
+1. `src/application/leaderboard/use-cases/GetLeaderboardService.ts` — StringLiteral en mensaje de error de ranking/leaderboard.
+2. `src/application/leaderboard/use-cases/GetLeaderboardService.ts` — StringLiteral en otro mensaje de error.
+3. `src/application/leaderboard/use-cases/SubmitScoreService.ts:53` — `throw new NotFoundError(\`User not found: ${input.userId}\`)` → `throw new NotFoundError('')`. Test `should_throw_not_found_when_user_does_not_exist` verifica el tipo de error pero no el mensaje.
+4. `src/application/leaderboard/use-cases/SubmitScoreService.ts:57` — `throw new NotFoundError(\`Level not found: ${input.levelId}\`)` → `throw new NotFoundError('')`. Mismo patrón.
+
+**Clasificación:** Mutantes equivalentes funcionales — el comportamiento observable (tipo de error lanzado) está testeado. El contenido del mensaje de error es informativo, no contractual. No se requiere acción del tdd-implementer para este ticket.
+
+## Nota de entorno
+
+`npm run mutation` falla en Windows con cmd.exe (no soporta `NODE_OPTIONS=...` inline). Workaround: `bash -c "NODE_OPTIONS='--experimental-vm-modules' npx stryker run ..."`. Documentado para sesiones futuras.
+
+
+---
+
 # AI Usage Log: MAZ-158 (CA-005) — Backend: reforzar lint arquitectónico y limpiar estructura
 
 ## Task / Problem
@@ -4406,52 +4456,105 @@ already covered by MAZ-177.
 
 ---
 
-# Mutación — MAZ-158 (CA-005)
+# AI Usage Log: MAZ-190 Tolerate mobile clock skew for completedAt (backend)
 
-**Veredicto:** PASS
-**Score:** 50/54 killed = 92.59% (umbral: 80%)
+## Task / Problem
 
-## Alcance del run
+Device QA produced backend failures completing progress:
 
-Archivos de `src/application` tocados por CA-005 (no se tocó `src/domain`):
-
-```
-src/application/leaderboard/ports/LeaderboardRepository.ts
-src/application/leaderboard/use-cases/GetLeaderboardService.ts
-src/application/leaderboard/use-cases/SubmitScoreService.ts
-src/application/progress/ports/ProgressRepository.ts
-src/application/progress/use-cases/CompleteLevelService.ts
-src/application/progress/use-cases/LoadProgressService.ts
-src/application/progress/use-cases/SyncProgressService.ts
+```txt
+Application use case failed {
+  operationName: 'CompleteLevelService',
+  status: 'error',
+  errorName: 'InvalidArgumentError',
+  errorMessage: 'CompletedAt cannot be in the future'
+}
 ```
 
-Los archivos de ports (LeaderboardRepository.ts, ProgressRepository.ts) son interfaces TypeScript puras — Stryker no genera mutantes sobre declaraciones de tipo. Los use-cases de progress alcanzaron 100%.
+The `CompletedAt` value object (added in MAZ-176) rejected **any** timestamp greater
+than `Date.now()`. A mobile device whose clock is a few seconds/minutes ahead of the
+backend therefore got every completion rejected with HTTP 422, leaving the client's
+progress stuck `pendingSync` forever (the client retried the same future timestamp on
+every drain — see client MAZ-185). MAZ-190 makes progress completion robust to clock
+skew without accepting clearly invalid far-future timestamps.
 
-## Resultados por archivo
+## Tool and Model
 
-| Archivo | Score | Killed | Survived |
-|---------|-------|--------|----------|
-| `GetLeaderboardService.ts` | 88.24% | 15 | 2 |
-| `SubmitScoreService.ts` | 88.24% | 15 | 2 |
-| `CompleteLevelService.ts` | 100% | 5 | 0 |
-| `LoadProgressService.ts` | 100% | 9 | 0 |
-| `SyncProgressService.ts` | 100% | 6 | 0 |
-| **Total** | **92.59%** | **50** | **4** |
+Claude Code / Claude Opus 4.8.
 
-## Mutantes sobrevivientes
+## Prompt Used
 
-Los 4 son `StringLiteral` en mensajes de error. Todos **pre-existentes** — CA-005 solo cambió el path del import en estos archivos, no tocó la lógica.
+The user asked to implement `MAZ-190` following both repository `AGENTS.md` files,
+root `MEMORY.md`, `Linear_MCP_Guideline.md`, fresh worktrees, AI usage logging,
+checks, commit/push/PR, Linear updates, and a review of affected tickets (this is a
+cross-repo refactor touching MAZ-176 and the MAZ-185 sync path).
 
-1. `src/application/leaderboard/use-cases/GetLeaderboardService.ts` — StringLiteral en mensaje de error de ranking/leaderboard.
-2. `src/application/leaderboard/use-cases/GetLeaderboardService.ts` — StringLiteral en otro mensaje de error.
-3. `src/application/leaderboard/use-cases/SubmitScoreService.ts:53` — `throw new NotFoundError(\`User not found: ${input.userId}\`)` → `throw new NotFoundError('')`. Test `should_throw_not_found_when_user_does_not_exist` verifica el tipo de error pero no el mensaje.
-4. `src/application/leaderboard/use-cases/SubmitScoreService.ts:57` — `throw new NotFoundError(\`Level not found: ${input.levelId}\`)` → `throw new NotFoundError('')`. Mismo patrón.
+## Chosen Policy (Open Product Decision)
 
-**Clasificación:** Mutantes equivalentes funcionales — el comportamiento observable (tipo de error lanzado) está testeado. El contenido del mensaje de error es informativo, no contractual. No se requiere acción del tdd-implementer para este ticket.
+The ticket required the team to choose one of: tolerate a small future window, clamp
+small future values to server time, or server-side timestamping. **Chosen: tolerate a
+bounded future window of 5 minutes; reject beyond it.**
 
-## Nota de entorno
+Why (vs. alternatives):
 
-`npm run mutation` falla en Windows con cmd.exe (no soporta `NODE_OPTIONS=...` inline). Workaround: `bash -c "NODE_OPTIONS='--experimental-vm-modules' npx stryker run ..."`. Documentado para sesiones futuras.
+- **Server-side timestamping** would corrupt offline/batch sync, where the real
+  completion time is genuinely earlier than the server-receive time.
+- **Clamping** mutates an immutable domain value object as a construction side effect
+  and discards the (harmless) real device time.
+- **Tolerance** is the minimal, low-risk change to the MAZ-176 invariant, unsticks the
+  realistic device-skew case, and still rejects clearly invalid far-future timestamps.
+
+The rule stays entirely inside the `CompletedAt` domain value object where MAZ-176
+placed it; no new framework date logic was added to the domain.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/progress-clock-skew-MAZ-190.spec.md` capturing the problem, the three policy options, and the rationale for the chosen tolerance policy. No separate agent session was run. | `specs/progress-clock-skew-MAZ-190.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin contract `@s1..@s5`. No separate planner session was run. | `specs/progress-clock-skew-MAZ-190.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Wrote failing domain + API tests (Red), then the minimal `CompletedAt` tolerance change (Green). | tests in the coverage map below; `src/domain/progress/value-objects/CompletedAt.ts` |
+| Judge (`.agents/judge.md`) | Not used | No separate judge review session was run in this turn (PR/Linear review is the human gate). | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Full mutation not re-run this slice; the change is a single bounded comparison covered by accept/boundary/reject tests. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test coverage |
+| --- | --- |
+| `@s1` accept slightly-future (skew) | `tests/domain/progress/value-objects/CompletedAt.test.ts` -> `should_accept_when_date_is_slightly_in_the_future_within_skew_tolerance` and `should_accept_when_date_is_at_the_skew_tolerance_boundary` |
+| `@s2` reject far-future | `tests/domain/progress/value-objects/CompletedAt.test.ts` -> `should_throw_invalid_argument_when_date_is_far_in_the_future` |
+| `@s3` reject non-parseable date | `tests/domain/progress/value-objects/CompletedAt.test.ts` -> `should_throw_invalid_argument_when_date_is_invalid` |
+| `@s4` complete with skew returns 201 + saves | `tests/api/progress/completeLevel.test.ts` -> `should_return_201_and_save_when_completed_at_is_slightly_in_the_future` |
+| `@s5` complete with far-future returns 422, no save | `tests/api/progress/completeLevel.test.ts` -> `should_return_422_and_skip_save_when_completed_at_is_far_in_the_future` |
+
+## Result Obtained
+
+- Added `CompletedAt.CLOCK_SKEW_TOLERANCE_MS = 5 * 60 * 1000`.
+- Changed the future check to `value.getTime() > Date.now() + CLOCK_SKEW_TOLERANCE_MS`
+  and updated the message to `CompletedAt is too far in the future` (the only other
+  reference was its own test).
+- `SyncProgressService` inherits the same tolerance because it constructs the same VO.
+- No new layers, patterns, or ports; AGENTS architecture rules unchanged.
+
+## Verification
+
+- `npm ci` GREEN.
+- Focused tests GREEN: `tests/domain/progress/value-objects/CompletedAt.test.ts`,
+  `tests/api/progress/completeLevel.test.ts`.
+- `npm run verify` GREEN: lint + typecheck + coverage (83 suites / 550 tests) + build.
+
+## Team Modifications Pending Human Review
+
+- Confirm 5 minutes is the desired tolerance window (easy to tune via the constant).
+- Domain/API tests are subject to mandatory human review.
+
+## Lessons / Limitations
+
+- The VO reads `Date.now()` directly (inherited from MAZ-176). Tolerance is testable
+  against the real clock because the tests offset from `Date.now()` themselves.
+- The companion client branch (MAZ-190) handles the remaining edge: a genuinely broken
+  device clock (hours ahead) still gets a permanent 422, and the client must resolve
+  the pending state instead of retrying forever.
 
 
 <!-- AI_LOG_ENTRIES_END -->

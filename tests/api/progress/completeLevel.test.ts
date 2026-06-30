@@ -147,4 +147,46 @@ describe('POST /progress/levels/:levelId/complete', () => {
     expect(res.body.error.code).toBe('INVALID_ARGUMENT');
     expect(repo.saveCount).toBe(0);
   });
+
+  it('should_return_201_and_save_when_completed_at_is_slightly_in_the_future', async () => {
+    // Arrange — a device clock one minute ahead of the server (clock skew)
+    const repo = new SpyProgressRepository();
+    const completeLevelService = new CompleteLevelService(repo, new SpyEventBus(), new FakeIdGeneratorForComplete(), new FakeClockForComplete());
+    const app = createProgressTestApp(
+      new FakeLoadUseCase(), completeLevelService,
+      new FakeSyncUseCase(), new ValidUuidTokenService(),
+    );
+
+    // Act
+    const res = await request(app)
+      .post(`/progress/levels/${VALID_LEVEL_ID}/complete`)
+      .set('Authorization', 'Bearer valid-token')
+      .send({ ...VALID_BODY, completedAt: new Date(Date.now() + 60_000).toISOString() });
+
+    // Assert
+    expect(res.status).toBe(201);
+    expect(res.body.status).toBe('success');
+    expect(repo.saveCount).toBe(1);
+  });
+
+  it('should_return_422_and_skip_save_when_completed_at_is_far_in_the_future', async () => {
+    // Arrange — a device clock one hour ahead is clearly invalid, not skew
+    const repo = new SpyProgressRepository();
+    const completeLevelService = new CompleteLevelService(repo, new SpyEventBus(), new FakeIdGeneratorForComplete(), new FakeClockForComplete());
+    const app = createProgressTestApp(
+      new FakeLoadUseCase(), completeLevelService,
+      new FakeSyncUseCase(), new ValidUuidTokenService(),
+    );
+
+    // Act
+    const res = await request(app)
+      .post(`/progress/levels/${VALID_LEVEL_ID}/complete`)
+      .set('Authorization', 'Bearer valid-token')
+      .send({ ...VALID_BODY, completedAt: new Date(Date.now() + 60 * 60_000).toISOString() });
+
+    // Assert
+    expect(res.status).toBe(422);
+    expect(res.body.error.code).toBe('INVALID_ARGUMENT');
+    expect(repo.saveCount).toBe(0);
+  });
 });
