@@ -7,7 +7,7 @@ import type { CreateLevelInput, CreateLevelOutput } from '../../application/leve
 import type { UpdateLevelDefinitionInput, UpdateLevelDefinitionOutput } from '../../application/level-catalog/use-cases/UpdateLevelDefinitionUseCase.js';
 import type { PublishLevelInput, PublishLevelOutput } from '../../application/level-catalog/use-cases/PublishLevelUseCase.js';
 import type { ArchiveLevelInput, ArchiveLevelOutput } from '../../application/level-catalog/use-cases/ArchiveLevelUseCase.js';
-import { BadRequestError, ForbiddenError } from '../../shared/errors/ApplicationError.js';
+import { BadRequestError } from '../../shared/errors/ApplicationError.js';
 import { ApiResponsePresenter } from '../errors/ApiResponsePresenter.js';
 import type { AuthenticatedRequest } from '../middleware/authMiddleware.js';
 
@@ -42,10 +42,7 @@ export class LevelCatalogController {
 
   async createLevel(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      if ((req as AuthenticatedRequest).user.role !== 'ADMIN') {
-        throw new ForbiddenError('Admin access required');
-      }
-
+      const actorRole = (req as AuthenticatedRequest).user.role;
       const { name, description, difficulty, arrows, attempts, timeLimit, boardShape } =
         req.body as Record<string, unknown>;
 
@@ -54,6 +51,7 @@ export class LevelCatalogController {
       }
 
       const result = await this.createLevelUseCase.execute({
+        actorRole,
         name: String(name),
         description: String(description),
         difficulty: String(difficulty),
@@ -73,10 +71,7 @@ export class LevelCatalogController {
 
   async updateDefinition(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      if ((req as AuthenticatedRequest).user.role !== 'ADMIN') {
-        throw new ForbiddenError('Admin access required');
-      }
-
+      const actorRole = (req as AuthenticatedRequest).user.role;
       const levelId = String(req.params['levelId']);
       const { arrows, attempts } = req.body as Record<string, unknown>;
 
@@ -85,6 +80,7 @@ export class LevelCatalogController {
       }
 
       const result = await this.updateDefinitionUseCase.execute({
+        actorRole,
         levelId,
         arrows: arrows as UpdateLevelDefinitionInput['arrows'],
         ...(attempts !== undefined && { attempts: Number(attempts) }),
@@ -98,12 +94,9 @@ export class LevelCatalogController {
 
   async publishLevel(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      if ((req as AuthenticatedRequest).user.role !== 'ADMIN') {
-        throw new ForbiddenError('Admin access required');
-      }
-
+      const actorRole = (req as AuthenticatedRequest).user.role;
       const levelId = String(req.params['levelId']);
-      const result = await this.publishLevelUseCase.execute({ levelId });
+      const result = await this.publishLevelUseCase.execute({ actorRole, levelId });
       res.status(200).json(ApiResponsePresenter.success(result));
     } catch (err) {
       next(err);
@@ -112,12 +105,9 @@ export class LevelCatalogController {
 
   async archiveLevel(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      if ((req as AuthenticatedRequest).user.role !== 'ADMIN') {
-        throw new ForbiddenError('Admin access required');
-      }
-
+      const actorRole = (req as AuthenticatedRequest).user.role;
       const levelId = String(req.params['levelId']);
-      const result = await this.archiveLevelUseCase.execute({ levelId });
+      const result = await this.archiveLevelUseCase.execute({ actorRole, levelId });
       res.status(200).json(ApiResponsePresenter.success(result));
     } catch (err) {
       next(err);

@@ -30,7 +30,7 @@ describe("PublishLevelUseCase", () => {
     const useCase = new PublishLevelUseCase(repo, new AlwaysSolvablePolicy(), new FakeClock());
 
     // Act
-    const result = await useCase.execute({ levelId: VALID_UUID });
+    const result = await useCase.execute({ actorRole: "ADMIN", levelId: VALID_UUID });
 
     // Assert
     expect(result.levelId).toBe(VALID_UUID);
@@ -44,7 +44,7 @@ describe("PublishLevelUseCase", () => {
 
     // Act / Assert
     await expect(
-      useCase.execute({ levelId: VALID_UUID })
+      useCase.execute({ actorRole: "ADMIN", levelId: VALID_UUID })
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 
@@ -56,7 +56,20 @@ describe("PublishLevelUseCase", () => {
 
     // Act / Assert
     await expect(
-      useCase.execute({ levelId: VALID_UUID })
+      useCase.execute({ actorRole: "ADMIN", levelId: VALID_UUID })
     ).rejects.toBeInstanceOf(BusinessRuleViolationError);
+  });
+
+  it("should_throw_forbidden_and_not_persist_when_actor_is_not_admin", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makeDraftLevel(VALID_UUID));
+    const useCase = new PublishLevelUseCase(repo, new AlwaysSolvablePolicy(), new FakeClock());
+
+    // Act / Assert
+    await expect(
+      useCase.execute({ actorRole: "USER", levelId: VALID_UUID })
+    ).rejects.toThrow("Admin access required");
+    expect(repo.savedLevels).toHaveLength(0);
   });
 });

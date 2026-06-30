@@ -5,8 +5,10 @@ import type { UseCase } from "../../aspects/UseCase.js";
 import type { LevelRepository } from "../ports/LevelRepository.js";
 import { mapArrowInput, type ArrowInput } from "./CreateLevelUseCase.js";
 import type { Clock } from "../../ports/Clock.js";
+import { assertAdminActor } from "./authorizeLevelCatalogMutation.js";
 
 export type UpdateLevelDefinitionInput = {
+  actorRole: string;
   levelId: string;
   arrows: ArrowInput[];
   attempts?: number;
@@ -23,6 +25,8 @@ export class UpdateLevelDefinitionUseCase
   ) {}
 
   async execute(input: UpdateLevelDefinitionInput): Promise<UpdateLevelDefinitionOutput> {
+    assertAdminActor(input.actorRole);
+
     const levelId = LevelId.create(input.levelId);
     const level = await this.repo.findById(levelId);
     if (!level) throw new NotFoundError(`Level not found: ${input.levelId}`);

@@ -7,10 +7,10 @@ import type { UpdateLevelDefinitionInput, UpdateLevelDefinitionOutput } from '..
 import type { PublishLevelInput, PublishLevelOutput } from '../../../src/application/level-catalog/use-cases/PublishLevelUseCase.js';
 import type { ArchiveLevelInput, ArchiveLevelOutput } from '../../../src/application/level-catalog/use-cases/ArchiveLevelUseCase.js';
 import type { TokenService } from '../../../src/application/identity/ports/TokenService.js';
-import { ValidationError, UnauthorizedError } from '../../../src/shared/errors/ApplicationError.js';
+import { ForbiddenError, ValidationError, UnauthorizedError } from '../../../src/shared/errors/ApplicationError.js';
 import { createLevelCatalogTestApp } from '../../helpers/createLevelCatalogTestApp.js';
 
-const VALID_BODY: CreateLevelInput = {
+const VALID_BODY: Omit<CreateLevelInput, 'actorRole'> = {
   name: 'Test Level',
   description: 'A test level',
   difficulty: 'EASY',
@@ -47,21 +47,37 @@ class FakeCreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevelOut
   lastInput: CreateLevelInput | null = null;
   async execute(input: CreateLevelInput): Promise<CreateLevelOutput> {
     this.lastInput = input;
+    if (input.actorRole !== 'ADMIN') throw new ForbiddenError('Admin access required');
     if (this.error) throw this.error;
     return { levelId: '550e8400-e29b-41d4-a716-446655440099' };
   }
 }
 
 class FakeUpdateDefinitionUseCase implements UseCase<UpdateLevelDefinitionInput, UpdateLevelDefinitionOutput> {
-  async execute(_input: UpdateLevelDefinitionInput): Promise<UpdateLevelDefinitionOutput> { return { levelId: 'l-1' }; }
+  lastInput: UpdateLevelDefinitionInput | null = null;
+  async execute(input: UpdateLevelDefinitionInput): Promise<UpdateLevelDefinitionOutput> {
+    this.lastInput = input;
+    if (input.actorRole !== 'ADMIN') throw new ForbiddenError('Admin access required');
+    return { levelId: 'l-1' };
+  }
 }
 
 class FakePublishUseCase implements UseCase<PublishLevelInput, PublishLevelOutput> {
-  async execute(_input: PublishLevelInput): Promise<PublishLevelOutput> { return { levelId: 'l-1' }; }
+  lastInput: PublishLevelInput | null = null;
+  async execute(input: PublishLevelInput): Promise<PublishLevelOutput> {
+    this.lastInput = input;
+    if (input.actorRole !== 'ADMIN') throw new ForbiddenError('Admin access required');
+    return { levelId: 'l-1' };
+  }
 }
 
 class FakeArchiveUseCase implements UseCase<ArchiveLevelInput, ArchiveLevelOutput> {
-  async execute(_input: ArchiveLevelInput): Promise<ArchiveLevelOutput> { return { levelId: 'l-1' }; }
+  lastInput: ArchiveLevelInput | null = null;
+  async execute(input: ArchiveLevelInput): Promise<ArchiveLevelOutput> {
+    this.lastInput = input;
+    if (input.actorRole !== 'ADMIN') throw new ForbiddenError('Admin access required');
+    return { levelId: 'l-1' };
+  }
 }
 
 class FakeTokenService implements TokenService {
@@ -73,14 +89,19 @@ class FakeTokenService implements TokenService {
   generate(_payload: { userId: string; role: string }): string { return 'token'; }
 }
 
-function buildApp(createLevelUseCase: FakeCreateLevelUseCase = new FakeCreateLevelUseCase()) {
+function buildApp(overrides: {
+  createLevelUseCase?: FakeCreateLevelUseCase;
+  updateDefinitionUseCase?: FakeUpdateDefinitionUseCase;
+  publishLevelUseCase?: FakePublishUseCase;
+  archiveLevelUseCase?: FakeArchiveUseCase;
+} = {}) {
   return createLevelCatalogTestApp(
     new FakeGetLevelsUseCase(),
     new FakeGetLevelUseCase(),
-    createLevelUseCase,
-    new FakeUpdateDefinitionUseCase(),
-    new FakePublishUseCase(),
-    new FakeArchiveUseCase(),
+    overrides.createLevelUseCase ?? new FakeCreateLevelUseCase(),
+    overrides.updateDefinitionUseCase ?? new FakeUpdateDefinitionUseCase(),
+    overrides.publishLevelUseCase ?? new FakePublishUseCase(),
+    overrides.archiveLevelUseCase ?? new FakeArchiveUseCase(),
     new FakeTokenService(),
   );
 }
@@ -162,7 +183,7 @@ describe('POST /levels', () => {
   it('should_forward_board_shape_to_the_use_case_when_present', async () => {
     // Arrange
     const createLevelUseCase = new FakeCreateLevelUseCase();
-    const app = buildApp(createLevelUseCase);
+    const app = buildApp({ createLevelUseCase });
     const body = {
       ...VALID_BODY,
       boardShape: { type: 'CELL_MASK', cells: [{ row: 0, col: 0 }] },
@@ -176,6 +197,7 @@ describe('POST /levels', () => {
 
     // Assert
     expect(res.status).toBe(201);
+    expect(createLevelUseCase.lastInput?.actorRole).toBe('ADMIN');
     expect(createLevelUseCase.lastInput?.boardShape).toEqual({
       type: 'CELL_MASK',
       cells: [{ row: 0, col: 0 }],
@@ -186,7 +208,7 @@ describe('POST /levels', () => {
     // Arrange
     const createLevelUseCase = new FakeCreateLevelUseCase();
     createLevelUseCase.error = new ValidationError('Level is not solvable');
-    const app = buildApp(createLevelUseCase);
+    const app = buildApp({ createLevelUseCase });
 
     // Act
     const res = await request(app)
@@ -197,5 +219,148 @@ describe('POST /levels', () => {
     // Assert
     expect(res.status).toBe(422);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
+  });
+});
+
+describe('Level catalog mutation authorization', () => {
+  const VALID_DEFINITION_BODY = {
+    arrows: [
+      { id: 'a', color: '#5262FB', path: [{ row: 0, col: 0 }], direction: 'UP' },
+    ],
+    attempts: 5,
+  };
+
+  it('should_return_200_when_admin_updates_level_definition', async () => {
+    // Arrange
+    const updateDefinitionUseCase = new FakeUpdateDefinitionUseCase();
+    const app = buildApp({ updateDefinitionUseCase });
+
+    // Act
+    const res = await request(app)
+      .put('/levels/l-1/definition')
+      .set('Authorization', 'Bearer admin-token')
+      .send(VALID_DEFINITION_BODY);
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(res.body.data.levelId).toBe('l-1');
+    expect(updateDefinitionUseCase.lastInput?.actorRole).toBe('ADMIN');
+  });
+
+  it('should_return_403_when_user_updates_level_definition', async () => {
+    // Arrange
+    const updateDefinitionUseCase = new FakeUpdateDefinitionUseCase();
+    const app = buildApp({ updateDefinitionUseCase });
+
+    // Act
+    const res = await request(app)
+      .put('/levels/l-1/definition')
+      .set('Authorization', 'Bearer user-token')
+      .send(VALID_DEFINITION_BODY);
+
+    // Assert
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('FORBIDDEN');
+    expect(updateDefinitionUseCase.lastInput?.actorRole).toBe('USER');
+  });
+
+  it('should_return_401_when_anonymous_user_updates_level_definition', async () => {
+    // Arrange
+    const app = buildApp();
+
+    // Act
+    const res = await request(app).put('/levels/l-1/definition').send(VALID_DEFINITION_BODY);
+
+    // Assert
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('should_return_200_when_admin_publishes_level', async () => {
+    // Arrange
+    const publishLevelUseCase = new FakePublishUseCase();
+    const app = buildApp({ publishLevelUseCase });
+
+    // Act
+    const res = await request(app)
+      .post('/levels/l-1/publish')
+      .set('Authorization', 'Bearer admin-token');
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(res.body.data.levelId).toBe('l-1');
+    expect(publishLevelUseCase.lastInput).toEqual({ actorRole: 'ADMIN', levelId: 'l-1' });
+  });
+
+  it('should_return_403_when_user_publishes_level', async () => {
+    // Arrange
+    const publishLevelUseCase = new FakePublishUseCase();
+    const app = buildApp({ publishLevelUseCase });
+
+    // Act
+    const res = await request(app)
+      .post('/levels/l-1/publish')
+      .set('Authorization', 'Bearer user-token');
+
+    // Assert
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('FORBIDDEN');
+    expect(publishLevelUseCase.lastInput).toEqual({ actorRole: 'USER', levelId: 'l-1' });
+  });
+
+  it('should_return_401_when_anonymous_user_publishes_level', async () => {
+    // Arrange
+    const app = buildApp();
+
+    // Act
+    const res = await request(app).post('/levels/l-1/publish');
+
+    // Assert
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('should_return_200_when_admin_archives_level', async () => {
+    // Arrange
+    const archiveLevelUseCase = new FakeArchiveUseCase();
+    const app = buildApp({ archiveLevelUseCase });
+
+    // Act
+    const res = await request(app)
+      .post('/levels/l-1/archive')
+      .set('Authorization', 'Bearer admin-token');
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(res.body.data.levelId).toBe('l-1');
+    expect(archiveLevelUseCase.lastInput).toEqual({ actorRole: 'ADMIN', levelId: 'l-1' });
+  });
+
+  it('should_return_403_when_user_archives_level', async () => {
+    // Arrange
+    const archiveLevelUseCase = new FakeArchiveUseCase();
+    const app = buildApp({ archiveLevelUseCase });
+
+    // Act
+    const res = await request(app)
+      .post('/levels/l-1/archive')
+      .set('Authorization', 'Bearer user-token');
+
+    // Assert
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('FORBIDDEN');
+    expect(archiveLevelUseCase.lastInput).toEqual({ actorRole: 'USER', levelId: 'l-1' });
+  });
+
+  it('should_return_401_when_anonymous_user_archives_level', async () => {
+    // Arrange
+    const app = buildApp();
+
+    // Act
+    const res = await request(app).post('/levels/l-1/archive');
+
+    // Assert
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('UNAUTHORIZED');
   });
 });
