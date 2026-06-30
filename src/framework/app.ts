@@ -144,12 +144,12 @@ export function createApp() {
 
   const getLeaderboardUseCase = new UseCaseLoggingDecorator(
     "GetLeaderboardService",
-    new GetLeaderboardService(leaderboardRepository),
+    new GetLeaderboardService(leaderboardRepository, levelRepository),
     logger
   );
   const submitScoreUseCase = new UseCaseLoggingDecorator(
     "SubmitScoreService",
-    new SubmitScoreService(leaderboardRepository, eventBus, clock),
+    new SubmitScoreService(leaderboardRepository, userRepository, levelRepository, eventBus, idGenerator, clock),
     logger
   );
 

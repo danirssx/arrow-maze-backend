@@ -3770,6 +3770,14 @@ blocked until the executable contract is approved.
 
 ---
 
+# AI Log — MAZ-173 Leaderboard submit/read contract hardening
+
+Date: 2026-06-29
+Ticket: MAZ-173
+
+## Task / Problem
+
+Implement the backend leaderboard contract that had previously landed only as planning/spec work. The backend needed to stop trusting client-owned leaderboard ids, entry ids, user ids, and username snapshots, while returning an empty leaderboard for known scoreless levels.
 # AI Log — MAZ-175 Refresh-token rotation and logout
 
 Date: 2026-06-29
@@ -3785,12 +3793,26 @@ OpenAI Codex CLI, GPT-5 coding agent.
 
 ## Prompt Used
 
+User requested completing the remaining M9 closure work after auditing that MAZ-173 was contract-only in `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
 User requested completing the remaining M9 closure work after auditing that MAZ-175 was missing from backend `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
 
 ## Agent Roles Used
 
 | Agent | Status | How it was used | Evidence |
 | --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing MAZ-173 backend contract spec. | `specs/leaderboard-submit-read-contract.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing `@s1..@s7` scenarios as the executable contract. | `specs/leaderboard-submit-read-contract.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Implemented against application/API/OpenAPI tests for slim submit and known-empty reads. | Tests listed in `@s → test` map |
+| Judge (`.agents/judge.md`) | Not used | No separate judge session was run in this pass. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Mutation testing was not run during this pass. | N/A |
+
+## Result Obtained
+
+- Slimmed `SubmitScoreInput` to authenticated `userId` plus gameplay facts.
+- Updated `LeaderboardController` to parse only `levelId`, `score`, `timeSeconds`, and `movesCount`; spoofed id/username fields are ignored.
+- Updated `SubmitScoreService` to load the authenticated user, validate the level, generate server-owned `LeaderboardId`/`EntryId`, and use the persisted username snapshot.
+- Updated `GetLeaderboardService` to return `{ levelId, entries: [] }` for known scoreless levels without creating a leaderboard row, while keeping `404` for unknown levels.
+- Updated OpenAPI source and generated `docs/openapi.json` for the slim submit schema and empty leaderboard response.
 | Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing approved refresh-token spec and preserved its scope while reapplying on current `develop`. | `specs/refresh-token-MAZ-175.spec.md` |
 | Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing Gherkin scenarios as the executable contract. | `specs/refresh-token-MAZ-175.feature` |
 | TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Reapplied production code against concrete tests and ran targeted tests before full verify. | Tests listed in `@s → test` map |
@@ -3812,6 +3834,13 @@ User requested completing the remaining M9 closure work after auditing that MAZ-
 
 | Scenario | Concrete tests |
 | --- | --- |
+| `@s1` Authenticated slim submit stores server-owned ids and username | `tests/application/leaderboard/SubmitScoreService.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s2` Spoofed identity fields ignored | `tests/framework/leaderboard/LeaderboardController.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s3` Anonymous/invalid submit rejected | `tests/api/leaderboard/submitScore.test.ts` |
+| `@s4` Submit requires gameplay fields | `tests/api/leaderboard/submitScore.test.ts`, `tests/framework/leaderboard/LeaderboardController.test.ts` |
+| `@s5` Known scoreless level returns empty leaderboard | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s6` Unknown level returns not found | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s7` OpenAPI documents slim submit contract | `tests/framework/swagger/openApiSpec.test.ts` |
 | `@s1` Login issues access + refresh token | `tests/application/identity/LoginUseCase.test.ts`, `tests/api/identity/login.test.ts`, `tests/integration/authFlow.e2e.test.ts` |
 | `@s2` Refresh rotates the token | `tests/application/identity/RefreshAccessTokenUseCase.test.ts`, `tests/api/identity/refresh.test.ts`, `tests/integration/authFlow.e2e.test.ts` |
 | `@s3` Expired refresh token is rejected | `tests/application/identity/RefreshAccessTokenUseCase.test.ts` |
@@ -3823,6 +3852,18 @@ User requested completing the remaining M9 closure work after auditing that MAZ-
 ## Verification
 
 - `npm run typecheck` passed.
+- Targeted leaderboard tests passed: 5 suites, 31 tests.
+- `npm run verify` passed: 72 suites, 467 tests.
+
+## Team Modifications Pending Human Review
+
+- Review the decision to keep stale-token missing users as `404`, preserving the current MAZ-174 behavior.
+- Review client compatibility: old clients sending extra id/username fields will not break, but those fields are ignored.
+
+## Lessons / Limitations
+
+- The original MAZ-173 work in `develop` was planning-only; implementation required wiring existing user and level repositories into the leaderboard use cases.
+- Full mutation testing was not run in this pass.
 - Targeted auth tests passed: 8 suites, 38 tests.
 - `npm run verify` passed: 80 suites, 503 tests.
 - `npm run mutation` was attempted and interrupted at 143/1250 mutants because the estimated remaining time was still over one hour and not practical for this pass.
