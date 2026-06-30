@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { SubmitScoreService, type SubmitScoreInput } from '../../../src/application/leaderboard/use-cases/SubmitScoreService.js';
-import type { LeaderboardRepository } from '../../../src/application/leaderboard/ports/ILeaderboardRepository.js';
+import type { LeaderboardRepository } from '../../../src/application/leaderboard/ports/LeaderboardRepository.js';
 import type { UserRepository } from '../../../src/application/identity/ports/UserRepository.js';
 import type { LevelRepository } from '../../../src/application/level-catalog/ports/LevelRepository.js';
 import type { DomainEventBus } from '../../../src/application/ports/DomainEventBus.js';

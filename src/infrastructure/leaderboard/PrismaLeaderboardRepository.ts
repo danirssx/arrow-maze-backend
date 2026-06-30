@@ -1,6 +1,6 @@
 // Pattern: Repository, Adapter
 import type { Prisma, PrismaClient } from '@prisma/client';
-import type { LeaderboardRepository } from '../../application/leaderboard/ports/ILeaderboardRepository.js';
+import type { LeaderboardRepository } from '../../application/leaderboard/ports/LeaderboardRepository.js';
 import { Leaderboard } from '../../domain/leaderboard/Leaderboard.js';
 import { ScoreEntry } from '../../domain/leaderboard/ScoreEntry.js';
 import { EntryId } from '../../domain/leaderboard/value-objects/EntryId.js';

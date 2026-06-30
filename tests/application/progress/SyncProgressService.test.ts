@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { SyncProgressService } from '../../../src/application/progress/use-cases/SyncProgressService.js';
-import type { ProgressRepository } from '../../../src/application/progress/ports/IProgressRepository.js';
+import type { ProgressRepository } from '../../../src/application/progress/ports/ProgressRepository.js';
 import type { DomainEventBus } from '../../../src/application/ports/DomainEventBus.js';
 import type { DomainEvent } from '../../../src/domain/shared/DomainEvent.js';
 import type { IdGenerator } from '../../../src/application/ports/IdGenerator.js';

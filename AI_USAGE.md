@@ -3775,6 +3775,64 @@ that does not require the CA pipeline.
 
 ---
 
+# Review — MAZ-158 (CA-005)
+
+**Veredicto:** APPROVED
+
+## Cobertura de escenarios (@s ↔ test)
+
+- @s1: [x] `crypto` bare import → lint exit 1 — verificado con probe file durante TDD; regla `no-restricted-imports` en `eslint.config.js` (domain block, pattern `crypto`). Sin Jest test permanente — aceptable: la spec declara explícitamente "Tests: No funcionales; validar `npm run lint`".
+- @s2: [x] `node:crypto` import → lint exit 1 — mismo pattern, mismo bloque ESLint.
+- @s3: [x] `AppError` import → lint exit 1 — verificado con probe file; pattern `**/shared/errors/AppError*` en mismo bloque.
+- @s4: [x] `leaderboard/ports/` sin prefijo `I` — cubierto por `tests/architecture/portNamingConvention.test.ts → should_not_use_I_prefix_in_port_filenames`.
+- @s5: [x] `progress/ports/` sin prefijo `I` — mismo test, itera todos los bounded contexts.
+- @s6: [x] `npm run verify` exit 0 — 82 suites, 526 tests GREEN, lint GREEN, typecheck GREEN, build GREEN.
+- @s7: [x] `docs/architecture.md` con sección "Port naming convention" y "ESLint architectural guardrails" — presentes en commit `ca27f59`.
+
+## Disciplina TDD
+
+- ¿Producción sin test que la pida? NO. Cada cambio tiene su verificación:
+  - Reglas ESLint: probe files (RED) → regla añadida (GREEN) → probe borrado.
+  - Port rename: `portNamingConvention.test.ts` escrito primero (RED con `ILeaderboardRepository.ts` existente) → rename (GREEN).
+- ¿Evidencia de Rojo→Verde→Refactor? SÍ — ciclos documentados en sesión: lint exit 0 sin regla → lint exit 1 con regla; test fallando con I-prefix → pasando tras rename.
+
+## Regla de dependencia y calidad
+
+- `eslint.config.js:33-46` — bloque `no-restricted-imports` correctamente scoped a `src/domain/**/*.ts`. Dos patterns: `crypto`/`node:crypto` y `**/shared/errors/AppError*`. Sin side effects en otras capas.
+- `src/application/leaderboard/ports/LeaderboardRepository.ts` — renombrado de `ILeaderboardRepository.ts`. Solo cambio de filename; contenido y tipo exportado (`LeaderboardRepository`) sin cambios.
+- `src/application/progress/ports/ProgressRepository.ts` — ídem.
+- 7 archivos con import path actualizado (`ILeaderboardRepository.js` → `LeaderboardRepository.js`, `IProgressRepository.js` → `ProgressRepository.js`) — cambio mecánico, sin lógica añadida.
+- `tests/architecture/portNamingConvention.test.ts` — lee `readdirSync` sobre dirs de ports, verifica nombre de archivo con `/^I[A-Z]/`. Correcto: testea comportamiento observable (filesystem), no detalles de implementación.
+
+**Hallazgos pre-existentes (no introducidos por CA-005 — no bloquean):**
+
+- `src/application/leaderboard/use-cases/GetLeaderboardService.ts:19`: `submittedAt: Date` en output DTO — viola "DTOs simples, no exponer `Date`". Pre-existente, fuera del scope de CA-005.
+- `src/application/level-catalog/use-cases/GetLevelsUseCase.ts:13`, `GetLevelUseCase.ts:17-18`, `LoadProgressService.ts:18,26`: mismo patrón `Date` en outputs. Pre-existente.
+- `src/framework/swagger/openApiSpec.ts:948,987`: referencias `'ADMIN'` en enum de Swagger schema — legítimas como documentación de API, no son reglas de negocio.
+
+## Checklist Clean Architecture / DDD / MVVM
+
+- **Regla de dependencia:** PASS — ningún archivo del commit introduce dependencias cruzadas. Grep `from.*infrastructure|framework` en domain/application: 0 matches.
+- **Dominio independiente:** PASS — domain tiene 0 imports de crypto/AppError/httpStatus. Reglas ESLint lo garantizan hacia el futuro.
+- **Application solo orquesta:** PASS — los 7 archivos de application/infrastructure modificados solo cambian una ruta de import; lógica intacta.
+- **Repositorios: interfaz adentro, implementación afuera:** PASS — `LeaderboardRepository` e `ProgressRepository` siguen siendo interfaces en `src/application`; implementaciones Prisma en `src/infrastructure`.
+- **DTOs simples en fronteras:** PASS para CA-005 (no introduce nuevos DTOs). Violaciones pre-existentes de `Date` documentadas como hallazgos, no atribuibles a este ticket.
+- **Invariantes en VO/agregados:** N/A — no se tocan entidades ni VOs.
+- **Errores de dominio sin semántica HTTP:** PASS — nueva regla ESLint enforcea esto.
+- **MVVM:** N/A
+- **Impacto por capa declarado vs. real:**
+  - Domain: declarado `no previsto` — real: 0 archivos tocados. PASS
+  - Application: declarado "rename 2 port files + update 5 imports" — real: exactamente eso. PASS
+  - Infrastructure: declarado "update 2 import paths" — real: `PrismaLeaderboardRepository.ts` + `PrismaProgressRepository.ts`. PASS
+  - Framework: declarado "`eslint.config.js`" — real: exactamente eso. PASS
+
+## npm run verify
+
+82 suites / 526 tests — GREEN. Commit `ca27f59`.
+
+
+---
+
 # AI Log — MAZ-173 Leaderboard submit/read contract hardening
 
 Date: 2026-06-29
@@ -4271,6 +4329,129 @@ checks, commit/push/PR, Linear update, and a context review of affected tickets.
   substituted. Real bcrypt at cost 12 keeps each E2E case ~0.45s — acceptable.
 - `RawPassword` only enforces length ≥ 8 (no complexity rule), so the demo passwords
   just need to be ≥ 8 chars.
+
+
+---
+
+# AI Usage Log: MAZ-158 (CA-005) — Backend: reforzar lint arquitectónico y limpiar estructura
+
+## Task / Problem
+
+Ticket `MAZ-158 (CA-005)`: agregar guardrails ESLint que conviertan regresiones en
+`src/domain` en errores de CI, renombrar archivos de puertos con prefijo `I`
+inconsistente, y documentar la convención de naming en `docs/architecture.md`.
+Sin cambios funcionales — ticket puramente estructural y preventivo.
+
+## Tool and Model
+
+Claude Code / Claude Sonnet 4.6.
+
+## Prompt Used
+
+The user asked to start CA-005 (MAZ-158) after reviewing the project context
+from AGENTS.md, docs/, and memory files, and after confirming that CA-003 was
+already covered by MAZ-177.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Used | Investigated codebase (ESLint config, port filenames, framework structure, domain imports), identified 4 concrete work items, wrote `specs/backend-clean-guardrails-CA-005.spec.md` with full CA contract. | `specs/backend-clean-guardrails-CA-005.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Used | Distilled 7 Gherkin scenarios from spec, human-approved before implementation. | `specs/backend-clean-guardrails-CA-005.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red-Green cycles: probe files for ESLint rules (@s1-@s3), arch test written before rename (@s4-@s5). | Commit `ca27f59`, tests green. |
+| Judge (`.agents/judge.md`) | Used | APPROVED — all @s covered, CA contract verified, no dependency violations. | `ai-log/2026-06-29-MAZ-158-CA-005-judge.md` |
+| Mutation Tester (`.agents/mutation.md`) | Used | PASS 92.59% (50/54 killed). 4 survivors: pre-existing StringLiteral in error messages, not introduced by CA-005. | `ai-log/2026-06-30-MAZ-158-CA-005-mutation.md` |
+
+## Scenario Coverage (@s ↔ test)
+
+| Scenario | Verification |
+|----------|-------------|
+| @s1 `crypto` import in domain → lint exit 1 | ESLint probe file RED → rule added GREEN. Lint gate in `npm run verify`. |
+| @s2 `node:crypto` import in domain → lint exit 1 | Same rule, `node:crypto` pattern. |
+| @s3 `AppError` import in domain → lint exit 1 | ESLint probe file RED → rule added GREEN. |
+| @s4 `leaderboard/ports/` has no I prefix | `tests/architecture/portNamingConvention.test.ts → should_not_use_I_prefix_in_port_filenames` (RED with ILeaderboardRepository.ts → GREEN after rename) |
+| @s5 `progress/ports/` has no I prefix | Same test, iterates all bounded contexts. |
+| @s6 `npm run verify` exits zero | 82 suites / 526 tests GREEN, lint GREEN, typecheck GREEN, build GREEN. |
+| @s7 `docs/architecture.md` has port naming convention | Sections "Port naming convention" and "ESLint architectural guardrails" added. |
+
+## Result Obtained
+
+- `eslint.config.js`: new `no-restricted-imports` block scoped to `src/domain/**/*.ts` blocking `crypto`, `node:crypto`, and `**/shared/errors/AppError*`.
+- `src/application/leaderboard/ports/ILeaderboardRepository.ts` → `LeaderboardRepository.ts` (filename only; exported type `LeaderboardRepository` was already correct).
+- `src/application/progress/ports/IProgressRepository.ts` → `ProgressRepository.ts` (same).
+- 7 import paths updated across use-cases and infrastructure repos.
+- `tests/architecture/portNamingConvention.test.ts` — new architecture boundary test.
+- `docs/architecture.md` — port naming convention and ESLint guardrails documented.
+- `specs/backend-clean-guardrails-CA-005.spec.md` + `.feature` — spec and Gherkin contract.
+
+## Verification
+
+- `npm run verify` — 82 suites / 526 tests GREEN (commit `ca27f59`).
+- ESLint probe for `crypto` / `node:crypto` / `AppError` — all exit 1 with new rules.
+- `portNamingConvention.test.ts` — PASS after rename.
+- Mutation: 92.59% (umbral 80%) — PASS.
+
+## Team Modifications Pending Human Review
+
+- Merge PR and update MAZ-158 to Done in Linear.
+- Pre-existing finding (not CA-005): `Date` in output DTOs of `GetLeaderboardService`, `GetLevelsUseCase`, `GetLevelUseCase`, `LoadProgressService` — violates "DTOs simples, no exponer Date". Separate tech debt item.
+- Mutation workaround for Windows: `npm run mutation` fails with cmd.exe. Use `bash -c "NODE_OPTIONS='--experimental-vm-modules' npx stryker run ..."`. Consider adding `cross-env` to package.json in a future chore.
+
+## Lessons / Limitations
+
+- ESLint `import/no-restricted-paths` does not reliably match TypeScript `.ts` files by full path on this setup — `no-restricted-imports` with glob patterns is more robust for fine-grained domain purity rules.
+- CA-003 was silently implemented by MAZ-177 before this session. Pulling `develop` and auditing what changed before starting a CA ticket is mandatory — otherwise effort is wasted re-implementing or the ticket scope is wrong.
+- Port files with `I` prefix only had wrong filenames — the exported TypeScript types were already correct. Rename was mechanical with no type changes needed.
+
+
+---
+
+# Mutación — MAZ-158 (CA-005)
+
+**Veredicto:** PASS
+**Score:** 50/54 killed = 92.59% (umbral: 80%)
+
+## Alcance del run
+
+Archivos de `src/application` tocados por CA-005 (no se tocó `src/domain`):
+
+```
+src/application/leaderboard/ports/LeaderboardRepository.ts
+src/application/leaderboard/use-cases/GetLeaderboardService.ts
+src/application/leaderboard/use-cases/SubmitScoreService.ts
+src/application/progress/ports/ProgressRepository.ts
+src/application/progress/use-cases/CompleteLevelService.ts
+src/application/progress/use-cases/LoadProgressService.ts
+src/application/progress/use-cases/SyncProgressService.ts
+```
+
+Los archivos de ports (LeaderboardRepository.ts, ProgressRepository.ts) son interfaces TypeScript puras — Stryker no genera mutantes sobre declaraciones de tipo. Los use-cases de progress alcanzaron 100%.
+
+## Resultados por archivo
+
+| Archivo | Score | Killed | Survived |
+|---------|-------|--------|----------|
+| `GetLeaderboardService.ts` | 88.24% | 15 | 2 |
+| `SubmitScoreService.ts` | 88.24% | 15 | 2 |
+| `CompleteLevelService.ts` | 100% | 5 | 0 |
+| `LoadProgressService.ts` | 100% | 9 | 0 |
+| `SyncProgressService.ts` | 100% | 6 | 0 |
+| **Total** | **92.59%** | **50** | **4** |
+
+## Mutantes sobrevivientes
+
+Los 4 son `StringLiteral` en mensajes de error. Todos **pre-existentes** — CA-005 solo cambió el path del import en estos archivos, no tocó la lógica.
+
+1. `src/application/leaderboard/use-cases/GetLeaderboardService.ts` — StringLiteral en mensaje de error de ranking/leaderboard.
+2. `src/application/leaderboard/use-cases/GetLeaderboardService.ts` — StringLiteral en otro mensaje de error.
+3. `src/application/leaderboard/use-cases/SubmitScoreService.ts:53` — `throw new NotFoundError(\`User not found: ${input.userId}\`)` → `throw new NotFoundError('')`. Test `should_throw_not_found_when_user_does_not_exist` verifica el tipo de error pero no el mensaje.
+4. `src/application/leaderboard/use-cases/SubmitScoreService.ts:57` — `throw new NotFoundError(\`Level not found: ${input.levelId}\`)` → `throw new NotFoundError('')`. Mismo patrón.
+
+**Clasificación:** Mutantes equivalentes funcionales — el comportamiento observable (tipo de error lanzado) está testeado. El contenido del mensaje de error es informativo, no contractual. No se requiere acción del tdd-implementer para este ticket.
+
+## Nota de entorno
+
+`npm run mutation` falla en Windows con cmd.exe (no soporta `NODE_OPTIONS=...` inline). Workaround: `bash -c "NODE_OPTIONS='--experimental-vm-modules' npx stryker run ..."`. Documentado para sesiones futuras.
 
 
 <!-- AI_LOG_ENTRIES_END -->

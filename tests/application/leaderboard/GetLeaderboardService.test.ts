@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { GetLeaderboardService } from '../../../src/application/leaderboard/use-cases/GetLeaderboardService.js';
-import type { LeaderboardRepository } from '../../../src/application/leaderboard/ports/ILeaderboardRepository.js';
+import type { LeaderboardRepository } from '../../../src/application/leaderboard/ports/LeaderboardRepository.js';
 import type { LevelRepository } from '../../../src/application/level-catalog/ports/LevelRepository.js';
 import type { Level } from '../../../src/domain/level-catalog/Level.js';
 import { NotFoundError } from '../../../src/shared/errors/ApplicationError.js';

@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { LoadProgressService } from '../../../src/application/progress/use-cases/LoadProgressService.js';
-import type { ProgressRepository } from '../../../src/application/progress/ports/IProgressRepository.js';
+import type { ProgressRepository } from '../../../src/application/progress/ports/ProgressRepository.js';
 import type { IdGenerator } from '../../../src/application/ports/IdGenerator.js';
 import type { Clock } from '../../../src/application/ports/Clock.js';
 import { PlayerProgress } from '../../../src/domain/progress/PlayerProgress.js';
