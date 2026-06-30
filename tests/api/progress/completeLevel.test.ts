@@ -3,7 +3,7 @@ import request from 'supertest';
 import type { UseCase } from '../../../src/application/aspects/UseCase.js';
 import type { CompleteLevelInput } from '../../../src/application/progress/use-cases/CompleteLevelService.js';
 import { CompleteLevelService } from '../../../src/application/progress/use-cases/CompleteLevelService.js';
-import type { ProgressRepository } from '../../../src/application/progress/ports/IProgressRepository.js';
+import type { ProgressRepository } from '../../../src/application/progress/ports/ProgressRepository.js';
 import type { LoadProgressInput, LoadProgressOutput } from '../../../src/application/progress/use-cases/LoadProgressService.js';
 import type { SyncProgressInput, SyncProgressOutput } from '../../../src/application/progress/use-cases/SyncProgressService.js';
 import type { TokenPayload, TokenService } from '../../../src/application/identity/ports/TokenService.js';

@@ -17,8 +17,9 @@ function listPortFiles(boundedContext: string): string[] {
 const BOUNDED_CONTEXTS = ["identity", "level-catalog", "leaderboard", "progress"];
 
 describe("port naming convention", () => {
-  it("should_not_use_I_prefix_in_port_filenames", () => {
-    for (const ctx of BOUNDED_CONTEXTS) {
+  it.each(BOUNDED_CONTEXTS)(
+    "should_not_use_I_prefix_when_listing_port_filenames_in_%s",
+    (ctx) => {
       const files = listPortFiles(ctx);
       for (const file of files) {
         expect(file).not.toMatch(
@@ -27,5 +28,5 @@ describe("port naming convention", () => {
         );
       }
     }
-  });
+  );
 });

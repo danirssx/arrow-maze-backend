@@ -17,8 +17,8 @@ structural and preventive.
 
 **In scope:**
 - Add `no-restricted-imports` ESLint rule: `src/domain/**` may not import `crypto`.
-- Add `import/no-restricted-paths` ESLint rule: `src/domain` may not import
-  `src/shared/errors/AppError.ts` (HTTP semantics must not enter the domain).
+- Add `no-restricted-imports` ESLint rule: `src/domain/**` may not import
+  `**/shared/errors/AppError*` (HTTP semantics must not enter the domain).
 - Rename `src/application/leaderboard/ports/ILeaderboardRepository.ts` →
   `LeaderboardRepository.ts` and update all 3 import references.
 - Rename `src/application/progress/ports/IProgressRepository.ts` →
@@ -46,10 +46,12 @@ silently reappearing:
    error. `crypto` is a Node.js runtime adapter; the domain must be
    infrastructure-free.
 
-2. **`import/no-restricted-paths` (domain → AppError):** Any import of
-   `src/shared/errors/AppError.ts` from `src/domain/**` causes a lint error.
+2. **`no-restricted-imports` (domain → AppError):** Any import matching
+   `**/shared/errors/AppError*` from `src/domain/**` causes a lint error.
    `AppError` carries `httpStatus`, which is HTTP semantics and must stay outside
    the domain. `DomainError` (in `src/domain/errors/`) is the correct base class.
+   (`no-restricted-imports` with glob patterns is used instead of `import/no-restricted-paths`
+   because it reliably matches module specifiers in this ESLint flat config + ESM setup.)
 
 Both rules fire during `npm run lint` and therefore also during `npm run verify`,
 making them CI gates.
