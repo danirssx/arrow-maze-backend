@@ -287,6 +287,50 @@ Compliance rules should live where agents cannot miss them: `AGENTS.md`, with a 
 
 ---
 
+# AI Usage Log: Agent Role Traceability Documentation
+
+## Task / Problem
+
+Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
+| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
+| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
+| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
+| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
+
+## Result Obtained
+
+Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
+
+## Verification
+
+- Documentation-only change; reviewed modified Markdown files.
+
+## Team Modifications Pending Human Review
+
+- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
+- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
+
+## Lessons / Limitations
+
+Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
+
+
+---
+
 # AI Log — AM-005 — Implement Identity application services
 
 **Date:** 2026-06-17
@@ -927,50 +971,6 @@ Typecheck clean.
 
 ---
 
-# AI Usage Log: Agent Role Traceability Documentation
-
-## Task / Problem
-
-Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
-| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
-| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
-| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
-| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
-
-## Result Obtained
-
-Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
-
-## Verification
-
-- Documentation-only change; reviewed modified Markdown files.
-
-## Team Modifications Pending Human Review
-
-- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
-- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
-
-## Lessons / Limitations
-
-Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
-
-
----
-
 # AI Log — Architecture Divergence Fixes
 
 **Date:** 2026-06-17  
@@ -1489,76 +1489,6 @@ User instructed to implement ticket AM-050 following the established workflow: r
 
 ---
 
-# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
-
-## Task / Problem
-
-Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
-
-- `ArrowSpec[]` level definitions.
-- Optional `attempts` with default 5.
-- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
-- OpenAPI and persistence updated for the new contract.
-
-## Tool and Model
-
-- Tool: Codex CLI coding agent.
-- Model: GPT-5 based Codex.
-
-## Prompt Used
-
-The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
-| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
-| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
-| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
-| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
-
-## Result Obtained
-
-- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
-- Replaced `LevelDefinition` with `{ arrows, attempts }`.
-- Replaced solvability logic with blocking-graph DAG detection.
-- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
-- Updated create/update/get level use cases and controller request handling.
-- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
-- Added migration `005_refactor_levels_to_arrow_specs.sql`.
-- Rewrote seed levels as Arrow Untangle examples.
-- Updated Swagger schemas and examples.
-- Rewrote Level Catalog tests for the new model.
-
-## Validation
-
-```sh
-npm run verify
-```
-
-Result: passed.
-
-- Lint: passed.
-- Typecheck: passed.
-- Test coverage: passed, 58 suites / 310 tests.
-- Build: passed.
-
-## Team Modifications Pending Human Review
-
-- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
-- Review production DB migration order before applying to an existing database.
-- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
-
-## Lessons / Limitations
-
-- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
-- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
-
-
----
-
 # AI Log — fix: add runtime enum guards via parseEnumFromInput / parseEnumFromDb
 
 **Date:** 2026-06-18
@@ -1984,6 +1914,76 @@ Continuation of critical bug fix session. User granted one-time merge permission
 ## Lessons / limitations
 
 - A missing `DomainEventBus` implementation is a silent runtime failure: TypeScript compiles fine, but any use case that calls `eventBus.publishAll()` would throw at startup when the dependency is injected. Always wire concrete infrastructure before registering routes.
+
+
+---
+
+# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
+
+## Task / Problem
+
+Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
+
+- `ArrowSpec[]` level definitions.
+- Optional `attempts` with default 5.
+- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
+- OpenAPI and persistence updated for the new contract.
+
+## Tool and Model
+
+- Tool: Codex CLI coding agent.
+- Model: GPT-5 based Codex.
+
+## Prompt Used
+
+The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
+| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
+| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
+| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
+| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
+
+## Result Obtained
+
+- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
+- Replaced `LevelDefinition` with `{ arrows, attempts }`.
+- Replaced solvability logic with blocking-graph DAG detection.
+- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
+- Updated create/update/get level use cases and controller request handling.
+- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
+- Added migration `005_refactor_levels_to_arrow_specs.sql`.
+- Rewrote seed levels as Arrow Untangle examples.
+- Updated Swagger schemas and examples.
+- Rewrote Level Catalog tests for the new model.
+
+## Validation
+
+```sh
+npm run verify
+```
+
+Result: passed.
+
+- Lint: passed.
+- Typecheck: passed.
+- Test coverage: passed, 58 suites / 310 tests.
+- Build: passed.
+
+## Team Modifications Pending Human Review
+
+- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
+- Review production DB migration order before applying to an existing database.
+- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
+
+## Lessons / Limitations
+
+- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
+- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
 
 
 ---
@@ -3389,35 +3389,6 @@ register/login tests were intentionally left untouched (additive `UserController
 
 ---
 
-# Mutación — ticket MAZ-176
-
-**Veredicto:** PASS
-**Score:** 12/12 killed = 100% (umbral: 80%)
-
-## Alcance
-
-- `src/domain/progress/value-objects/CompletedAt.ts`
-
-## Comando
-
-```bash
-npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"
-```
-
-## Mutantes sobrevivientes
-
-- Ninguno.
-
-## Nota
-
-La primera corrida obtuvo 83.33% con dos mutantes sobrevivientes de string
-literal en mensajes de error. Se agregaron aserciones explícitas de mensaje en
-`tests/domain/progress/value-objects/CompletedAt.test.ts` y la repetición quedó
-en 100%.
-
-
----
-
 # AI Usage Log: MAZ-176 Progress Timestamp And Referential Integrity
 
 ## Task / Problem
@@ -3490,6 +3461,35 @@ Linear updates. No secrets were pasted or committed.
   move from `varchar` to `uuid` to reference `levels.id`.
 - String-literal mutation survivors on public domain error messages were useful;
   tests now pin those messages.
+
+
+---
+
+# Mutación — ticket MAZ-176
+
+**Veredicto:** PASS
+**Score:** 12/12 killed = 100% (umbral: 80%)
+
+## Alcance
+
+- `src/domain/progress/value-objects/CompletedAt.ts`
+
+## Comando
+
+```bash
+npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"
+```
+
+## Mutantes sobrevivientes
+
+- Ninguno.
+
+## Nota
+
+La primera corrida obtuvo 83.33% con dos mutantes sobrevivientes de string
+literal en mensajes de error. Se agregaron aserciones explícitas de mensaje en
+`tests/domain/progress/value-objects/CompletedAt.test.ts` y la repetición quedó
+en 100%.
 
 
 ---
@@ -3682,6 +3682,165 @@ Los 17 sobrevivientes pueden ser objetivo del `tdd-implementer` en un ticket sep
 
 ---
 
+# AI Usage Log: MAZ-156 (CA-003) — Audit: admin authorization migration coverage
+
+## Task / Problem
+
+Determine whether `MAZ-156 (CA-003)` — "Backend: mover autorización ADMIN desde
+controllers a application policy" — still has remaining implementation scope
+after the team merged `MAZ-177` (PR #64) to `develop` on 2026-06-30.
+
+The original CA-003 violation: `LevelCatalogController.ts` lines 45, 76, 101,
+and 115 contained inline `role !== 'ADMIN'` comparisons and threw `ForbiddenError`
+directly — a business rule living in the framework layer.
+
+## Tool and Model
+
+Claude Code / Claude Sonnet 4.6.
+
+## Prompt Used
+
+The user asked to pull `develop`, read the full project context (AGENTS.md,
+docs/, claude-memory.md, memory files), and start CA-003. After the pull
+surfaced MAZ-177's changes, the user asked for an architecture audit before
+deciding scope.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | The CA-003 exploration findings from the previous session guided the audit scope. No spec was produced because the implementation was already done by another ticket. | `claude-memory.md` §CA-003 exploration, `docs/reglas_clean_arch.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Not used | No Gherkin contract was needed — this was a coverage audit, not a new implementation. | N/A |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Not used | No production code was written. | N/A |
+| Judge (`.agents/judge.md`) | Not used | No implementation to judge. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No new domain/application code was added. | N/A |
+
+## Scenario Coverage (@s ↔ test)
+
+N/A — no implementation or Gherkin contract produced in this session.
+
+## Result Obtained
+
+**Audit findings:**
+
+1. `MAZ-177` (PR #64, merged 2026-06-30) fully implemented the CA-003 goal:
+   - Created `src/application/level-catalog/use-cases/authorizeLevelCatalogMutation.ts`
+     with `assertAdminActor(actorRole: string)` — authorization decision lives in
+     the application layer.
+   - All 4 mutation use-cases (`Create`, `UpdateDefinition`, `Publish`, `Archive`)
+     call `assertAdminActor(input.actorRole)` as the first statement.
+   - `LevelCatalogController` now only reads `actorRole` from the JWT payload and
+     passes it as input — zero inline `ForbiddenError` or role comparisons remain.
+   - Architecture boundary test (`tests/architecture/levelCatalogAuthorizationBoundary.test.ts`)
+     enforces the rule statically.
+
+2. Framework-layer grep confirmed: no remaining `role !== 'ADMIN'` or inline
+   `ForbiddenError` in any controller (`LevelCatalogController`,
+   `LeaderboardController`, `IdentityController`).
+
+3. One open observation (not a CA violation): `AuthenticatedRequest.user.role`
+   is typed as `string` rather than `UserRole`. The `assertAdminActor` parameter
+   is likewise `string`. This is a TypeScript type-safety gap, not an architecture
+   dependency violation. The dependency direction is correct.
+
+**Decision:** CA-003 is satisfied by MAZ-177. No further implementation needed.
+The `string` → `UserRole` type improvement, if desired, is a separate `chore`
+that does not require the CA pipeline.
+
+## Verification
+
+- `git log --oneline origin/develop -5` confirmed PR #64 merged.
+- `grep -rn "ADMIN\|ForbiddenError\|role" src/framework/` — no inline auth
+  decisions found in any controller.
+- `src/application/level-catalog/use-cases/authorizeLevelCatalogMutation.ts`
+  confirmed present and imported by all 4 mutation use-cases.
+
+## Team Modifications Pending Human Review
+
+- Update MAZ-156 (CA-003) in Linear to **Done** — the ticket objective is
+  covered by MAZ-177.
+- Optional follow-up: type `AuthenticatedRequest.user.role` as `UserRole` and
+  update `assertAdminActor` signature. Estimated effort: ~4 lines across 2 files.
+  Does not require spec/feature/TDD cycle — a plain `chore` commit suffices.
+
+## Lessons / Limitations
+
+- Cross-team ticket overlap is a real risk when multiple developers work on the
+  same milestone. MAZ-177 (Daniella/Daniel) implemented exactly what CA-003
+  required without coordinating via the CA ticket. Future CA tickets should be
+  communicated to the full team before starting to avoid silent duplication.
+- Pulling `develop` before starting any CA ticket is mandatory — the current
+  state of the codebase can render the planned work already done.
+
+
+---
+
+# AI Log — MAZ-173 Leaderboard submit/read contract hardening
+
+Date: 2026-06-29
+Ticket: MAZ-173
+
+## Task / Problem
+
+Implement the backend leaderboard contract that had previously landed only as planning/spec work. The backend needed to stop trusting client-owned leaderboard ids, entry ids, user ids, and username snapshots, while returning an empty leaderboard for known scoreless levels.
+
+## Tool and Model
+
+OpenAI Codex CLI, GPT-5 coding agent.
+
+## Prompt Used
+
+User requested completing the remaining M9 closure work after auditing that MAZ-173 was contract-only in `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing MAZ-173 backend contract spec. | `specs/leaderboard-submit-read-contract.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing `@s1..@s7` scenarios as the executable contract. | `specs/leaderboard-submit-read-contract.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Implemented against application/API/OpenAPI tests for slim submit and known-empty reads. | Tests listed in `@s → test` map |
+| Judge (`.agents/judge.md`) | Not used | No separate judge session was run in this pass. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Mutation testing was not run during this pass. | N/A |
+
+## Result Obtained
+
+- Slimmed `SubmitScoreInput` to authenticated `userId` plus gameplay facts.
+- Updated `LeaderboardController` to parse only `levelId`, `score`, `timeSeconds`, and `movesCount`; spoofed id/username fields are ignored.
+- Updated `SubmitScoreService` to load the authenticated user, validate the level, generate server-owned `LeaderboardId`/`EntryId`, and use the persisted username snapshot.
+- Updated `GetLeaderboardService` to return `{ levelId, entries: [] }` for known scoreless levels without creating a leaderboard row, while keeping `404` for unknown levels.
+- Updated OpenAPI source and generated `docs/openapi.json` for the slim submit schema and empty leaderboard response.
+
+## @s → Test Map
+
+| Scenario | Concrete tests |
+| --- | --- |
+| `@s1` Authenticated slim submit stores server-owned ids and username | `tests/application/leaderboard/SubmitScoreService.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s2` Spoofed identity fields ignored | `tests/framework/leaderboard/LeaderboardController.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s3` Anonymous/invalid submit rejected | `tests/api/leaderboard/submitScore.test.ts` |
+| `@s4` Submit requires gameplay fields | `tests/api/leaderboard/submitScore.test.ts`, `tests/framework/leaderboard/LeaderboardController.test.ts` |
+| `@s5` Known scoreless level returns empty leaderboard | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s6` Unknown level returns not found | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s7` OpenAPI documents slim submit contract | `tests/framework/swagger/openApiSpec.test.ts` |
+
+## Verification
+
+- `npm run typecheck` passed.
+- Targeted leaderboard tests passed: 5 suites, 31 tests.
+- `npm run verify` passed: 72 suites, 467 tests.
+
+## Team Modifications Pending Human Review
+
+- Review the decision to keep stale-token missing users as `404`, preserving the current MAZ-174 behavior.
+- Review client compatibility: old clients sending extra id/username fields will not break, but those fields are ignored.
+
+## Lessons / Limitations
+
+- The original MAZ-173 work in `develop` was planning-only; implementation required wiring existing user and level repositories into the leaderboard use cases.
+- Full mutation testing was not run in this pass.
+
+
+---
+
 # AI Usage Log: MAZ-173 Leaderboard Submit/Read Contract Planning
 
 ## Task / Problem
@@ -3770,14 +3929,6 @@ blocked until the executable contract is approved.
 
 ---
 
-# AI Log — MAZ-173 Leaderboard submit/read contract hardening
-
-Date: 2026-06-29
-Ticket: MAZ-173
-
-## Task / Problem
-
-Implement the backend leaderboard contract that had previously landed only as planning/spec work. The backend needed to stop trusting client-owned leaderboard ids, entry ids, user ids, and username snapshots, while returning an empty leaderboard for known scoreless levels.
 # AI Log — MAZ-175 Refresh-token rotation and logout
 
 Date: 2026-06-29
@@ -3793,26 +3944,12 @@ OpenAI Codex CLI, GPT-5 coding agent.
 
 ## Prompt Used
 
-User requested completing the remaining M9 closure work after auditing that MAZ-173 was contract-only in `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
 User requested completing the remaining M9 closure work after auditing that MAZ-175 was missing from backend `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
 
 ## Agent Roles Used
 
 | Agent | Status | How it was used | Evidence |
 | --- | --- | --- | --- |
-| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing MAZ-173 backend contract spec. | `specs/leaderboard-submit-read-contract.spec.md` |
-| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing `@s1..@s7` scenarios as the executable contract. | `specs/leaderboard-submit-read-contract.feature` |
-| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Implemented against application/API/OpenAPI tests for slim submit and known-empty reads. | Tests listed in `@s → test` map |
-| Judge (`.agents/judge.md`) | Not used | No separate judge session was run in this pass. | N/A |
-| Mutation Tester (`.agents/mutation.md`) | Not used | Mutation testing was not run during this pass. | N/A |
-
-## Result Obtained
-
-- Slimmed `SubmitScoreInput` to authenticated `userId` plus gameplay facts.
-- Updated `LeaderboardController` to parse only `levelId`, `score`, `timeSeconds`, and `movesCount`; spoofed id/username fields are ignored.
-- Updated `SubmitScoreService` to load the authenticated user, validate the level, generate server-owned `LeaderboardId`/`EntryId`, and use the persisted username snapshot.
-- Updated `GetLeaderboardService` to return `{ levelId, entries: [] }` for known scoreless levels without creating a leaderboard row, while keeping `404` for unknown levels.
-- Updated OpenAPI source and generated `docs/openapi.json` for the slim submit schema and empty leaderboard response.
 | Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing approved refresh-token spec and preserved its scope while reapplying on current `develop`. | `specs/refresh-token-MAZ-175.spec.md` |
 | Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing Gherkin scenarios as the executable contract. | `specs/refresh-token-MAZ-175.feature` |
 | TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Reapplied production code against concrete tests and ran targeted tests before full verify. | Tests listed in `@s → test` map |
@@ -3834,13 +3971,6 @@ User requested completing the remaining M9 closure work after auditing that MAZ-
 
 | Scenario | Concrete tests |
 | --- | --- |
-| `@s1` Authenticated slim submit stores server-owned ids and username | `tests/application/leaderboard/SubmitScoreService.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
-| `@s2` Spoofed identity fields ignored | `tests/framework/leaderboard/LeaderboardController.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
-| `@s3` Anonymous/invalid submit rejected | `tests/api/leaderboard/submitScore.test.ts` |
-| `@s4` Submit requires gameplay fields | `tests/api/leaderboard/submitScore.test.ts`, `tests/framework/leaderboard/LeaderboardController.test.ts` |
-| `@s5` Known scoreless level returns empty leaderboard | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
-| `@s6` Unknown level returns not found | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
-| `@s7` OpenAPI documents slim submit contract | `tests/framework/swagger/openApiSpec.test.ts` |
 | `@s1` Login issues access + refresh token | `tests/application/identity/LoginUseCase.test.ts`, `tests/api/identity/login.test.ts`, `tests/integration/authFlow.e2e.test.ts` |
 | `@s2` Refresh rotates the token | `tests/application/identity/RefreshAccessTokenUseCase.test.ts`, `tests/api/identity/refresh.test.ts`, `tests/integration/authFlow.e2e.test.ts` |
 | `@s3` Expired refresh token is rejected | `tests/application/identity/RefreshAccessTokenUseCase.test.ts` |
@@ -3852,18 +3982,6 @@ User requested completing the remaining M9 closure work after auditing that MAZ-
 ## Verification
 
 - `npm run typecheck` passed.
-- Targeted leaderboard tests passed: 5 suites, 31 tests.
-- `npm run verify` passed: 72 suites, 467 tests.
-
-## Team Modifications Pending Human Review
-
-- Review the decision to keep stale-token missing users as `404`, preserving the current MAZ-174 behavior.
-- Review client compatibility: old clients sending extra id/username fields will not break, but those fields are ignored.
-
-## Lessons / Limitations
-
-- The original MAZ-173 work in `develop` was planning-only; implementation required wiring existing user and level repositories into the leaderboard use cases.
-- Full mutation testing was not run in this pass.
 - Targeted auth tests passed: 8 suites, 38 tests.
 - `npm run verify` passed: 80 suites, 503 tests.
 - `npm run mutation` was attempted and interrupted at 143/1250 mutants because the estimated remaining time was still over one hour and not practical for this pass.
@@ -3878,90 +3996,6 @@ User requested completing the remaining M9 closure work after auditing that MAZ-
 
 - The old MAZ-175 branch was not safe to merge because it was based before later M9 work; reapplying the changes on top of current `develop` avoided regressions.
 - Full mutation testing remains pending for the final M9 closure gate.
-
-
----
-
-# AI Usage Log: MAZ-177 Backend Level Catalog Admin Authorization Planning
-
-## Task / Problem
-
-Prepare MAZ-177 for implementation: enforce ADMIN authorization for
-level-catalog mutations without leaving role decisions in framework controllers.
-The ticket is still in Linear Backlog and no approved executable contract existed
-in the repository, so production TDD work is blocked until the human approval
-gate is satisfied.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked Codex to work MAZ-177, review backend/client AGENTS.md,
-MEMORY.md, Linear guidance, AI usage logging, affected tickets, create a new
-worktree, and follow commit/PR/Linear rules. Local Linear was queried through
-the configured environment variable without printing secrets.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner (`.agents/spec-partner.md`) | Referenced | Read and applied the rule that source-touching work needs a spec with behavior, HTTP contract, Clean Architecture contract, edge cases, decisions, and open questions. | `specs/level-catalog-admin-authorization.spec.md`, Linear MAZ-177 |
-| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Read and applied the rule that a Gherkin `.feature` with stable `@s` tags is the executable contract before TDD. No new Linear tickets were created because MAZ-177 already exists. | `specs/level-catalog-admin-authorization.feature` |
-| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Read and applied the precondition that no production code may be written until the executable contract is approved and the ticket is approved for implementation. | Blocked before `src`/`tests` edits |
-| Judge (`.agents/judge.md`) | Referenced | Read and applied the requirement that source-touching tickets include a Clean Architecture contract with per-layer impact before implementation. | `specs/level-catalog-admin-authorization.spec.md` |
-| Mutation Tester (`.agents/mutation.md`) | Not used | No production code was changed, so mutation testing is not applicable yet. | N/A |
-
-## Scenario Coverage (@s -> test)
-
-Pending implementation after human approval:
-
-- @s1 -> pending
-- @s2 -> pending
-- @s3 -> pending
-- @s4 -> pending
-- @s5 -> pending
-- @s6 -> pending
-- @s7 -> pending
-
-## Result Obtained
-
-- Created a new backend worktree at `worktrees/am-MAZ-177` on branch
-  `refactor/backend-admin-level-auth-MAZ-177`.
-- Queried Linear MAZ-177 and confirmed it is in Backlog with `repo:backend`,
-  `type:refactor`, and `layer:application` labels.
-- Reviewed current backend code and found the existing implementation already
-  performs ADMIN checks in `LevelCatalogController`, which means MAZ-177 should
-  move/enforce authorization in application code rather than add another
-  framework check.
-- Added `specs/level-catalog-admin-authorization.spec.md`.
-- Added `specs/level-catalog-admin-authorization.feature` with scenarios
-  `@s1` through `@s7`.
-
-## Verification
-
-- `npm ci` (required because the new worktree did not have `node_modules`; the
-  first sandboxed attempt was blocked by Prisma cache permissions, then rerun
-  with approval)
-- `npm run verify` - passed: lint, typecheck, coverage, and build; 63 test
-  suites / 403 tests passed.
-
-## Team Modifications Pending Human Review
-
-- Approve or change `specs/level-catalog-admin-authorization.feature`.
-- Move MAZ-177 from Backlog to Todo/In Progress according to the team Linear
-  workflow before TDD implementation starts.
-- Confirm whether MAZ-177 fully covers the level-catalog portion of MAZ-156
-  (CA-003) or should remain a narrower defect fix.
-
-## Lessons / Limitations
-
-The current backend already protects level-catalog mutations, but the protection
-lives in the framework controller. The security defect is therefore best handled
-as a Clean Architecture refactor that preserves the HTTP contract while moving
-authorization into the application boundary. TDD implementation is intentionally
-blocked until the executable contract is approved.
 
 
 ---
@@ -4049,6 +4083,90 @@ checks, commit/push/PR, Linear updates, and review of affected tickets.
 - No OpenAPI change was needed because the HTTP status contract was already
   documented as admin-only; the behavioral owner moved from controller to
   application.
+
+
+---
+
+# AI Usage Log: MAZ-177 Backend Level Catalog Admin Authorization Planning
+
+## Task / Problem
+
+Prepare MAZ-177 for implementation: enforce ADMIN authorization for
+level-catalog mutations without leaving role decisions in framework controllers.
+The ticket is still in Linear Backlog and no approved executable contract existed
+in the repository, so production TDD work is blocked until the human approval
+gate is satisfied.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked Codex to work MAZ-177, review backend/client AGENTS.md,
+MEMORY.md, Linear guidance, AI usage logging, affected tickets, create a new
+worktree, and follow commit/PR/Linear rules. Local Linear was queried through
+the configured environment variable without printing secrets.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Read and applied the rule that source-touching work needs a spec with behavior, HTTP contract, Clean Architecture contract, edge cases, decisions, and open questions. | `specs/level-catalog-admin-authorization.spec.md`, Linear MAZ-177 |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Read and applied the rule that a Gherkin `.feature` with stable `@s` tags is the executable contract before TDD. No new Linear tickets were created because MAZ-177 already exists. | `specs/level-catalog-admin-authorization.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Read and applied the precondition that no production code may be written until the executable contract is approved and the ticket is approved for implementation. | Blocked before `src`/`tests` edits |
+| Judge (`.agents/judge.md`) | Referenced | Read and applied the requirement that source-touching tickets include a Clean Architecture contract with per-layer impact before implementation. | `specs/level-catalog-admin-authorization.spec.md` |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No production code was changed, so mutation testing is not applicable yet. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+Pending implementation after human approval:
+
+- @s1 -> pending
+- @s2 -> pending
+- @s3 -> pending
+- @s4 -> pending
+- @s5 -> pending
+- @s6 -> pending
+- @s7 -> pending
+
+## Result Obtained
+
+- Created a new backend worktree at `worktrees/am-MAZ-177` on branch
+  `refactor/backend-admin-level-auth-MAZ-177`.
+- Queried Linear MAZ-177 and confirmed it is in Backlog with `repo:backend`,
+  `type:refactor`, and `layer:application` labels.
+- Reviewed current backend code and found the existing implementation already
+  performs ADMIN checks in `LevelCatalogController`, which means MAZ-177 should
+  move/enforce authorization in application code rather than add another
+  framework check.
+- Added `specs/level-catalog-admin-authorization.spec.md`.
+- Added `specs/level-catalog-admin-authorization.feature` with scenarios
+  `@s1` through `@s7`.
+
+## Verification
+
+- `npm ci` (required because the new worktree did not have `node_modules`; the
+  first sandboxed attempt was blocked by Prisma cache permissions, then rerun
+  with approval)
+- `npm run verify` - passed: lint, typecheck, coverage, and build; 63 test
+  suites / 403 tests passed.
+
+## Team Modifications Pending Human Review
+
+- Approve or change `specs/level-catalog-admin-authorization.feature`.
+- Move MAZ-177 from Backlog to Todo/In Progress according to the team Linear
+  workflow before TDD implementation starts.
+- Confirm whether MAZ-177 fully covers the level-catalog portion of MAZ-156
+  (CA-003) or should remain a narrower defect fix.
+
+## Lessons / Limitations
+
+The current backend already protects level-catalog mutations, but the protection
+lives in the framework controller. The security defect is therefore best handled
+as a Clean Architecture refactor that preserves the HTTP contract while moving
+authorization into the application boundary. TDD implementation is intentionally
+blocked until the executable contract is approved.
 
 
 ---
