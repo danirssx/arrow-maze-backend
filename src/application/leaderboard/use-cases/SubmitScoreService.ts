@@ -1,5 +1,5 @@
 import type { UseCase } from '../../aspects/UseCase.js';
-import type { LeaderboardRepository } from '../ports/ILeaderboardRepository.js';
+import type { LeaderboardRepository } from '../ports/LeaderboardRepository.js';
 import type { DomainEventBus } from '../../ports/DomainEventBus.js';
 import type { Clock } from '../../ports/Clock.js';
 import type { IdGenerator } from '../../ports/IdGenerator.js';

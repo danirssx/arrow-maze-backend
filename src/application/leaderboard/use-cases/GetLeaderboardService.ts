@@ -1,5 +1,5 @@
 import type { UseCase } from '../../aspects/UseCase.js';
-import type { LeaderboardRepository } from '../ports/ILeaderboardRepository.js';
+import type { LeaderboardRepository } from '../ports/LeaderboardRepository.js';
 import type { LevelRepository } from '../../level-catalog/ports/LevelRepository.js';
 import { LevelId } from '../../../domain/shared/LevelId.js';
 import { NotFoundError } from '../../../shared/errors/ApplicationError.js';

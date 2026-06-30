@@ -1,6 +1,6 @@
 // Pattern: Repository, Adapter
 import type { Prisma, PrismaClient } from '@prisma/client';
-import type { ProgressRepository } from '../../application/progress/ports/IProgressRepository.js';
+import type { ProgressRepository } from '../../application/progress/ports/ProgressRepository.js';
 import { CompletedLevel } from '../../domain/progress/CompletedLevel.js';
 import { PlayerProgress } from '../../domain/progress/PlayerProgress.js';
 import { CompletedAt } from '../../domain/progress/value-objects/CompletedAt.js';

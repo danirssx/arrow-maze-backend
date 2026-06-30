@@ -1,5 +1,5 @@
 import type { UseCase } from '../../aspects/UseCase.js';
-import type { ProgressRepository } from '../ports/IProgressRepository.js';
+import type { ProgressRepository } from '../ports/ProgressRepository.js';
 import type { DomainEventBus } from '../../ports/DomainEventBus.js';
 import type { IdGenerator } from '../../ports/IdGenerator.js';
 import type { Clock } from '../../ports/Clock.js';

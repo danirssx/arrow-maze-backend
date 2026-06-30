@@ -33,6 +33,29 @@ strictly inside `src/infrastructure`:
   only on the ports (`UserRepository`, `LevelRepository`, `LeaderboardRepository`,
   `ProgressRepository`, `UnitOfWork`).
 
+## Port naming convention
+
+Port interface files in `src/application/*/ports/` follow these rules:
+
+- **No `I` prefix** on the filename or the exported TypeScript type.
+- The filename must match the exported type name exactly (one type per file).
+- Correct example: `UserRepository.ts` exporting `interface UserRepository { ... }`.
+- Wrong example: `IUserRepository.ts` — do not use this pattern.
+
+This convention is enforced by the architecture test
+`tests/architecture/portNamingConvention.test.ts`.
+
+## ESLint architectural guardrails
+
+The following rules in `eslint.config.js` turn domain-layer regressions into
+CI failures:
+
+| Rule | What it blocks | Why |
+|------|---------------|-----|
+| `no-restricted-imports` (`crypto`, `node:crypto`) in `src/domain/**` | Importing the Node.js `crypto` module | Domain must use `IdGenerator`/`Clock` ports; runtime adapters belong in infrastructure |
+| `no-restricted-imports` (`**/shared/errors/AppError*`) in `src/domain/**` | Importing `AppError` | `AppError` carries `httpStatus` (HTTP semantics); domain errors must extend `DomainError` |
+| `import/no-restricted-paths` (layer zones) | Cross-layer imports (e.g. domain → application, application → infrastructure) | Enforces the inward-only dependency rule |
+
 Required diagrams before final delivery:
 
 - `docs/clean-architecture.drawio`
