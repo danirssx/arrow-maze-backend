@@ -144,22 +144,44 @@ fresh database only needs `npm run db:setup` (`db:migrate` then `db:seed`).
 
 #### Demo credentials (local / dev only)
 
-`npm run db:seed` creates three demo users so the mandatory-login flow can be
+`npm run db:seed` creates the demo users below so the mandatory-login flow can be
 exercised on a seeded database. Their passwords are **documented, non-secret
 local/dev values** (defined in `prisma/seed-data/demoCredentials.ts`) hashed with
 bcrypt cost 12. **Never reuse them in production.**
 
-| Email | Username | Password |
-| --- | --- | --- |
-| `demo@arrowmaze.test` | `demo_player` | `ArrowDemo!Player` |
-| `mika@arrowmaze.test` | `mika_arrows` | `ArrowDemo!Mika` |
-| `noah@arrowmaze.test` | `noah_escape` | `ArrowDemo!Noah` |
+| Email | Username | Password | Purpose |
+| --- | --- | --- | --- |
+| `demo@arrowmaze.test` | `demo_player` | `ArrowDemo!Player` | Demo player (has seeded progress + leaderboard entries) |
+| `mika@arrowmaze.test` | `mika_arrows` | `ArrowDemo!Mika` | Demo leaderboard rival |
+| `noah@arrowmaze.test` | `noah_escape` | `ArrowDemo!Noah` | Demo leaderboard rival |
+| `qa@arrowmaze.test` | `qa_catalog` | `ArrowDemo!QaCatalog` | QA full-catalog account — **starts empty, normal progression** (MAZ-194) |
 
 Log in via `POST /auth/login` with `{ "email": "demo@arrowmaze.test", "rawPassword":
 "ArrowDemo!Player" }`, then call authenticated endpoints (e.g. `GET /users/me`,
 `GET /progress/me`) with the returned `accessToken` as `Authorization: Bearer …`.
 The end-to-end `register → login → authenticated request` chain is verified by
 `tests/integration/authFlow.e2e.test.ts`.
+
+#### Full-catalog QA runbook (local / dev only)
+
+The `qa_catalog` account is the single stable user QA uses to exercise the **complete
+level catalog**, progress, leaderboard submit, refresh-token, and sync flows without
+creating many accounts. **Chosen policy (MAZ-194): normal progression** — the account
+is seeded **empty** and unlocks levels by completing them in order, exactly like any
+user, so normal players' progression rules are never weakened (no local/dev lock
+bypass). It is a documented non-secret local/dev account only; do not deploy it.
+
+1. `npm run db:setup` (fresh DB: migrate + seed) — creates `qa_catalog` and publishes
+   the full catalog.
+2. `POST /auth/login` with `{ "email": "qa@arrowmaze.test", "rawPassword": "ArrowDemo!QaCatalog" }`.
+3. `GET /levels` to list the whole catalog; on the client, only level 1 is unlocked at
+   first (sequential locking, MAZ-191).
+4. Play/complete each level in order; each completion (`POST /progress/levels/:id/complete`)
+   records progress and unlocks the next level, letting the one account reach every
+   catalog level. Score submit and refresh-token flows can be exercised along the way.
+
+Seed validity and the empty-start policy are covered by `tests/seed/demoCredentials.test.ts`
+and `tests/seed/demoProgress.test.ts`.
 
 #### Authoring levels (JSON → DB → game)
 

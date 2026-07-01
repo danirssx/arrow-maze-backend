@@ -21,6 +21,19 @@ export type DemoCredential = {
 
 export const DEMO_PASSWORD_BCRYPT_COST = 12;
 
+/**
+ * Dedicated QA account for end-to-end full-catalog level progression (MAZ-194).
+ *
+ * `QA_PROGRESSION_POLICY` records the team's decision for the ticket's open question:
+ * the QA account follows NORMAL progression from level 1 (it starts with no completed
+ * levels and unlocks levels by playing them in order, exactly like any user). It does
+ * NOT bypass locks, so normal users' progression rules are never weakened. The
+ * credential below is a documented, non-secret local/dev value, seeded like the other
+ * demo users.
+ */
+export const QA_FULL_CATALOG_USER_ID = "660e8400-e29b-41d4-a716-446655440004";
+export const QA_PROGRESSION_POLICY = "normal-progression" as const;
+
 export const DEMO_USER_CREDENTIALS: readonly DemoCredential[] = [
   {
     id: "660e8400-e29b-41d4-a716-446655440001",
@@ -42,5 +55,13 @@ export const DEMO_USER_CREDENTIALS: readonly DemoCredential[] = [
     username: "noah_escape",
     password: "ArrowDemo!Noah",
     createdDaysAgo: 4,
+  },
+  {
+    // MAZ-194 — QA full-catalog account (normal progression, starts empty).
+    id: QA_FULL_CATALOG_USER_ID,
+    email: "qa@arrowmaze.test",
+    username: "qa_catalog",
+    password: "ArrowDemo!QaCatalog",
+    createdDaysAgo: 7,
   },
 ];
