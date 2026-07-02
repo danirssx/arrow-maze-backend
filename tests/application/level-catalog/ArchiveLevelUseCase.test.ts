@@ -27,6 +27,21 @@ describe("ArchiveLevelUseCase", () => {
     expect(repo.savedLevels[0].status).toBe(LevelStatus.ARCHIVED);
   });
 
+  it("should_archive_published_level_without_leaderboard_or_progress_collaborators", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makePublishedLevel(VALID_UUID));
+    const useCase = new ArchiveLevelUseCase(repo, new FakeClock());
+
+    // Act
+    await useCase.execute({ actorRole: "ADMIN", levelId: VALID_UUID });
+
+    // Assert
+    expect(repo.savedLevels).toHaveLength(1);
+    expect(repo.savedLevels[0].id.value).toBe(VALID_UUID);
+    expect(repo.savedLevels[0].status).toBe(LevelStatus.ARCHIVED);
+  });
+
   it("should_throw_not_found_when_level_does_not_exist", async () => {
     // Arrange
     const repo = new FakeLevelRepository();
