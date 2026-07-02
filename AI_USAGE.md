@@ -287,50 +287,6 @@ Compliance rules should live where agents cannot miss them: `AGENTS.md`, with a 
 
 ---
 
-# AI Usage Log: Agent Role Traceability Documentation
-
-## Task / Problem
-
-Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
-| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
-| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
-| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
-| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
-
-## Result Obtained
-
-Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
-
-## Verification
-
-- Documentation-only change; reviewed modified Markdown files.
-
-## Team Modifications Pending Human Review
-
-- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
-- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
-
-## Lessons / Limitations
-
-Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
-
-
----
-
 # AI Log — AM-005 — Implement Identity application services
 
 **Date:** 2026-06-17
@@ -971,6 +927,50 @@ Typecheck clean.
 
 ---
 
+# AI Usage Log: Agent Role Traceability Documentation
+
+## Task / Problem
+
+Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
+| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
+| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
+| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
+| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
+
+## Result Obtained
+
+Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
+
+## Verification
+
+- Documentation-only change; reviewed modified Markdown files.
+
+## Team Modifications Pending Human Review
+
+- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
+- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
+
+## Lessons / Limitations
+
+Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
+
+
+---
+
 # AI Log — Architecture Divergence Fixes
 
 **Date:** 2026-06-17  
@@ -1489,6 +1489,76 @@ User instructed to implement ticket AM-050 following the established workflow: r
 
 ---
 
+# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
+
+## Task / Problem
+
+Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
+
+- `ArrowSpec[]` level definitions.
+- Optional `attempts` with default 5.
+- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
+- OpenAPI and persistence updated for the new contract.
+
+## Tool and Model
+
+- Tool: Codex CLI coding agent.
+- Model: GPT-5 based Codex.
+
+## Prompt Used
+
+The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
+| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
+| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
+| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
+| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
+
+## Result Obtained
+
+- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
+- Replaced `LevelDefinition` with `{ arrows, attempts }`.
+- Replaced solvability logic with blocking-graph DAG detection.
+- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
+- Updated create/update/get level use cases and controller request handling.
+- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
+- Added migration `005_refactor_levels_to_arrow_specs.sql`.
+- Rewrote seed levels as Arrow Untangle examples.
+- Updated Swagger schemas and examples.
+- Rewrote Level Catalog tests for the new model.
+
+## Validation
+
+```sh
+npm run verify
+```
+
+Result: passed.
+
+- Lint: passed.
+- Typecheck: passed.
+- Test coverage: passed, 58 suites / 310 tests.
+- Build: passed.
+
+## Team Modifications Pending Human Review
+
+- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
+- Review production DB migration order before applying to an existing database.
+- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
+
+## Lessons / Limitations
+
+- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
+- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
+
+
+---
+
 # AI Log — fix: add runtime enum guards via parseEnumFromInput / parseEnumFromDb
 
 **Date:** 2026-06-18
@@ -1914,76 +1984,6 @@ Continuation of critical bug fix session. User granted one-time merge permission
 ## Lessons / limitations
 
 - A missing `DomainEventBus` implementation is a silent runtime failure: TypeScript compiles fine, but any use case that calls `eventBus.publishAll()` would throw at startup when the dependency is injected. Always wire concrete infrastructure before registering routes.
-
-
----
-
-# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
-
-## Task / Problem
-
-Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
-
-- `ArrowSpec[]` level definitions.
-- Optional `attempts` with default 5.
-- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
-- OpenAPI and persistence updated for the new contract.
-
-## Tool and Model
-
-- Tool: Codex CLI coding agent.
-- Model: GPT-5 based Codex.
-
-## Prompt Used
-
-The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
-| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
-| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
-| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
-| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
-
-## Result Obtained
-
-- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
-- Replaced `LevelDefinition` with `{ arrows, attempts }`.
-- Replaced solvability logic with blocking-graph DAG detection.
-- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
-- Updated create/update/get level use cases and controller request handling.
-- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
-- Added migration `005_refactor_levels_to_arrow_specs.sql`.
-- Rewrote seed levels as Arrow Untangle examples.
-- Updated Swagger schemas and examples.
-- Rewrote Level Catalog tests for the new model.
-
-## Validation
-
-```sh
-npm run verify
-```
-
-Result: passed.
-
-- Lint: passed.
-- Typecheck: passed.
-- Test coverage: passed, 58 suites / 310 tests.
-- Build: passed.
-
-## Team Modifications Pending Human Review
-
-- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
-- Review production DB migration order before applying to an existing database.
-- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
-
-## Lessons / Limitations
-
-- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
-- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
 
 
 ---
@@ -4555,6 +4555,504 @@ placed it; no new framework date logic was added to the domain.
 - The companion client branch (MAZ-190) handles the remaining edge: a genuinely broken
   device clock (hours ahead) still gets a permanent 422, and the client must resolve
   the pending state instead of retrying forever.
+
+
+---
+
+# AI Usage Log: MAZ-195 (BE-01) requireAdmin route-level middleware (backend)
+
+## Task / Problem
+
+The upcoming admin dashboard needs `/admin/*` endpoints gated to ADMIN users. This
+ticket adds the coarse, transport-level `requireAdmin` Express middleware (runs after
+`authMiddleware`): anonymous → 401, authenticated non-ADMIN → 403, ADMIN → passes.
+First ticket of milestone **M11 — Admin Dashboard**.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M context).
+
+## Prompt Used
+
+The user asked to implement `MAZ-195` following both repository `AGENTS.md` files, root
+`MEMORY.md`, `Linear_MCP_Guideline.md`, a fresh worktree, AI usage logging, checks,
+commit/push/PR, Linear updates, and a review of affected tickets (this middleware is
+consumed by BE-02/BE-03; per-action authorization `assertAdminActor` from MAZ-177 stays
+unchanged).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/admin-authorization-middleware-MAZ-195.spec.md` with the `Clean Architecture contract` (framework-only impact) + the transport-vs-application authorization decision. No separate agent session. | `specs/admin-authorization-middleware-MAZ-195.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin `@s1..@s4`. No separate planner session. | `specs/admin-authorization-middleware-MAZ-195.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green: wrote the supertest integration + unit tests first, then the minimal middleware. | `tests/api/requireAdmin.test.ts`; `src/framework/middleware/requireAdmin.ts` |
+| Judge (`.agents/judge.md`) | Referenced | Applied the judge checklist while writing (dependency rule inward-only, Clean Architecture contract declared per layer, `@s`→test map, `npm run verify` green). No separate judge session. | this log + spec CA contract |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Framework-only change; `src/framework` is outside Stryker's `mutate` globs (`src/domain/**` + `src/application/**` only), so there is no mutation gate for this middleware. | `stryker.conf.json` mutate globs |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test |
+| --- | --- |
+| `@s1` no token → 401 | `tests/api/requireAdmin.test.ts` -> `should_return_401_when_no_token` |
+| `@s2` USER → 403 (FORBIDDEN) | `should_return_403_when_authenticated_user_is_not_admin` |
+| `@s3` ADMIN → handler runs (200) | `should_pass_to_handler_when_authenticated_user_is_admin` |
+| `@s4` no authenticated user → UnauthorizedError (401) | `should_forward_unauthorized_when_request_has_no_authenticated_user` |
+
+## Result Obtained
+
+- New `src/framework/middleware/requireAdmin.ts`: reads `req.user` (set by
+  `authMiddleware`), forwards `UnauthorizedError` (401) if absent, `ForbiddenError`
+  (403) if `role !== UserRole.ADMIN`, else `next()`. Reuses the existing
+  `UnauthorizedError`/`ForbiddenError` and the domain `UserRole` enum (no magic string).
+- **Framework-only** change: domain/application/infrastructure untouched; the
+  per-action `assertAdminActor` (MAZ-177) is unchanged. No route wired yet — BE-02/BE-03
+  mount it on the real `/admin/*` routes.
+- No new pattern/entity/service; consistent with `authMiddleware`.
+
+## Verification
+
+- `npm ci` GREEN.
+- Focused tests GREEN: `tests/api/requireAdmin.test.ts` (4 tests).
+- `npm run verify` GREEN: lint + typecheck + coverage + build — 84 suites / 554 tests.
+- Mutation: N/A — `src/framework` is outside Stryker's `mutate` globs (no mutation gate).
+
+## Team Modifications Pending Human Review
+
+- Confirm the coarse route gate belongs in `framework` (transport authz) while
+  fine-grained authorization stays in the application use cases. Adapter/API tests are
+  subject to human review.
+
+## Lessons / Limitations
+
+- Under the backend ESM jest runner, `jest` must be imported from `@jest/globals` for
+  `jest.fn()` (globals `describe/it/expect` are available; `jest` is not).
+- No `/admin/*` route exists yet, so the guard is proven via a minimal in-test app
+  (`authMiddleware` + `requireAdmin` + dummy handler) plus a unit test for the defensive
+  no-user path.
+
+
+---
+
+# AI Usage Log: MAZ-196 (BE-02) GET /admin/levels — list all levels with status (backend)
+
+## Task / Problem
+
+The admin dashboard must see every level, including DRAFT and ARCHIVED, which the
+public `GET /levels` (published only) never returns. This ticket adds an ADMIN-only
+`GET /admin/levels` that lists all levels with their `status`, optionally filtered by
+`?status=`. Milestone **M11 — Admin Dashboard**. Depends on MAZ-195 (`requireAdmin`) —
+stacked branch.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M context).
+
+## Prompt Used
+
+Implement `MAZ-196` following both `AGENTS.md` files, root `MEMORY.md`,
+`Linear_MCP_Guideline.md`, a fresh worktree, AI usage logging, checks, commit/push/PR,
+Linear updates, and a review of affected tickets (uses BE-01's `requireAdmin`; public
+`GET /levels` unchanged; OpenAPI docs land in BE-05).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/admin-list-levels-MAZ-196.spec.md` with the `Clean Architecture contract` (impact per layer) + the separate-controller decision. | `specs/admin-list-levels-MAZ-196.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin `@s1..@s5`. | `specs/admin-list-levels-MAZ-196.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green twice: application use-case test then use case + port + impls; API test then controller + router + wiring. | tests + code below |
+| Judge (`.agents/judge.md`) | Referenced | Applied the checklist (dependency rule inward-only, CA contract per layer, `@s`→test map, `npm run verify` green). | this log + spec CA contract |
+| Mutation Tester (`.agents/mutation.md`) | Used | Scoped Stryker on `ListAdminLevelsUseCase.ts`: first run 75% (a `timeLimitSeconds` ConditionalExpression survived) → added a timed-level test → **100%**. | scoped Stryker run |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test |
+| --- | --- |
+| `@s1` admin lists all levels with status | `tests/application/level-catalog/ListAdminLevelsUseCase.test.ts` -> `should_return_all_levels_with_their_status_when_no_filter` + `should_expose_summary_fields_for_each_level`; `tests/api/level-catalog/adminLevels.test.ts` -> `should_return_200_with_levels_including_status_when_admin` |
+| `@s2` filter by status | `ListAdminLevelsUseCase.test.ts` -> `should_filter_by_status_when_a_status_is_given`; `adminLevels.test.ts` -> `should_pass_the_status_filter_to_the_use_case` |
+| `@s3` USER → 403 | `adminLevels.test.ts` -> `should_return_403_when_authenticated_user_is_not_admin` |
+| `@s4` no token → 401 | `adminLevels.test.ts` -> `should_return_401_when_no_token` |
+| `@s5` unknown status → 400 | `adminLevels.test.ts` -> `should_return_400_when_status_is_unknown` |
+
+## Result Obtained
+
+- **Application:** `ListAdminLevelsUseCase` (pure read; maps aggregates → summary incl.
+  `status`); new `LevelRepository.findAll(status?)` port method.
+- **Infrastructure:** `PrismaLevelRepository.findAll` (findMany, optional status filter,
+  `createdAt asc`); `FakeLevelRepository` test helper gains `findAll`.
+- **Framework:** `AdminLevelController.listLevels` (parses/validates `?status` → 400 on
+  unknown) + `createAdminLevelRouter` (`authMiddleware` + `requireAdmin`); wired in
+  `app.ts` (`GET /admin/levels`). Public `GET /levels` unchanged.
+- Separate admin controller/router avoids touching `LevelCatalogController`'s constructor
+  (used across many tests). No new pattern; Controller/Repository are existing patterns.
+
+## Verification
+
+- Focused tests GREEN: `ListAdminLevelsUseCase.test.ts` (3), `adminLevels.test.ts` (5).
+- `npm run verify` GREEN: lint + typecheck + coverage + build.
+- Mutation: scoped Stryker on `ListAdminLevelsUseCase.ts` (in the mutate globs) — score in
+  the PR comment / mutation note.
+
+## Team Modifications Pending Human Review
+
+- Confirm the read use case carries no authorization (route `requireAdmin` is the gate),
+  consistent with the public read use cases. Application + adapter tests are subject to
+  human review.
+
+## Lessons / Limitations
+
+- Stacked on MAZ-195 (requireAdmin); merge PR #69 first, then this PR.
+- OpenAPI docs for `/admin/levels` are intentionally deferred to BE-05 (which documents
+  all `/admin/*` endpoints together) to avoid overlap.
+
+
+---
+
+# AI Usage Log: MAZ-197 (BE-03) GET /admin/users — read-only paginated list (backend)
+
+## Task / Problem
+
+The admin dashboard needs to view platform users. This ticket adds an ADMIN-only,
+read-only, paginated `GET /admin/users` exposing `userId, email, username, role, status,
+createdAt` and **never** `passwordHash`. Milestone **M11 — Admin Dashboard**. Depends on
+MAZ-195 (`requireAdmin`) — stacked branch.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M context).
+
+## Prompt Used
+
+Implement `MAZ-197` following both `AGENTS.md` files, root `MEMORY.md`,
+`Linear_MCP_Guideline.md`, a fresh worktree, AI usage logging, checks, commit/push/PR,
+Linear updates, and a review of affected tickets (uses BE-01's `requireAdmin`; OpenAPI
+docs for `/admin/*` land in BE-05).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/admin-list-users-MAZ-197.spec.md` with the `Clean Architecture contract` + the ISP narrow-port decision. | `specs/admin-list-users-MAZ-197.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin `@s1..@s6`. | `specs/admin-list-users-MAZ-197.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green twice: application use-case test then port + use case + impl; API test then controller + router + wiring. | tests + code below |
+| Judge (`.agents/judge.md`) | Referenced | Applied the checklist (dependency rule inward-only, no `passwordHash` leak, CA contract per layer, `@s`→test map, `npm run verify` green). | this log + spec CA contract |
+| Mutation Tester (`.agents/mutation.md`) | Used | Scoped Stryker on `ListUsersUseCase.ts` → **100%** (page→offset arithmetic mutants killed by the offset test). | scoped Stryker run |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test |
+| --- | --- |
+| `@s1` admin lists users, no passwordHash | `tests/application/identity/ListUsersUseCase.test.ts` -> `should_return_users_without_password_hash`; `tests/api/identity/adminUsers.test.ts` -> `should_return_200_with_users_and_no_password_hash_when_admin` |
+| `@s2` page/limit → offset | `ListUsersUseCase.test.ts` -> `should_convert_page_to_offset_before_querying`; `adminUsers.test.ts` -> `should_apply_page_and_limit_from_query` |
+| `@s3` default pagination | `adminUsers.test.ts` -> `should_default_pagination_when_absent` (+ `should_cap_limit_at_the_maximum`) |
+| `@s4` invalid pagination → 400 | `adminUsers.test.ts` -> `should_return_400_when_page_is_not_a_positive_integer` |
+| `@s5` USER → 403 | `adminUsers.test.ts` -> `should_return_403_when_authenticated_user_is_not_admin` |
+| `@s6` no token → 401 | `adminUsers.test.ts` -> `should_return_401_when_no_token` |
+
+Pagination metadata: `ListUsersUseCase.test.ts` -> `should_return_pagination_metadata`.
+
+## Result Obtained
+
+- **Application:** new narrow `AdminUserRepository` port (`findAll(offset, limit)` →
+  `{ users, total }`) + `ListUsersUseCase` (page→offset; maps to DTO **without**
+  `passwordHash`; returns `{ users, page, limit, total }`).
+- **Infrastructure:** `PrismaUserRepository` now `implements UserRepository,
+  AdminUserRepository` with `findAll` (findMany skip/take + count, `createdAt asc`).
+- **Framework:** `AdminUserController.listUsers` (defaults page=1/limit=20; caps limit at
+  100; non-positive-integer → 400) + `createAdminUserRouter` (`authMiddleware` +
+  `requireAdmin`); wired in `app.ts` (`GET /admin/users`).
+- **ISP decision:** the narrow `AdminUserRepository` avoids adding `findAll` to
+  `UserRepository`, so the ~5 inline `UserRepository` fakes in other identity tests are
+  untouched.
+
+## Verification
+
+- Focused tests GREEN: `ListUsersUseCase.test.ts` (3), `adminUsers.test.ts` (7).
+- `npm run verify` GREEN: lint + typecheck + coverage + build — 86 suites / 564 tests.
+- Mutation: scoped Stryker on `ListUsersUseCase.ts` → **100%**.
+
+## Team Modifications Pending Human Review
+
+- Confirm the read use case carries no authorization (route `requireAdmin` is the gate)
+  and the DTO omits `passwordHash`. Application + adapter tests are subject to human review.
+
+## Lessons / Limitations
+
+- Stacked on MAZ-195 (requireAdmin); merge PR #69 first, then this PR.
+- OpenAPI docs for `/admin/users` are deferred to BE-05.
+- ISP (a narrow read port) was the cleanest way to add a repository method without a
+  cross-test-fake ripple.
+
+
+---
+
+# AI Usage Log: MAZ-198 CORS multi-origin for admin web
+
+## Task / Problem
+
+The admin web dashboard needs browser access to the backend while preserving the existing Expo
+client origin. MAZ-198 changes `CORS_ORIGIN` from a single-origin string into a comma-separated
+allowlist and documents the format.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked to implement Linear ticket `MAZ-198`, following backend/client `AGENTS.md`,
+`MEMORY.md`, `Linear_MCP_Guideline.md`, worktree discipline, AI usage logging, verification,
+commit, push, PR, Linear update, and review of affected tickets. The backend M11 context and
+MAZ-195/196/197 admin tickets were reviewed before implementation. No secrets were included.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Produced the local spec in the same Codex session using the prompt rules; no separate agent session was run. | `specs/admin-cors-multi-origin-MAZ-198.spec.md`, Linear `MAZ-198` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Distilled the approved executable contract with stable `@s1..@s5` tags in the same Codex session; no separate agent session was run. | `specs/admin-cors-multi-origin-MAZ-198.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Followed Red-Green-Refactor manually: wrote failing CORS/environment tests first, then the minimal framework config change, then docs. | `tests/api/cors.test.ts`, `tests/framework/environment.test.ts` |
+| Judge (`.agents/judge.md`) | Referenced | Applied the Clean Architecture contract requirements and manual grep checks; no separate judge verdict was run. | Architecture grep results in this log |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Production change is limited to `src/framework`; mandatory mutation scope is domain/application per `docs/mutation-testing.md`. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+- @s1 -> `should_allow_expo_origin_when_origin_is_configured`
+- @s2 -> `should_allow_admin_web_origin_when_origin_is_configured`
+- @s3 -> `should_not_allow_unknown_origin_when_origin_is_not_configured`
+- @s4 -> `should_not_reject_request_when_origin_header_is_missing`
+- @s5 -> `should_configure_trimmed_non_empty_cors_origins_when_CORS_ORIGIN_contains_commas`
+
+## TDD Evidence
+
+- Red: `npm test -- --runInBand tests/framework/environment.test.ts tests/api/cors.test.ts`
+  failed because the previous implementation returned the entire comma-separated string as
+  `Access-Control-Allow-Origin` and exposed no `corsOrigins` list.
+- Green: `src/framework/config/environment.ts` now parses trimmed non-empty origins and
+  `src/framework/app.ts` passes that list to `cors()`.
+- Refactor/docs: `.env.example`, `README.md`, and `docs/RELEASE.md` document the
+  comma-separated format.
+
+## Result Obtained
+
+- Added `Environment.corsOrigins: string[]`.
+- `CORS_ORIGIN` now accepts exact comma-separated origins such as
+  `http://localhost:8081,http://localhost:5173`.
+- Allowed origins receive their own `Access-Control-Allow-Origin` value.
+- Unknown origins and no-origin requests do not receive a CORS allow header; no-origin health
+  checks still return 200.
+- Added executable contract files for MAZ-198.
+
+## Clean Architecture / DDD Check
+
+- `rg -n "httpStatus|from ['\"]crypto|from ['\"].*shared/errors/AppError" src/domain` -> no matches.
+- `rg -n "from ['\"].*(infrastructure|framework)" src/domain src/application` -> no matches.
+- `rg -n "role !==|role ===|isAdmin|ADMIN" src/framework` -> only pre-existing admin route/docs and `requireAdmin` matches from MAZ-195/196/197.
+- `rg -n "createdAt: Date|updatedAt: Date|submittedAt: Date|completedAt: Date" src/application` -> pre-existing DTO `Date` fields from earlier use cases; MAZ-198 added no DTOs.
+- Layer impact matched the spec: Domain/Application/Infrastructure untouched; Framework config and app wiring changed.
+
+## Verification
+
+- `npm test -- --runInBand tests/framework/environment.test.ts tests/api/cors.test.ts` -> GREEN (2 suites / 5 tests).
+- `npm run verify` -> GREEN (90 suites / 578 tests).
+
+## Team Modifications Pending Human Review
+
+- Confirm the deployed admin web origin before production release and add it to `CORS_ORIGIN`.
+- Human review should confirm that the disallowed-origin behavior should remain "omit CORS header"
+  rather than returning a transport error.
+
+## Lessons / Limitations
+
+- The `cors` package accepts an array allowlist and reflects the matched request origin, which fits
+  the ticket without introducing custom middleware.
+- Mutation was not run because the changed production behavior is framework configuration, outside
+  the mandatory domain/application mutation gate.
+
+
+---
+
+# AI Usage Log: MAZ-199 Admin seed user and OpenAPI docs
+
+## Task / Problem
+
+The backend needs a documented local/dev ADMIN account for the admin dashboard and OpenAPI/README
+documentation for the existing `/admin/*` read endpoints. MAZ-199 adds one non-secret admin seed
+credential, persists the credential role during seed, documents `/admin/levels` and `/admin/users`,
+and proves the contract with tests.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked to implement Linear ticket `MAZ-199`, following backend/client `AGENTS.md`,
+`MEMORY.md`, `Linear_MCP_Guideline.md`, worktree discipline, AI usage logging, verification,
+commit, push, PR, Linear update, and a review of affected tickets. The user approved the generated
+`@s1..@s6` specs before TDD implementation. No secrets were included.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Produced the local spec in the same Codex session using the prompt rules; no separate agent session was run. | `specs/admin-seed-openapi-MAZ-199.spec.md`, Linear `MAZ-199` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Distilled the approved executable contract with stable `@s1..@s6` tags in the same Codex session; no separate agent session was run. | `specs/admin-seed-openapi-MAZ-199.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Followed Red-Green-Refactor manually: wrote failing seed/OpenAPI/README tests first, then the minimal seed/docs changes. | Tests listed in the `@s -> test` map |
+| Judge (`.agents/judge.md`) | Referenced | Applied the Clean Architecture contract requirements and manual grep checks; no separate judge verdict was run. | Architecture grep results in this log |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Production changes are limited to Prisma seed data/script, framework OpenAPI docs, generated OpenAPI JSON, and README. Mandatory mutation scope is domain/application per `docs/mutation-testing.md`; no domain/application production code changed. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+- @s1 -> `should_define_one_active_admin_credential_for_local_admin_access`, `should_use_unique_ids_emails_and_usernames`, `should_mark_every_seed_credential_active`, `should_define_valid_raw_passwords_for_every_demo_user`
+- @s2 -> `should_use_a_bcrypt_cost_of_12_consistent_with_the_app_hasher`, `should_log_in_with_a_cost_12_hash_of_the_documented_password`
+- @s3 -> `should_return_admin_role_when_admin_user_logs_in`
+- @s4 -> `should_document_admin_levels_with_bearer_auth_and_status_filter`
+- @s5 -> `should_document_admin_users_with_bearer_auth_pagination_and_no_password_hash`
+- @s6 -> `should_document_the_local_dev_admin_credential_as_non_secret`, `should_list_the_admin_read_endpoints`
+
+## TDD Evidence
+
+- Red: `npm test -- --runInBand tests/seed/demoCredentials.test.ts tests/application/identity/LoginUseCase.test.ts tests/framework/swagger/openApiSpec.test.ts tests/docs/readmeAdminDocs.test.ts`
+  failed because the seed data had no admin credential, OpenAPI had no `/admin/levels` or
+  `/admin/users` paths, and README did not document the admin credential/endpoints.
+- Green: added the admin seed credential and role/status seed support; documented the two admin
+  read endpoints in `openApiSpec`; updated README and regenerated `docs/openapi.json`.
+- Refactor/docs: no broad refactor. Changes stayed scoped to seed data, OpenAPI docs, README, and
+  contract tests.
+
+## Result Obtained
+
+- Added one documented local/dev admin credential:
+  `admin@arrowmaze.test` / `admin_arrow` / `ArrowDemo!Admin`.
+- Existing demo credentials now carry explicit `role` and `status` seed metadata.
+- `prisma/seed.ts` persists each seed credential's role/status instead of hard-coding all users as
+  `USER`.
+- `POST /auth/login` use-case coverage proves an admin user returns `role: "ADMIN"`.
+- OpenAPI documents `GET /admin/levels` and `GET /admin/users` with `bearerAuth`, query params,
+  success schemas, and error responses.
+- `/admin/users` documentation excludes `passwordHash`.
+- README documents local/dev-only demo credentials and the admin read endpoints.
+
+## Clean Architecture / DDD Check
+
+- `rg -n "httpStatus|from ['\"]crypto|from ['\"].*shared/errors/AppError" src/domain` -> no matches.
+- `rg -n "from ['\"].*(infrastructure|framework)" src/domain src/application` -> no matches.
+- `rg -n "role !==|role ===|isAdmin|ADMIN" src/framework` -> only pre-existing admin route checks and framework OpenAPI/admin docs references.
+- `rg -n "createdAt: Date|updatedAt: Date|submittedAt: Date|completedAt: Date" src/application` -> pre-existing DTO `Date` fields from earlier use cases; MAZ-199 added no DTOs.
+- Layer impact matched the spec: Domain/Application production code untouched; Prisma seed data/script, Framework OpenAPI docs, README, generated OpenAPI JSON, and tests changed.
+
+## Verification
+
+- `npm test -- --runInBand tests/seed/demoCredentials.test.ts tests/application/identity/LoginUseCase.test.ts tests/framework/swagger/openApiSpec.test.ts tests/docs/readmeAdminDocs.test.ts` -> GREEN (4 suites / 24 tests).
+- `npm run export-openapi` -> GREEN; regenerated `docs/openapi.json`.
+- `npm run verify` -> GREEN (91 suites / 585 tests).
+- `npm run db:seed` was not run in this worktree because the new worktree has no `.env`; the seed behavior is covered by focused seed tests and should be exercised by a human in an environment with local database credentials.
+
+## Team Modifications Pending Human Review
+
+- Human review should confirm the documented local/dev admin password remains acceptable for the
+  classroom/demo environment.
+- Human review should run `npm run db:seed` against a local database with `.env` configured before
+  relying on the admin demo credential manually.
+- Domain and application tests remain subject to mandatory human review per `AGENTS.md`.
+
+## Lessons / Limitations
+
+- Keeping role/status in `demoCredentials.ts` makes the seed credential source explicit and avoids
+  splitting identity and role decisions across files.
+- Mutation was not run because no domain/application production code was modified.
+
+
+---
+
+# AI Usage Log: MAZ-200 Archive preserves score history
+
+## Task / Problem
+
+The admin dashboard needs confidence that archiving a published level is a soft state change:
+archived levels disappear from the public catalog, but leaderboard entries and progress history
+for that level remain readable. MAZ-200 closes this backend slice with executable regression
+coverage.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked to implement Linear ticket `MAZ-200`, following backend/client `AGENTS.md`,
+`MEMORY.md`, `Linear_MCP_Guideline.md`, worktree discipline, AI usage logging, verification,
+commit, push, PR, Linear update, and a review of affected tickets. The user approved the generated
+`@s1..@s6` specs before implementation. No secrets were included.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Produced the local spec in the same Codex session using the prompt rules; no separate agent session was run. | `specs/archive-score-preservation-MAZ-200.spec.md`, Linear `MAZ-200` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Distilled the approved executable contract with stable `@s1..@s6` tags in the same Codex session; no separate agent session was run. | `specs/archive-score-preservation-MAZ-200.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Added regression tests for the approved contract. The existing production behavior already satisfied the tests, so no production code was changed. | Tests listed in the `@s -> test` map |
+| Judge (`.agents/judge.md`) | Referenced | Applied the Clean Architecture contract requirements and manual grep checks; no separate judge verdict was run. | Architecture grep results in this log |
+| Mutation Tester (`.agents/mutation.md`) | Not used | MAZ-200 changed tests/specs/logs only. No domain/application production code was modified, so there were no feature lines to mutate under `docs/mutation-testing.md`. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+- @s1 -> `should_archive_published_level_without_leaderboard_or_progress_collaborators`
+- @s2 -> `should_not_return_archived_levels`
+- @s3 -> `should_return_entries_when_level_is_archived`, `should_hide_archived_level_from_public_catalog_but_keep_leaderboard_readable`
+- @s4 -> `should_return_empty_entries_when_archived_level_has_no_leaderboard`
+- @s5 -> `should_restrict_level_history_relations_when_levels_are_archived`
+- @s6 -> `should_hide_archived_level_from_public_catalog_but_keep_leaderboard_readable`
+
+## TDD / Characterization Evidence
+
+- Characterization run:
+  `npm test -- --runInBand tests/application/level-catalog/ArchiveLevelUseCase.test.ts tests/application/leaderboard/GetLeaderboardService.test.ts tests/api/archivePreservation.test.ts tests/infrastructure/database/PrismaArchivePreservation.test.ts`
+  -> GREEN (4 suites / 13 tests).
+- Result: current production behavior already matched the approved MAZ-200 contract.
+- No production code was written; this ticket is a regression/test gate for the existing archive
+  behavior.
+
+## Result Obtained
+
+- Added application regression coverage proving archive saves only the level state and does not
+  require leaderboard/progress collaborators.
+- Added leaderboard use-case coverage proving archived known levels remain readable with entries
+  and return empty entries when no leaderboard exists yet.
+- Added API regression coverage proving public catalog hiding and leaderboard readability can
+  intentionally diverge for the same archived `levelId`.
+- Added Prisma schema regression coverage proving level history relations use `onDelete: Restrict`
+  for `Leaderboard.level` and `CompletedLevel.level`.
+- Added approved MAZ-200 spec and Gherkin contract.
+
+## Clean Architecture / DDD Check
+
+- `rg -n "httpStatus|from ['\"]crypto|from ['\"].*shared/errors/AppError" src/domain` -> no matches.
+- `rg -n "from ['\"].*(infrastructure|framework)" src/domain src/application` -> no matches.
+- `rg -n "role !==|role ===|isAdmin|ADMIN" src/framework` -> only pre-existing admin route checks and framework OpenAPI/admin docs references.
+- `rg -n "createdAt: Date|updatedAt: Date|submittedAt: Date|completedAt: Date" src/application` -> pre-existing DTO `Date` fields from earlier use cases; MAZ-200 added no DTOs.
+- Layer impact matched the spec: production Domain/Application/Infrastructure/Framework code
+  untouched; only tests, specs, and AI usage logs changed.
+
+## Verification
+
+- `npm test -- --runInBand tests/application/level-catalog/ArchiveLevelUseCase.test.ts tests/application/leaderboard/GetLeaderboardService.test.ts tests/api/archivePreservation.test.ts tests/infrastructure/database/PrismaArchivePreservation.test.ts` -> GREEN (4 suites / 13 tests).
+- `npm run verify` -> GREEN (93 suites / 590 tests).
+
+## Team Modifications Pending Human Review
+
+- Human review should confirm that a schema-level regression test is acceptable for preserving the
+  "archive never deletes history" guarantee without requiring a live database smoke test.
+- Domain and application tests remain subject to mandatory human review per `AGENTS.md`.
+
+## Lessons / Limitations
+
+- The existing implementation already uses status-based archive plus restrictive level relations,
+  so the correct MAZ-200 change is regression coverage rather than production edits.
+- A live DB smoke test was not run; the guarantee is covered by use-case/API characterization tests
+  and a Prisma schema relation test.
 
 
 <!-- AI_LOG_ENTRIES_END -->

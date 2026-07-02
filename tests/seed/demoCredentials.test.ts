@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import { DEMO_USER_CREDENTIALS, DEMO_PASSWORD_BCRYPT_COST } from "../../prisma/seed-data/demoCredentials.js";
 import { RawPassword } from "../../src/domain/identity/value-objects/RawPassword.js";
 import { PasswordHash } from "../../src/domain/identity/value-objects/PasswordHash.js";
+import { UserRole } from "../../src/domain/identity/enums/UserRole.js";
+import { UserStatus } from "../../src/domain/identity/enums/UserStatus.js";
 import { BcryptPasswordHasher } from "../../src/infrastructure/identity/BcryptPasswordHasher.js";
 
 // Subject to human review — seed-credential contract test
@@ -18,6 +20,17 @@ describe("demo seed credentials", () => {
     }
   });
 
+  it("should_define_one_active_admin_credential_for_local_admin_access", () => {
+    const admin = DEMO_USER_CREDENTIALS.find((credential) => credential.email === "admin@arrowmaze.test");
+
+    expect(admin).toMatchObject({
+      username: "admin_arrow",
+      password: "ArrowDemo!Admin",
+      role: UserRole.ADMIN,
+      status: UserStatus.ACTIVE,
+    });
+  });
+
   it("should_use_unique_ids_emails_and_usernames", () => {
     const ids = DEMO_USER_CREDENTIALS.map((c) => c.id);
     const emails = DEMO_USER_CREDENTIALS.map((c) => c.email);
@@ -28,14 +41,10 @@ describe("demo seed credentials", () => {
     expect(new Set(usernames).size).toBe(usernames.length);
   });
 
-  it("should_define_one_admin_debug_user", () => {
-    const admins = DEMO_USER_CREDENTIALS.filter((credential) => credential.role === "ADMIN");
-
-    expect(admins).toHaveLength(1);
-    expect(admins[0]).toMatchObject({
-      email: "admin@arrowmaze.test",
-      username: "admin_debug",
-    });
+  it("should_mark_every_seed_credential_active", () => {
+    for (const credential of DEMO_USER_CREDENTIALS) {
+      expect(credential.status).toBe(UserStatus.ACTIVE);
+    }
   });
 
   it("should_log_in_with_a_cost_12_hash_of_the_documented_password", async () => {

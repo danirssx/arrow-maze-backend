@@ -96,10 +96,16 @@ Copy `.env.example` to `.env` and fill in your values (never commit `.env`):
 DATABASE_URL=postgresql://user:pass@localhost:5432/arrow_maze
 JWT_SECRET=your-secret-here
 PORT=3000
+CORS_ORIGIN=http://localhost:8081,http://localhost:5173
 # Optional auth token lifetimes:
 JWT_ACCESS_EXPIRES_IN=15m
 REFRESH_TOKEN_TTL_DAYS=30
 ```
+
+`CORS_ORIGIN` accepts a comma-separated list of exact browser origins. Keep the
+Expo development origin (`http://localhost:8081`) and add the admin web origin
+(`http://localhost:5173` locally, or the deployed admin URL in production).
+Origins not listed do not receive `Access-Control-Allow-Origin`.
 
 Auth issues a short-lived **access token** plus a long-lived, rotating, revocable
 **refresh token** stored only as a hash. `POST /auth/refresh` exchanges a refresh
@@ -144,17 +150,18 @@ fresh database only needs `npm run db:setup` (`db:migrate` then `db:seed`).
 
 #### Demo credentials (local / dev only)
 
-`npm run db:seed` creates four demo users so the mandatory-login flow can be
+`npm run db:seed` creates local/dev demo users so the mandatory-login and admin
+dashboard flows can be
 exercised on a seeded database. Their passwords are **documented, non-secret
 local/dev values** (defined in `prisma/seed-data/demoCredentials.ts`) hashed with
 bcrypt cost 12. **Never reuse them in production.**
 
-| Email | Username | Password |
-| --- | --- | --- |
-| `admin@arrowmaze.test` | `admin_debug` | `ArrowAdmin!Debug` |
-| `demo@arrowmaze.test` | `demo_player` | `ArrowDemo!Player` |
-| `mika@arrowmaze.test` | `mika_arrows` | `ArrowDemo!Mika` |
-| `noah@arrowmaze.test` | `noah_escape` | `ArrowDemo!Noah` |
+| Email | Username | Role | Password |
+| --- | --- | --- | --- |
+| `demo@arrowmaze.test` | `demo_player` | `USER` | `ArrowDemo!Player` |
+| `mika@arrowmaze.test` | `mika_arrows` | `USER` | `ArrowDemo!Mika` |
+| `noah@arrowmaze.test` | `noah_escape` | `USER` | `ArrowDemo!Noah` |
+| `admin@arrowmaze.test` | `admin_arrow` | `ADMIN` | `ArrowDemo!Admin` |
 
 Log in via `POST /auth/login` with `{ "email": "demo@arrowmaze.test", "rawPassword":
 "ArrowDemo!Player" }`, then call authenticated endpoints (e.g. `GET /users/me`,
@@ -212,6 +219,8 @@ POST /auth/login
 POST /auth/refresh
 POST /auth/logout
 GET  /users/me
+GET  /admin/levels
+GET  /admin/users
 POST /leaderboard/scores
 GET  /leaderboard/:levelId
 GET  /progress/me

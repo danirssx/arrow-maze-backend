@@ -45,7 +45,7 @@ const DEMO_PROGRESS = {
   ],
 };
 
-const ADMIN_USER_ID = "660e8400-e29b-41d4-a716-446655440000";
+const ADMIN_USER_ID = "660e8400-e29b-41d4-a716-446655440004";
 const ADMIN_PROGRESS_ID = "770e8400-e29b-41d4-a716-446655440000";
 
 function adminCompletedLevelId(index: number): string {
@@ -128,7 +128,7 @@ async function main(): Promise<void> {
         username: user.username,
         passwordHash: await bcrypt.hash(user.password, DEMO_PASSWORD_BCRYPT_COST),
         role: user.role,
-        status: "ACTIVE",
+        status: user.status,
         updatedAt: now,
       };
       await prisma.user.upsert({

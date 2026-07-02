@@ -16,6 +16,7 @@ import { TimeSeconds } from '../../../src/domain/leaderboard/value-objects/TimeS
 import { UsernameSnapshot } from '../../../src/domain/leaderboard/value-objects/UsernameSnapshot.js';
 import { LevelId } from '../../../src/domain/shared/LevelId.js';
 import { UserId } from '../../../src/domain/shared/UserId.js';
+import { makeArchivedLevel } from '../level-catalog/helpers/levelFixtures.js';
 
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const LEVEL_1 = '550e8400-e29b-41d4-a716-446655440010';
@@ -83,8 +84,27 @@ describe('GetLeaderboardService', () => {
       expect(result.entries[0]?.score).toBe(100);
     });
 
+    it('should_return_entries_when_level_is_archived', async () => {
+      const leaderboard = makeLeaderboardWithEntry();
+      const service = new GetLeaderboardService(makeRepo(leaderboard), makeLevelRepo(makeArchivedLevel(LEVEL_1)));
+
+      const result = await service.execute({ levelId: LEVEL_1 });
+
+      expect(result.levelId).toBe(LEVEL_1);
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]?.usernameSnapshot).toBe('Player1');
+    });
+
     it('should_return_empty_entries_when_known_level_has_no_leaderboard', async () => {
       const service = new GetLeaderboardService(makeRepo(null), makeLevelRepo({ id: LevelId.create(LEVEL_99) } as Level));
+
+      const result = await service.execute({ levelId: LEVEL_99 });
+
+      expect(result).toEqual({ levelId: LEVEL_99, entries: [] });
+    });
+
+    it('should_return_empty_entries_when_archived_level_has_no_leaderboard', async () => {
+      const service = new GetLeaderboardService(makeRepo(null), makeLevelRepo(makeArchivedLevel(LEVEL_99)));
 
       const result = await service.execute({ levelId: LEVEL_99 });
 

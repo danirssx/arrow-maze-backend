@@ -49,6 +49,16 @@ const makeSuspendedUser = () =>
     new Date()
   );
 
+const makeActiveAdminUser = () =>
+  UserFactory.create(
+    UserId.create(FIXED_ID),
+    Email.create("admin@arrowmaze.test"),
+    Username.create("admin_arrow"),
+    PasswordHash.fromHash("$2b$12$hashedvalue"),
+    FIXED_NOW,
+    UserRole.ADMIN,
+  );
+
 class FakeUserRepository implements UserRepository {
   constructor(private readonly user: User | null = null) {}
   async save(_user: User): Promise<void> {}
@@ -120,6 +130,16 @@ describe("LoginUseCase", () => {
     expect(result.userId).toBeTruthy();
     expect(result.username).toBe("alice");
     expect(result.role).toBe(UserRole.USER);
+  });
+
+  it("should_return_admin_role_when_admin_user_logs_in", async () => {
+    const result = await makeUseCase(
+      new FakeUserRepository(makeActiveAdminUser()),
+      new FakePasswordHasher(true),
+    ).execute({ email: "admin@arrowmaze.test", rawPassword: "ArrowDemo!Admin" });
+
+    expect(result.username).toBe("admin_arrow");
+    expect(result.role).toBe(UserRole.ADMIN);
   });
 
   it("should_return_a_refresh_token_when_login_succeeds", async () => {

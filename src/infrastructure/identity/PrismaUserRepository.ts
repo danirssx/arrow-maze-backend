@@ -1,6 +1,7 @@
 // Pattern: Repository, Adapter
 import type { PrismaClient } from '@prisma/client';
 import type { UserRepository } from '../../application/identity/ports/UserRepository.js';
+import type { AdminUserPage, AdminUserRepository } from '../../application/identity/ports/AdminUserRepository.js';
 import { User } from '../../domain/identity/User.js';
 import { UserRole } from '../../domain/identity/enums/UserRole.js';
 import { UserStatus } from '../../domain/identity/enums/UserStatus.js';
@@ -38,8 +39,24 @@ function recordToUser(record: UserRecord): User {
   );
 }
 
-export class PrismaUserRepository implements UserRepository {
+export class PrismaUserRepository implements UserRepository, AdminUserRepository {
   constructor(private readonly prisma: PrismaClient) {}
+
+  async findAll(offset: number, limit: number): Promise<AdminUserPage> {
+    try {
+      const [records, total] = await Promise.all([
+        getClient(this.prisma).user.findMany({
+          skip: offset,
+          take: limit,
+          orderBy: { createdAt: 'asc' },
+        }),
+        getClient(this.prisma).user.count(),
+      ]);
+      return { users: records.map((record) => recordToUser(record)), total };
+    } catch (err) {
+      throw new InfrastructureError('Failed to list users', { cause: String(err) });
+    }
+  }
 
   async save(user: User): Promise<void> {
     try {
