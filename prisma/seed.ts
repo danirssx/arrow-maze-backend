@@ -45,6 +45,13 @@ const DEMO_PROGRESS = {
   ],
 };
 
+const ADMIN_USER_ID = "660e8400-e29b-41d4-a716-446655440000";
+const ADMIN_PROGRESS_ID = "770e8400-e29b-41d4-a716-446655440000";
+
+function adminCompletedLevelId(index: number): string {
+  return `bb0e8400-e29b-41d4-a716-44665544${String(index + 1).padStart(4, "0")}`;
+}
+
 const DEMO_LEADERBOARDS = [
   {
     id: "990e8400-e29b-41d4-a716-446655440010",
@@ -120,7 +127,7 @@ async function main(): Promise<void> {
         email: user.email,
         username: user.username,
         passwordHash: await bcrypt.hash(user.password, DEMO_PASSWORD_BCRYPT_COST),
-        role: "USER",
+        role: user.role,
         status: "ACTIVE",
         updatedAt: now,
       };
@@ -128,6 +135,30 @@ async function main(): Promise<void> {
         where: { id: user.id },
         create: { id: user.id, createdAt: daysAgo(user.createdDaysAgo), ...data },
         update: data,
+      });
+    }
+
+    await prisma.playerProgress.upsert({
+      where: { id: ADMIN_PROGRESS_ID },
+      create: { id: ADMIN_PROGRESS_ID, userId: ADMIN_USER_ID, version: catalogLevels.length, updatedAt: now },
+      update: { version: catalogLevels.length, updatedAt: now },
+    });
+
+    for (const [index, level] of catalogLevels.entries()) {
+      const completedAt = new Date(ORDER_EPOCH_MS + level.order * 1000);
+      await prisma.completedLevel.upsert({
+        where: { progressId_levelId: { progressId: ADMIN_PROGRESS_ID, levelId: level.id } },
+        create: {
+          id: adminCompletedLevelId(index),
+          progressId: ADMIN_PROGRESS_ID,
+          levelId: level.id,
+          bestScore: 0,
+          bestTimeSeconds: 1,
+          bestMovesCount: 0,
+          completedAt,
+          updatedAt: now,
+        },
+        update: { completedAt, updatedAt: now },
       });
     }
 

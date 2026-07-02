@@ -28,6 +28,16 @@ describe("demo seed credentials", () => {
     expect(new Set(usernames).size).toBe(usernames.length);
   });
 
+  it("should_define_one_admin_debug_user", () => {
+    const admins = DEMO_USER_CREDENTIALS.filter((credential) => credential.role === "ADMIN");
+
+    expect(admins).toHaveLength(1);
+    expect(admins[0]).toMatchObject({
+      email: "admin@arrowmaze.test",
+      username: "admin_debug",
+    });
+  });
+
   it("should_log_in_with_a_cost_12_hash_of_the_documented_password", async () => {
     const hasher = new BcryptPasswordHasher(DEMO_PASSWORD_BCRYPT_COST);
 

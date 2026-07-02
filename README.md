@@ -144,13 +144,14 @@ fresh database only needs `npm run db:setup` (`db:migrate` then `db:seed`).
 
 #### Demo credentials (local / dev only)
 
-`npm run db:seed` creates three demo users so the mandatory-login flow can be
+`npm run db:seed` creates four demo users so the mandatory-login flow can be
 exercised on a seeded database. Their passwords are **documented, non-secret
 local/dev values** (defined in `prisma/seed-data/demoCredentials.ts`) hashed with
 bcrypt cost 12. **Never reuse them in production.**
 
 | Email | Username | Password |
 | --- | --- | --- |
+| `admin@arrowmaze.test` | `admin_debug` | `ArrowAdmin!Debug` |
 | `demo@arrowmaze.test` | `demo_player` | `ArrowDemo!Player` |
 | `mika@arrowmaze.test` | `mika_arrows` | `ArrowDemo!Mika` |
 | `noah@arrowmaze.test` | `noah_escape` | `ArrowDemo!Noah` |
