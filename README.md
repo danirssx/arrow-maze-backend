@@ -150,16 +150,18 @@ fresh database only needs `npm run db:setup` (`db:migrate` then `db:seed`).
 
 #### Demo credentials (local / dev only)
 
-`npm run db:seed` creates three demo users so the mandatory-login flow can be
+`npm run db:seed` creates local/dev demo users so the mandatory-login and admin
+dashboard flows can be
 exercised on a seeded database. Their passwords are **documented, non-secret
 local/dev values** (defined in `prisma/seed-data/demoCredentials.ts`) hashed with
 bcrypt cost 12. **Never reuse them in production.**
 
-| Email | Username | Password |
-| --- | --- | --- |
-| `demo@arrowmaze.test` | `demo_player` | `ArrowDemo!Player` |
-| `mika@arrowmaze.test` | `mika_arrows` | `ArrowDemo!Mika` |
-| `noah@arrowmaze.test` | `noah_escape` | `ArrowDemo!Noah` |
+| Email | Username | Role | Password |
+| --- | --- | --- | --- |
+| `demo@arrowmaze.test` | `demo_player` | `USER` | `ArrowDemo!Player` |
+| `mika@arrowmaze.test` | `mika_arrows` | `USER` | `ArrowDemo!Mika` |
+| `noah@arrowmaze.test` | `noah_escape` | `USER` | `ArrowDemo!Noah` |
+| `admin@arrowmaze.test` | `admin_arrow` | `ADMIN` | `ArrowDemo!Admin` |
 
 Log in via `POST /auth/login` with `{ "email": "demo@arrowmaze.test", "rawPassword":
 "ArrowDemo!Player" }`, then call authenticated endpoints (e.g. `GET /users/me`,
@@ -217,6 +219,8 @@ POST /auth/login
 POST /auth/refresh
 POST /auth/logout
 GET  /users/me
+GET  /admin/levels
+GET  /admin/users
 POST /leaderboard/scores
 GET  /leaderboard/:levelId
 GET  /progress/me

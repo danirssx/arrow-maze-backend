@@ -4,8 +4,14 @@ import { openApiSpec } from '../../../src/framework/swagger/openApiSpec.js';
 
 type SchemaShape = { properties?: Record<string, unknown> };
 type RequiredSchemaShape = SchemaShape & { required?: string[] };
+type OperationShape = {
+  security?: unknown;
+  parameters?: Array<{ name?: string }>;
+  responses?: Record<string, unknown>;
+};
 
 const schemas = openApiSpec.components.schemas as unknown as Record<string, SchemaShape>;
+const paths = openApiSpec.paths as unknown as Record<string, { get?: OperationShape }>;
 
 describe('openApiSpec board shape', () => {
   it('should_define_a_board_shape_input_schema', () => {
@@ -37,5 +43,29 @@ describe('openApiSpec leaderboard submit contract', () => {
     expect(submitScore.properties?.['entryId']).toBeUndefined();
     expect(submitScore.properties?.['userId']).toBeUndefined();
     expect(submitScore.properties?.['usernameSnapshot']).toBeUndefined();
+  });
+});
+
+describe('openApiSpec admin read endpoints', () => {
+  it('should_document_admin_levels_with_bearer_auth_and_status_filter', () => {
+    const operation = paths['/admin/levels']?.get;
+
+    expect(operation).toBeDefined();
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.parameters?.some((parameter) => parameter.name === 'status')).toBe(true);
+    expect(operation?.responses?.['200']).toBeDefined();
+    expect(schemas['AdminLevelSummary']?.properties?.['status']).toBeDefined();
+  });
+
+  it('should_document_admin_users_with_bearer_auth_pagination_and_no_password_hash', () => {
+    const operation = paths['/admin/users']?.get;
+
+    expect(operation).toBeDefined();
+    expect(operation?.security).toEqual([{ bearerAuth: [] }]);
+    expect(operation?.parameters?.some((parameter) => parameter.name === 'page')).toBe(true);
+    expect(operation?.parameters?.some((parameter) => parameter.name === 'limit')).toBe(true);
+    expect(operation?.responses?.['200']).toBeDefined();
+    expect(JSON.stringify(operation)).not.toContain('passwordHash');
+    expect(JSON.stringify(schemas['AdminUserListResponse'])).not.toContain('passwordHash');
   });
 });

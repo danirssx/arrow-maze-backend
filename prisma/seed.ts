@@ -120,8 +120,8 @@ async function main(): Promise<void> {
         email: user.email,
         username: user.username,
         passwordHash: await bcrypt.hash(user.password, DEMO_PASSWORD_BCRYPT_COST),
-        role: "USER",
-        status: "ACTIVE",
+        role: user.role,
+        status: user.status,
         updatedAt: now,
       };
       await prisma.user.upsert({

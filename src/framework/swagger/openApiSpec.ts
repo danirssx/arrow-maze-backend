@@ -829,6 +829,150 @@ export const openApiSpec = {
         },
       },
     },
+    '/admin/levels': {
+      get: {
+        summary: 'List all levels for admin',
+        tags: ['Admin'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'status',
+            in: 'query',
+            required: false,
+            schema: { type: 'string', enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED'] },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Admin level list',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/AdminLevelsResponse' },
+                example: {
+                  status: 'success',
+                  data: {
+                    levels: [
+                      {
+                        levelId: '550e8400-e29b-41d4-a716-446655440020',
+                        name: 'Corridor',
+                        difficulty: 'EASY',
+                        status: 'DRAFT',
+                        arrowCount: 2,
+                        attempts: 5,
+                        createdAt: '2026-06-18T00:00:00Z',
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Unknown status filter',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'BAD_REQUEST', message: 'Unknown status filter: NONSENSE' } },
+              },
+            },
+          },
+          '401': {
+            description: 'Unauthorized',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } },
+              },
+            },
+          },
+          '403': {
+            description: 'Admin access required',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/admin/users': {
+      get: {
+        summary: 'List users for admin',
+        tags: ['Admin'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'page',
+            in: 'query',
+            required: false,
+            schema: { type: 'integer', minimum: 1, default: 1 },
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            required: false,
+            schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Admin user list',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/AdminUserListResponse' },
+                example: {
+                  status: 'success',
+                  data: {
+                    users: [
+                      {
+                        userId: '660e8400-e29b-41d4-a716-446655440001',
+                        email: 'demo@arrowmaze.test',
+                        username: 'demo_player',
+                        role: 'USER',
+                        status: 'ACTIVE',
+                        createdAt: '2026-06-18T00:00:00Z',
+                      },
+                    ],
+                    page: 1,
+                    limit: 20,
+                    total: 1,
+                  },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid pagination query',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'BAD_REQUEST', message: 'page must be a positive integer' } },
+              },
+            },
+          },
+          '401': {
+            description: 'Unauthorized',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } },
+              },
+            },
+          },
+          '403': {
+            description: 'Admin access required',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+              },
+            },
+          },
+        },
+      },
+    },
     '/leaderboard/{levelId}': {
       get: {
         summary: 'Get leaderboard for a level',
@@ -1155,6 +1299,20 @@ export const openApiSpec = {
           createdAt: { type: 'string', format: 'date-time' },
         },
       },
+      AdminLevelSummary: {
+        type: 'object',
+        required: ['levelId', 'name', 'difficulty', 'status', 'arrowCount', 'attempts', 'createdAt'],
+        properties: {
+          levelId: { type: 'string', format: 'uuid' },
+          name: { type: 'string' },
+          difficulty: { type: 'string', enum: ['EASY', 'MEDIUM', 'HARD'] },
+          status: { type: 'string', enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED'] },
+          arrowCount: { type: 'integer', minimum: 1 },
+          attempts: { type: 'integer', minimum: 1 },
+          timeLimitSeconds: { type: 'integer', minimum: 1, nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
       LevelsListResponse: {
         type: 'object',
         required: ['status', 'data'],
@@ -1164,6 +1322,47 @@ export const openApiSpec = {
             type: 'object',
             required: ['levels'],
             properties: { levels: { type: 'array', items: { $ref: '#/components/schemas/LevelSummary' } } },
+          },
+        },
+      },
+      AdminLevelsResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: {
+            type: 'object',
+            required: ['levels'],
+            properties: { levels: { type: 'array', items: { $ref: '#/components/schemas/AdminLevelSummary' } } },
+          },
+        },
+      },
+      AdminUserSummary: {
+        type: 'object',
+        required: ['userId', 'email', 'username', 'role', 'status', 'createdAt'],
+        properties: {
+          userId: { type: 'string', format: 'uuid' },
+          email: { type: 'string', format: 'email' },
+          username: { type: 'string' },
+          role: { type: 'string', enum: ['USER', 'ADMIN'] },
+          status: { type: 'string', enum: ['ACTIVE', 'SUSPENDED'] },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      AdminUserListResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: {
+            type: 'object',
+            required: ['users', 'page', 'limit', 'total'],
+            properties: {
+              users: { type: 'array', items: { $ref: '#/components/schemas/AdminUserSummary' } },
+              page: { type: 'integer', minimum: 1 },
+              limit: { type: 'integer', minimum: 1, maximum: 100 },
+              total: { type: 'integer', minimum: 0 },
+            },
           },
         },
       },
