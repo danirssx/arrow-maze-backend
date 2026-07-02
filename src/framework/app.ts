@@ -216,7 +216,7 @@ export function createApp() {
   const app = express();
 
   app.use(helmet());
-  app.use(cors({ origin: environment.corsOrigin }));
+  app.use(cors({ origin: environment.corsOrigins }));
   app.use(express.json());
   app.use(createHealthRouter());
   app.use(createIdentityRouter(identityController));
