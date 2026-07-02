@@ -32,6 +32,18 @@ export class PrismaLevelRepository implements LevelRepository {
     }
   }
 
+  async findAll(status?: LevelStatus): Promise<Level[]> {
+    try {
+      const records = await getClient(this.prisma).level.findMany({
+        where: status === undefined ? {} : { status },
+        orderBy: { createdAt: 'asc' },
+      });
+      return records.map((record) => recordToLevel(record));
+    } catch (err) {
+      throw new InfrastructureError('Failed to find levels', { cause: String(err) });
+    }
+  }
+
   async save(level: Level): Promise<void> {
     try {
       const arrows = arrowsToRecord(level) as unknown as Prisma.InputJsonValue;
