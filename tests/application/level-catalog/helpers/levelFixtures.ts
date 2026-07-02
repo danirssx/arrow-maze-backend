@@ -11,6 +11,7 @@ import { LevelId } from "../../../../src/domain/shared/LevelId.js";
 import { LevelName } from "../../../../src/domain/level-catalog/value-objects/LevelName";
 import { LevelVersion } from "../../../../src/domain/level-catalog/value-objects/LevelVersion";
 import { Position } from "../../../../src/domain/level-catalog/value-objects/Position";
+import { TimeLimit } from "../../../../src/domain/level-catalog/value-objects/TimeLimit";
 import type { LevelRepository } from "../../../../src/application/level-catalog/ports/LevelRepository";
 
 export const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
@@ -45,6 +46,19 @@ export function makeArchivedLevel(id = VALID_UUID): Level {
   const level = makePublishedLevel(id);
   level.archive(FIXED_LEVEL_NOW);
   return level;
+}
+
+export function makeTimedDraftLevel(id = VALID_UUID, seconds = 60): Level {
+  return Level.draft(
+    LevelId.create(id),
+    LevelName.create("Timed Level"),
+    LevelDescription.create("A timed level"),
+    makeSolvableDefinition(),
+    Difficulty.EASY,
+    LevelVersion.initial(),
+    FIXED_LEVEL_NOW,
+    TimeLimit.create(seconds)
+  );
 }
 
 /** A 2x2 CELL_MASK that contains the single 2-cell arrow used in shaped fixtures. */
@@ -107,5 +121,10 @@ export class FakeLevelRepository implements LevelRepository {
     return [...this.store.values()].filter(
       (l) => l.status === LevelStatus.PUBLISHED
     );
+  }
+
+  async findAll(status?: LevelStatus): Promise<Level[]> {
+    const all = [...this.store.values()];
+    return status === undefined ? all : all.filter((l) => l.status === status);
   }
 }

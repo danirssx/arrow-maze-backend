@@ -4594,6 +4594,101 @@ Why (vs. the alternative):
 
 The decision is recorded in code (`QA_PROGRESSION_POLICY = "normal-progression"`), the
 README runbook, and this log; the human ratifies it at the PR/Linear review gate.
+# AI Usage Log: MAZ-195 (BE-01) requireAdmin route-level middleware (backend)
+
+## Task / Problem
+
+The upcoming admin dashboard needs `/admin/*` endpoints gated to ADMIN users. This
+ticket adds the coarse, transport-level `requireAdmin` Express middleware (runs after
+`authMiddleware`): anonymous → 401, authenticated non-ADMIN → 403, ADMIN → passes.
+First ticket of milestone **M11 — Admin Dashboard**.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M context).
+
+## Prompt Used
+
+The user asked to implement `MAZ-195` following both repository `AGENTS.md` files, root
+`MEMORY.md`, `Linear_MCP_Guideline.md`, a fresh worktree, AI usage logging, checks,
+commit/push/PR, Linear updates, and a review of affected tickets (this middleware is
+consumed by BE-02/BE-03; per-action authorization `assertAdminActor` from MAZ-177 stays
+unchanged).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/admin-authorization-middleware-MAZ-195.spec.md` with the `Clean Architecture contract` (framework-only impact) + the transport-vs-application authorization decision. No separate agent session. | `specs/admin-authorization-middleware-MAZ-195.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin `@s1..@s4`. No separate planner session. | `specs/admin-authorization-middleware-MAZ-195.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green: wrote the supertest integration + unit tests first, then the minimal middleware. | `tests/api/requireAdmin.test.ts`; `src/framework/middleware/requireAdmin.ts` |
+| Judge (`.agents/judge.md`) | Referenced | Applied the judge checklist while writing (dependency rule inward-only, Clean Architecture contract declared per layer, `@s`→test map, `npm run verify` green). No separate judge session. | this log + spec CA contract |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Framework-only change; `src/framework` is outside Stryker's `mutate` globs (`src/domain/**` + `src/application/**` only), so there is no mutation gate for this middleware. | `stryker.conf.json` mutate globs |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test |
+| --- | --- |
+| `@s1` no token → 401 | `tests/api/requireAdmin.test.ts` -> `should_return_401_when_no_token` |
+| `@s2` USER → 403 (FORBIDDEN) | `should_return_403_when_authenticated_user_is_not_admin` |
+| `@s3` ADMIN → handler runs (200) | `should_pass_to_handler_when_authenticated_user_is_admin` |
+| `@s4` no authenticated user → UnauthorizedError (401) | `should_forward_unauthorized_when_request_has_no_authenticated_user` |
+
+## Result Obtained
+
+- New `src/framework/middleware/requireAdmin.ts`: reads `req.user` (set by
+  `authMiddleware`), forwards `UnauthorizedError` (401) if absent, `ForbiddenError`
+  (403) if `role !== UserRole.ADMIN`, else `next()`. Reuses the existing
+  `UnauthorizedError`/`ForbiddenError` and the domain `UserRole` enum (no magic string).
+- **Framework-only** change: domain/application/infrastructure untouched; the
+  per-action `assertAdminActor` (MAZ-177) is unchanged. No route wired yet — BE-02/BE-03
+  mount it on the real `/admin/*` routes.
+- No new pattern/entity/service; consistent with `authMiddleware`.
+
+## Verification
+
+- `npm ci` GREEN.
+- Focused tests GREEN: `tests/api/requireAdmin.test.ts` (4 tests).
+- `npm run verify` GREEN: lint + typecheck + coverage + build — 84 suites / 554 tests.
+- Mutation: N/A — `src/framework` is outside Stryker's `mutate` globs (no mutation gate).
+
+## Team Modifications Pending Human Review
+
+- Confirm the coarse route gate belongs in `framework` (transport authz) while
+  fine-grained authorization stays in the application use cases. Adapter/API tests are
+  subject to human review.
+
+## Lessons / Limitations
+
+- Under the backend ESM jest runner, `jest` must be imported from `@jest/globals` for
+  `jest.fn()` (globals `describe/it/expect` are available; `jest` is not).
+- No `/admin/*` route exists yet, so the guard is proven via a minimal in-test app
+  (`authMiddleware` + `requireAdmin` + dummy handler) plus a unit test for the defensive
+  no-user path.
+
+
+---
+
+# AI Usage Log: MAZ-196 (BE-02) GET /admin/levels — list all levels with status (backend)
+
+## Task / Problem
+
+The admin dashboard must see every level, including DRAFT and ARCHIVED, which the
+public `GET /levels` (published only) never returns. This ticket adds an ADMIN-only
+`GET /admin/levels` that lists all levels with their `status`, optionally filtered by
+`?status=`. Milestone **M11 — Admin Dashboard**. Depends on MAZ-195 (`requireAdmin`) —
+stacked branch.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M context).
+
+## Prompt Used
+
+Implement `MAZ-196` following both `AGENTS.md` files, root `MEMORY.md`,
+`Linear_MCP_Guideline.md`, a fresh worktree, AI usage logging, checks, commit/push/PR,
+Linear updates, and a review of affected tickets (uses BE-01's `requireAdmin`; public
+`GET /levels` unchanged; OpenAPI docs land in BE-05).
 
 ## Agent Roles Used
 
@@ -4640,6 +4735,52 @@ README runbook, and this log; the human ratifies it at the PR/Linear review gate
 - No `src/` production behaviour changed; this is seed data + docs + tests.
 - The QA account exercises the full catalog by playing levels in order; a fresh
   `npm run db:setup` is required before the documented login works.
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/admin-list-levels-MAZ-196.spec.md` with the `Clean Architecture contract` (impact per layer) + the separate-controller decision. | `specs/admin-list-levels-MAZ-196.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin `@s1..@s5`. | `specs/admin-list-levels-MAZ-196.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green twice: application use-case test then use case + port + impls; API test then controller + router + wiring. | tests + code below |
+| Judge (`.agents/judge.md`) | Referenced | Applied the checklist (dependency rule inward-only, CA contract per layer, `@s`→test map, `npm run verify` green). | this log + spec CA contract |
+| Mutation Tester (`.agents/mutation.md`) | Used | Scoped Stryker on `ListAdminLevelsUseCase.ts`: first run 75% (a `timeLimitSeconds` ConditionalExpression survived) → added a timed-level test → **100%**. | scoped Stryker run |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test |
+| --- | --- |
+| `@s1` admin lists all levels with status | `tests/application/level-catalog/ListAdminLevelsUseCase.test.ts` -> `should_return_all_levels_with_their_status_when_no_filter` + `should_expose_summary_fields_for_each_level`; `tests/api/level-catalog/adminLevels.test.ts` -> `should_return_200_with_levels_including_status_when_admin` |
+| `@s2` filter by status | `ListAdminLevelsUseCase.test.ts` -> `should_filter_by_status_when_a_status_is_given`; `adminLevels.test.ts` -> `should_pass_the_status_filter_to_the_use_case` |
+| `@s3` USER → 403 | `adminLevels.test.ts` -> `should_return_403_when_authenticated_user_is_not_admin` |
+| `@s4` no token → 401 | `adminLevels.test.ts` -> `should_return_401_when_no_token` |
+| `@s5` unknown status → 400 | `adminLevels.test.ts` -> `should_return_400_when_status_is_unknown` |
+
+## Result Obtained
+
+- **Application:** `ListAdminLevelsUseCase` (pure read; maps aggregates → summary incl.
+  `status`); new `LevelRepository.findAll(status?)` port method.
+- **Infrastructure:** `PrismaLevelRepository.findAll` (findMany, optional status filter,
+  `createdAt asc`); `FakeLevelRepository` test helper gains `findAll`.
+- **Framework:** `AdminLevelController.listLevels` (parses/validates `?status` → 400 on
+  unknown) + `createAdminLevelRouter` (`authMiddleware` + `requireAdmin`); wired in
+  `app.ts` (`GET /admin/levels`). Public `GET /levels` unchanged.
+- Separate admin controller/router avoids touching `LevelCatalogController`'s constructor
+  (used across many tests). No new pattern; Controller/Repository are existing patterns.
+
+## Verification
+
+- Focused tests GREEN: `ListAdminLevelsUseCase.test.ts` (3), `adminLevels.test.ts` (5).
+- `npm run verify` GREEN: lint + typecheck + coverage + build.
+- Mutation: scoped Stryker on `ListAdminLevelsUseCase.ts` (in the mutate globs) — score in
+  the PR comment / mutation note.
+
+## Team Modifications Pending Human Review
+
+- Confirm the read use case carries no authorization (route `requireAdmin` is the gate),
+  consistent with the public read use cases. Application + adapter tests are subject to
+  human review.
+
+## Lessons / Limitations
+
+- Stacked on MAZ-195 (requireAdmin); merge PR #69 first, then this PR.
+- OpenAPI docs for `/admin/levels` are intentionally deferred to BE-05 (which documents
+  all `/admin/*` endpoints together) to avoid overlap.
 
 
 <!-- AI_LOG_ENTRIES_END -->
