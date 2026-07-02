@@ -20,6 +20,7 @@ import { CreateLevelUseCase } from "../application/level-catalog/use-cases/Creat
 import { UpdateLevelDefinitionUseCase } from "../application/level-catalog/use-cases/UpdateLevelDefinitionUseCase.js";
 import { PublishLevelUseCase } from "../application/level-catalog/use-cases/PublishLevelUseCase.js";
 import { ArchiveLevelUseCase } from "../application/level-catalog/use-cases/ArchiveLevelUseCase.js";
+import { ListAdminLevelsUseCase } from "../application/level-catalog/use-cases/ListAdminLevelsUseCase.js";
 import { TransactionDecorator } from "../application/aspects/TransactionDecorator.js";
 import { UseCaseLoggingDecorator } from "../application/aspects/UseCaseLoggingDecorator.js";
 import { BcryptPasswordHasher } from "../infrastructure/identity/BcryptPasswordHasher.js";
@@ -47,12 +48,14 @@ import { AdminUserController } from "./identity/AdminUserController.js";
 import { ProgressController } from "./progress/ProgressController.js";
 import { LeaderboardController } from "./leaderboard/LeaderboardController.js";
 import { LevelCatalogController } from "./level-catalog/LevelCatalogController.js";
+import { AdminLevelController } from "./level-catalog/AdminLevelController.js";
 import { createIdentityRouter } from "./identity/identityRoutes.js";
 import { createUserRouter } from "./identity/userRoutes.js";
 import { createAdminUserRouter } from "./identity/adminUserRoutes.js";
 import { createProgressRouter } from "./progress/progressRoutes.js";
 import { createLeaderboardRouter } from "./leaderboard/leaderboardRoutes.js";
 import { createLevelCatalogRouter } from "./level-catalog/levelCatalogRoutes.js";
+import { createAdminLevelRouter } from "./level-catalog/adminLevelRoutes.js";
 import { createHealthRouter } from "./routes/healthRoutes.js";
 import { openApiSpec } from "./swagger/openApiSpec.js";
 
@@ -187,6 +190,11 @@ export function createApp() {
     new UseCaseLoggingDecorator("ArchiveLevelUseCase", new ArchiveLevelUseCase(levelRepository, clock), logger),
     unitOfWork
   );
+  const listAdminLevelsUseCase = new UseCaseLoggingDecorator(
+    "ListAdminLevelsUseCase",
+    new ListAdminLevelsUseCase(levelRepository),
+    logger
+  );
 
   const identityController = new IdentityController(registerUseCase, loginUseCase, refreshUseCase, logoutUseCase);
   const userController = new UserController(getCurrentUserUseCase);
@@ -201,6 +209,7 @@ export function createApp() {
     publishLevelUseCase,
     archiveLevelUseCase,
   );
+  const adminLevelController = new AdminLevelController(listAdminLevelsUseCase);
 
   const authMiddleware = createAuthMiddleware(tokenService);
 
@@ -216,6 +225,7 @@ export function createApp() {
   app.use(createProgressRouter(progressController, authMiddleware));
   app.use(createLeaderboardRouter(leaderboardController, authMiddleware));
   app.use(createLevelCatalogRouter(levelCatalogController, authMiddleware));
+  app.use(createAdminLevelRouter(adminLevelController, authMiddleware));
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
   app.use(notFoundMiddleware);
   app.use(createErrorMiddleware(logger));
