@@ -96,10 +96,16 @@ Copy `.env.example` to `.env` and fill in your values (never commit `.env`):
 DATABASE_URL=postgresql://user:pass@localhost:5432/arrow_maze
 JWT_SECRET=your-secret-here
 PORT=3000
+CORS_ORIGIN=http://localhost:8081,http://localhost:5173
 # Optional auth token lifetimes:
 JWT_ACCESS_EXPIRES_IN=15m
 REFRESH_TOKEN_TTL_DAYS=30
 ```
+
+`CORS_ORIGIN` accepts a comma-separated list of exact browser origins. Keep the
+Expo development origin (`http://localhost:8081`) and add the admin web origin
+(`http://localhost:5173` locally, or the deployed admin URL in production).
+Origins not listed do not receive `Access-Control-Allow-Origin`.
 
 Auth issues a short-lived **access token** plus a long-lived, rotating, revocable
 **refresh token** stored only as a hash. `POST /auth/refresh` exchanges a refresh
