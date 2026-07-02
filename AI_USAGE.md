@@ -4632,6 +4632,84 @@ unchanged).
   no-user path.
 
 
+---
+
+# AI Usage Log: MAZ-197 (BE-03) GET /admin/users — read-only paginated list (backend)
+
+## Task / Problem
+
+The admin dashboard needs to view platform users. This ticket adds an ADMIN-only,
+read-only, paginated `GET /admin/users` exposing `userId, email, username, role, status,
+createdAt` and **never** `passwordHash`. Milestone **M11 — Admin Dashboard**. Depends on
+MAZ-195 (`requireAdmin`) — stacked branch.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M context).
+
+## Prompt Used
+
+Implement `MAZ-197` following both `AGENTS.md` files, root `MEMORY.md`,
+`Linear_MCP_Guideline.md`, a fresh worktree, AI usage logging, checks, commit/push/PR,
+Linear updates, and a review of affected tickets (uses BE-01's `requireAdmin`; OpenAPI
+docs for `/admin/*` land in BE-05).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/admin-list-users-MAZ-197.spec.md` with the `Clean Architecture contract` + the ISP narrow-port decision. | `specs/admin-list-users-MAZ-197.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin `@s1..@s6`. | `specs/admin-list-users-MAZ-197.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green twice: application use-case test then port + use case + impl; API test then controller + router + wiring. | tests + code below |
+| Judge (`.agents/judge.md`) | Referenced | Applied the checklist (dependency rule inward-only, no `passwordHash` leak, CA contract per layer, `@s`→test map, `npm run verify` green). | this log + spec CA contract |
+| Mutation Tester (`.agents/mutation.md`) | Used | Scoped Stryker on `ListUsersUseCase.ts` → **100%** (page→offset arithmetic mutants killed by the offset test). | scoped Stryker run |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test |
+| --- | --- |
+| `@s1` admin lists users, no passwordHash | `tests/application/identity/ListUsersUseCase.test.ts` -> `should_return_users_without_password_hash`; `tests/api/identity/adminUsers.test.ts` -> `should_return_200_with_users_and_no_password_hash_when_admin` |
+| `@s2` page/limit → offset | `ListUsersUseCase.test.ts` -> `should_convert_page_to_offset_before_querying`; `adminUsers.test.ts` -> `should_apply_page_and_limit_from_query` |
+| `@s3` default pagination | `adminUsers.test.ts` -> `should_default_pagination_when_absent` (+ `should_cap_limit_at_the_maximum`) |
+| `@s4` invalid pagination → 400 | `adminUsers.test.ts` -> `should_return_400_when_page_is_not_a_positive_integer` |
+| `@s5` USER → 403 | `adminUsers.test.ts` -> `should_return_403_when_authenticated_user_is_not_admin` |
+| `@s6` no token → 401 | `adminUsers.test.ts` -> `should_return_401_when_no_token` |
+
+Pagination metadata: `ListUsersUseCase.test.ts` -> `should_return_pagination_metadata`.
+
+## Result Obtained
+
+- **Application:** new narrow `AdminUserRepository` port (`findAll(offset, limit)` →
+  `{ users, total }`) + `ListUsersUseCase` (page→offset; maps to DTO **without**
+  `passwordHash`; returns `{ users, page, limit, total }`).
+- **Infrastructure:** `PrismaUserRepository` now `implements UserRepository,
+  AdminUserRepository` with `findAll` (findMany skip/take + count, `createdAt asc`).
+- **Framework:** `AdminUserController.listUsers` (defaults page=1/limit=20; caps limit at
+  100; non-positive-integer → 400) + `createAdminUserRouter` (`authMiddleware` +
+  `requireAdmin`); wired in `app.ts` (`GET /admin/users`).
+- **ISP decision:** the narrow `AdminUserRepository` avoids adding `findAll` to
+  `UserRepository`, so the ~5 inline `UserRepository` fakes in other identity tests are
+  untouched.
+
+## Verification
+
+- Focused tests GREEN: `ListUsersUseCase.test.ts` (3), `adminUsers.test.ts` (7).
+- `npm run verify` GREEN: lint + typecheck + coverage + build — 86 suites / 564 tests.
+- Mutation: scoped Stryker on `ListUsersUseCase.ts` → **100%**.
+
+## Team Modifications Pending Human Review
+
+- Confirm the read use case carries no authorization (route `requireAdmin` is the gate)
+  and the DTO omits `passwordHash`. Application + adapter tests are subject to human review.
+
+## Lessons / Limitations
+
+- Stacked on MAZ-195 (requireAdmin); merge PR #69 first, then this PR.
+- OpenAPI docs for `/admin/users` are deferred to BE-05.
+- ISP (a narrow read port) was the cleanest way to add a repository method without a
+  cross-test-fake ripple.
+
+
 <!-- AI_LOG_ENTRIES_END -->
 
 ## Critical Evaluation
