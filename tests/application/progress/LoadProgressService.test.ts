@@ -39,14 +39,13 @@ describe('LoadProgressService', () => {
     expect(result.version).toBe(0);
   });
 
-  it('should_persist_new_empty_progress_when_none_exists', async () => {
+  it('should_not_persist_when_no_progress_exists', async () => {
     const repo = new FakeProgressRepository();
     const service = new LoadProgressService(repo, new FakeIdGenerator(), new FakeClock());
 
     await service.execute({ userId: USER_1 });
 
-    expect(repo.stored).not.toBeNull();
-    expect(repo.stored!.userId.value).toBe(USER_1);
+    expect(repo.stored).toBeNull();
   });
 
   it('should_return_existing_progress_when_found', async () => {

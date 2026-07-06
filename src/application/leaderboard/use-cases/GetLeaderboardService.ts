@@ -16,14 +16,14 @@ export interface ScoreEntryDto {
   timeSeconds: number;
   movesCount: number;
   rank: number;
-  submittedAt: Date;
+  submittedAt: string;
 }
 
 export interface GetLeaderboardOutput {
   levelId: string;
   entries: ScoreEntryDto[];
   leaderboardId?: string;
-  updatedAt?: Date;
+  updatedAt?: string;
 }
 
 export class GetLeaderboardService implements UseCase<GetLeaderboardInput, GetLeaderboardOutput> {
@@ -51,7 +51,7 @@ export class GetLeaderboardService implements UseCase<GetLeaderboardInput, GetLe
     return {
       leaderboardId: leaderboard.id.value,
       levelId: leaderboard.levelId.value,
-      updatedAt: leaderboard.updatedAt.value,
+      updatedAt: leaderboard.updatedAt.value.toISOString(),
       entries: leaderboard.entries.map((e) => ({
         entryId: e.id.value,
         userId: e.userId.value,
@@ -60,7 +60,7 @@ export class GetLeaderboardService implements UseCase<GetLeaderboardInput, GetLe
         timeSeconds: e.timeSeconds.value,
         movesCount: e.movesCount.value,
         rank: e.rank?.value ?? 0,
-        submittedAt: e.submittedAt.value,
+        submittedAt: e.submittedAt.value.toISOString(),
       })),
     };
   }

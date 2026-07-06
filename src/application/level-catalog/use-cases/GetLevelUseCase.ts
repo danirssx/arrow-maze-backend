@@ -14,8 +14,8 @@ export type LevelDto = {
   version: number;
   definition: LevelDefinitionDto;
   timeLimitSeconds?: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type BoardShapeDto = {
@@ -73,8 +73,8 @@ export class GetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
             : {}),
         },
         ...(level.timeLimit !== undefined ? { timeLimitSeconds: level.timeLimit.value } : {}),
-        createdAt: level.createdAt,
-        updatedAt: level.updatedAt,
+        createdAt: level.createdAt.toISOString(),
+        updatedAt: level.updatedAt.toISOString(),
       },
     };
   }

@@ -15,7 +15,7 @@ export interface CompletedLevelDto {
   score: number;
   timeSeconds: number;
   movesCount: number;
-  completedAt: Date;
+  completedAt: string;
 }
 
 export interface LoadProgressOutput {
@@ -23,7 +23,7 @@ export interface LoadProgressOutput {
   userId: string;
   completedLevels: CompletedLevelDto[];
   version: number;
-  updatedAt: Date;
+  updatedAt: string;
 }
 
 export class LoadProgressService implements UseCase<LoadProgressInput, LoadProgressOutput> {
@@ -40,7 +40,6 @@ export class LoadProgressService implements UseCase<LoadProgressInput, LoadProgr
 
     if (progress === null) {
       progress = PlayerProgress.empty(ProgressId.create(this.idGenerator.generate()), userId, now);
-      await this.repo.save(progress);
     }
 
     return toProgressOutput(progress);
@@ -52,13 +51,13 @@ export function toProgressOutput(progress: PlayerProgress): LoadProgressOutput {
     progressId: progress.id.value,
     userId: progress.userId.value,
     version: progress.version.value,
-    updatedAt: progress.updatedAt.value,
+    updatedAt: progress.updatedAt.value.toISOString(),
     completedLevels: progress.completedLevels.map((cl) => ({
       levelId: cl.levelId.value,
       score: cl.bestScore.score,
       timeSeconds: cl.bestScore.timeSeconds,
       movesCount: cl.bestScore.movesCount,
-      completedAt: cl.completedAt.value,
+      completedAt: cl.completedAt.value.toISOString(),
     })),
   };
 }
