@@ -57,5 +57,25 @@ export default [
         }
       ]
     }
+  },
+  {
+    files: ["src/domain/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          "patterns": [
+            {
+              "group": ["crypto", "node:crypto"],
+              "message": "Domain must not import crypto. Use IdGenerator/Clock ports instead."
+            },
+            {
+              "group": ["**/shared/errors/AppError*"],
+              "message": "Domain must not import AppError (HTTP semantics). Use DomainError instead."
+            }
+          ]
+        }
+      ]
+    }
   }
 ];

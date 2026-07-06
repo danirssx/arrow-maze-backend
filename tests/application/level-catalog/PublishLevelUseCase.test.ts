@@ -4,9 +4,15 @@ import type { LevelDefinition } from "../../../src/domain/level-catalog/value-ob
 import { LevelStatus } from "../../../src/domain/level-catalog/enums/LevelStatus";
 import { NotFoundError } from "../../../src/shared/errors/ApplicationError";
 import { BusinessRuleViolationError } from "../../../src/domain/errors/DomainError";
+import type { Clock } from "../../../src/application/ports/Clock";
 import { FakeLevelRepository, makeDraftLevel, VALID_UUID } from "./helpers/levelFixtures";
 
 // Subject to human review — application use case test
+
+const FAKE_NOW = new Date("2024-01-15T10:00:00.000Z");
+class FakeClock implements Clock {
+  now(): Date { return FAKE_NOW; }
+}
 
 class AlwaysSolvablePolicy extends LevelSolvabilityPolicy {
   override isSolvable(_def: LevelDefinition): boolean { return true; }
@@ -21,10 +27,10 @@ describe("PublishLevelUseCase", () => {
     // Arrange
     const repo = new FakeLevelRepository();
     repo.seed(makeDraftLevel(VALID_UUID));
-    const useCase = new PublishLevelUseCase(repo, new AlwaysSolvablePolicy());
+    const useCase = new PublishLevelUseCase(repo, new AlwaysSolvablePolicy(), new FakeClock());
 
     // Act
-    const result = await useCase.execute({ levelId: VALID_UUID });
+    const result = await useCase.execute({ actorRole: "ADMIN", levelId: VALID_UUID });
 
     // Assert
     expect(result.levelId).toBe(VALID_UUID);
@@ -34,11 +40,11 @@ describe("PublishLevelUseCase", () => {
   it("should_throw_not_found_when_level_does_not_exist", async () => {
     // Arrange
     const repo = new FakeLevelRepository();
-    const useCase = new PublishLevelUseCase(repo, new AlwaysSolvablePolicy());
+    const useCase = new PublishLevelUseCase(repo, new AlwaysSolvablePolicy(), new FakeClock());
 
     // Act / Assert
     await expect(
-      useCase.execute({ levelId: VALID_UUID })
+      useCase.execute({ actorRole: "ADMIN", levelId: VALID_UUID })
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 
@@ -46,11 +52,24 @@ describe("PublishLevelUseCase", () => {
     // Arrange
     const repo = new FakeLevelRepository();
     repo.seed(makeDraftLevel(VALID_UUID));
-    const useCase = new PublishLevelUseCase(repo, new NeverSolvablePolicy());
+    const useCase = new PublishLevelUseCase(repo, new NeverSolvablePolicy(), new FakeClock());
 
     // Act / Assert
     await expect(
-      useCase.execute({ levelId: VALID_UUID })
+      useCase.execute({ actorRole: "ADMIN", levelId: VALID_UUID })
     ).rejects.toBeInstanceOf(BusinessRuleViolationError);
+  });
+
+  it("should_throw_forbidden_and_not_persist_when_actor_is_not_admin", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makeDraftLevel(VALID_UUID));
+    const useCase = new PublishLevelUseCase(repo, new AlwaysSolvablePolicy(), new FakeClock());
+
+    // Act / Assert
+    await expect(
+      useCase.execute({ actorRole: "USER", levelId: VALID_UUID })
+    ).rejects.toThrow("Admin access required");
+    expect(repo.savedLevels).toHaveLength(0);
   });
 });

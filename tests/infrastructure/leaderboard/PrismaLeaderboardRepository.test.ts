@@ -23,6 +23,8 @@ const LEVEL_1 = "550e8400-e29b-41d4-a716-446655440010";
 const LB_1 = "550e8400-e29b-41d4-a716-446655440020";
 const USER_1 = "550e8400-e29b-41d4-a716-446655440001";
 const ENTRY_1 = "550e8400-e29b-41d4-a716-446655440030";
+const ENTRY_2 = "550e8400-e29b-41d4-a716-446655440031";
+const FIXED_NOW = new Date("2026-01-01T00:00:00Z");
 
 type LeaderboardDelegate = { findUnique: jest.Mock };
 type TxDelegates = {
@@ -51,7 +53,7 @@ function makeWritePrisma(tx: TxDelegates): PrismaClient {
 }
 
 function makeEmptyLeaderboard(): Leaderboard {
-  return Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10));
+  return Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10), FIXED_NOW);
 }
 
 function makeLeaderboardWithEntry(): Leaderboard {
@@ -73,6 +75,40 @@ function makeLeaderboardWithEntry(): Leaderboard {
     updatedAt: new UpdatedAt(new Date("2026-01-01T00:00:00Z")),
     entries: [entry],
   });
+}
+
+function makeLeaderboardAfterReplacement(): Leaderboard {
+  // Same user submits twice (better the second time). The aggregate keeps one
+  // entry per user, so the repository must persist exactly one row for that user
+  // — honoring @@unique([leaderboardId, userId]).
+  const board = Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10), FIXED_NOW);
+  board.submitEntry(
+    ScoreEntry.create({
+      id: EntryId.create(ENTRY_1),
+      userId: UserId.create(USER_1),
+      levelId: LevelId.create(LEVEL_1),
+      usernameSnapshot: new UsernameSnapshot("player_one"),
+      score: new Score(900),
+      timeSeconds: new TimeSeconds(30),
+      movesCount: new MoveCount(8),
+      submittedAt: new SubmittedAt(new Date("2026-01-01T00:00:00Z")),
+    }),
+    FIXED_NOW,
+  );
+  board.submitEntry(
+    ScoreEntry.create({
+      id: EntryId.create(ENTRY_2),
+      userId: UserId.create(USER_1),
+      levelId: LevelId.create(LEVEL_1),
+      usernameSnapshot: new UsernameSnapshot("player_one"),
+      score: new Score(990),
+      timeSeconds: new TimeSeconds(20),
+      movesCount: new MoveCount(5),
+      submittedAt: new SubmittedAt(new Date("2026-01-02T00:00:00Z")),
+    }),
+    FIXED_NOW,
+  );
+  return board;
 }
 
 describe("PrismaLeaderboardRepository", () => {
@@ -166,6 +202,25 @@ describe("PrismaLeaderboardRepository", () => {
           data: expect.arrayContaining([expect.objectContaining({ id: ENTRY_1, leaderboardId: LB_1, rank: 1 })]),
         })
       );
+    });
+
+    it("should_persist_a_single_row_per_user_when_entry_replaced", async () => {
+      // Arrange
+      const tx = makeTx();
+      const repo = new PrismaLeaderboardRepository(makeWritePrisma(tx));
+
+      // Act
+      await repo.save(makeLeaderboardAfterReplacement());
+
+      // Assert — deleteMany clears the user's old row, createMany writes exactly one
+      // (the better score), so @@unique([leaderboardId, userId]) is never violated.
+      const createArg = tx.leaderboardEntry.createMany.mock.calls[0]?.[0] as {
+        data: Array<{ userId: string; score: number }>;
+      };
+      const userRows = createArg.data.filter((row) => row.userId === USER_1);
+      expect(userRows).toHaveLength(1);
+      expect(userRows[0]?.score).toBe(990);
+      expect(tx.leaderboardEntry.deleteMany).toHaveBeenCalledWith({ where: { leaderboardId: LB_1 } });
     });
 
     it("should_throw_infrastructure_error_when_save_fails", async () => {

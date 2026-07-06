@@ -34,8 +34,10 @@ function makeController() {
 }
 
 const validBody = {
-  leaderboardId: 'lb-1', entryId: 'e-1', levelId: 'level-1',
-  usernameSnapshot: 'Player1', score: 100, timeSeconds: 30, movesCount: 15,
+  levelId: 'level-1',
+  score: 100,
+  timeSeconds: 30,
+  movesCount: 15,
 };
 
 const authenticatedReq = { body: validBody, user: { userId: 'u-1', role: 'USER' } } as unknown as Request;
@@ -54,6 +56,36 @@ describe('LeaderboardController', () => {
       // Assert
       expect(res.status).toHaveBeenCalledWith(201);
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should_pass_only_gameplay_fields_and_authenticated_user_to_use_case', async () => {
+      // Arrange
+      const submitUseCase = makeSubmitUseCase();
+      const controller = new LeaderboardController(submitUseCase, makeGetUseCase());
+      const req = {
+        body: {
+          ...validBody,
+          leaderboardId: 'spoofed-lb',
+          entryId: 'spoofed-entry',
+          userId: 'spoofed-user',
+          usernameSnapshot: 'spoofed-name',
+        },
+        user: { userId: 'u-1', role: 'USER' },
+      } as unknown as Request;
+      const res = makeRes();
+      const next = makeNext();
+
+      // Act
+      await controller.submitScore(req, res, next);
+
+      // Assert
+      expect(submitUseCase.execute).toHaveBeenCalledWith({
+        userId: 'u-1',
+        levelId: 'level-1',
+        score: 100,
+        timeSeconds: 30,
+        movesCount: 15,
+      });
     });
 
     it('should_call_next_with_bad_request_when_required_field_missing', async () => {

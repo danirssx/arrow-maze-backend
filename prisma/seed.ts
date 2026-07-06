@@ -10,9 +10,11 @@
  * The seed is idempotent: every write is an upsert keyed by id (or by the
  * relevant unique constraint), so re-running it is safe.
  */
+import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { createPrismaClient } from "../src/infrastructure/database/PrismaClientProvider.js";
 import { loadAuthoredLevels } from "./seed-data/authoredLevels.js";
+import { DEMO_USER_CREDENTIALS, DEMO_PASSWORD_BCRYPT_COST } from "./seed-data/demoCredentials.js";
 
 /**
  * Base epoch for order-derived `createdAt`. `GET /levels` orders by `createdAt asc`,
@@ -32,14 +34,6 @@ function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
 
-const DEMO_PASSWORD_HASH = "$2b$10$aa37iFFglWjt6nlwkyNV3OCnnZCXGnN2o81ujv6Yf3ZSzJKYhlnPq";
-
-const DEMO_USERS = [
-  { id: "660e8400-e29b-41d4-a716-446655440001", email: "demo@arrowmaze.test", username: "demo_player", createdDaysAgo: 6 },
-  { id: "660e8400-e29b-41d4-a716-446655440002", email: "mika@arrowmaze.test", username: "mika_arrows", createdDaysAgo: 5 },
-  { id: "660e8400-e29b-41d4-a716-446655440003", email: "noah@arrowmaze.test", username: "noah_escape", createdDaysAgo: 4 },
-];
-
 const DEMO_PROGRESS = {
   id: "770e8400-e29b-41d4-a716-446655440001",
   userId: "660e8400-e29b-41d4-a716-446655440001",
@@ -50,6 +44,13 @@ const DEMO_PROGRESS = {
     { id: "880e8400-e29b-41d4-a716-446655440003", levelId: "550e8400-e29b-41d4-a716-446655440012", bestScore: 860, bestTimeSeconds: 62, bestMovesCount: 10, completedDaysAgo: 1 },
   ],
 };
+
+const ADMIN_USER_ID = "660e8400-e29b-41d4-a716-446655440004";
+const ADMIN_PROGRESS_ID = "770e8400-e29b-41d4-a716-446655440000";
+
+function adminCompletedLevelId(index: number): string {
+  return `bb0e8400-e29b-41d4-a716-44665544${String(index + 1).padStart(4, "0")}`;
+}
 
 const DEMO_LEADERBOARDS = [
   {
@@ -121,19 +122,43 @@ async function main(): Promise<void> {
     }
     process.stdout.write(`Seeded ${catalogLevels.length} catalog levels from level-json\n`);
 
-    for (const user of DEMO_USERS) {
+    for (const user of DEMO_USER_CREDENTIALS) {
       const data = {
         email: user.email,
         username: user.username,
-        passwordHash: DEMO_PASSWORD_HASH,
-        role: "USER",
-        status: "ACTIVE",
+        passwordHash: await bcrypt.hash(user.password, DEMO_PASSWORD_BCRYPT_COST),
+        role: user.role,
+        status: user.status,
         updatedAt: now,
       };
       await prisma.user.upsert({
         where: { id: user.id },
         create: { id: user.id, createdAt: daysAgo(user.createdDaysAgo), ...data },
         update: data,
+      });
+    }
+
+    await prisma.playerProgress.upsert({
+      where: { id: ADMIN_PROGRESS_ID },
+      create: { id: ADMIN_PROGRESS_ID, userId: ADMIN_USER_ID, version: catalogLevels.length, updatedAt: now },
+      update: { version: catalogLevels.length, updatedAt: now },
+    });
+
+    for (const [index, level] of catalogLevels.entries()) {
+      const completedAt = new Date(ORDER_EPOCH_MS + level.order * 1000);
+      await prisma.completedLevel.upsert({
+        where: { progressId_levelId: { progressId: ADMIN_PROGRESS_ID, levelId: level.id } },
+        create: {
+          id: adminCompletedLevelId(index),
+          progressId: ADMIN_PROGRESS_ID,
+          levelId: level.id,
+          bestScore: 0,
+          bestTimeSeconds: 1,
+          bestMovesCount: 0,
+          completedAt,
+          updatedAt: now,
+        },
+        update: { completedAt, updatedAt: now },
       });
     }
 
@@ -180,7 +205,7 @@ async function main(): Promise<void> {
         });
       }
     }
-    process.stdout.write(`Seeded ${DEMO_USERS.length} demo users, progress and ${DEMO_LEADERBOARDS.length} leaderboards\n`);
+    process.stdout.write(`Seeded ${DEMO_USER_CREDENTIALS.length} demo users, progress and ${DEMO_LEADERBOARDS.length} leaderboards\n`);
   } finally {
     await prisma.$disconnect();
   }

@@ -12,6 +12,7 @@ const USER_1 = "550e8400-e29b-41d4-a716-446655440001";
 const LEVEL_1 = "550e8400-e29b-41d4-a716-446655440010";
 const PROGRESS_1 = "550e8400-e29b-41d4-a716-446655440020";
 const COMPLETED_LEVEL_1 = "550e8400-e29b-41d4-a716-446655440030";
+const FIXED_NOW = new Date("2026-01-01T00:00:00Z");
 
 type ProgressDelegate = { findUnique: jest.Mock };
 type TxDelegates = {
@@ -40,7 +41,7 @@ function makeWritePrisma(tx: TxDelegates): PrismaClient {
 }
 
 function makeEmptyProgress(): PlayerProgress {
-  return PlayerProgress.empty(ProgressId.create(PROGRESS_1), UserId.create(USER_1));
+  return PlayerProgress.empty(ProgressId.create(PROGRESS_1), UserId.create(USER_1), FIXED_NOW);
 }
 
 describe("PrismaProgressRepository", () => {

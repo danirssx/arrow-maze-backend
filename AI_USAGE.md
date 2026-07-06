@@ -287,50 +287,6 @@ Compliance rules should live where agents cannot miss them: `AGENTS.md`, with a 
 
 ---
 
-# AI Usage Log: Agent Role Traceability Documentation
-
-## Task / Problem
-
-Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
-
-## Tool and Model
-
-Codex / GPT-5.
-
-## Prompt Used
-
-The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
-| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
-| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
-| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
-| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
-
-## Result Obtained
-
-Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
-
-## Verification
-
-- Documentation-only change; reviewed modified Markdown files.
-
-## Team Modifications Pending Human Review
-
-- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
-- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
-
-## Lessons / Limitations
-
-Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
-
-
----
-
 # AI Log — AM-005 — Implement Identity application services
 
 **Date:** 2026-06-17
@@ -971,6 +927,50 @@ Typecheck clean.
 
 ---
 
+# AI Usage Log: Agent Role Traceability Documentation
+
+## Task / Problem
+
+Clarify whether ticket work has been following the configured `.agents/` workflow and update documentation so future `ai-log/` entries explicitly record which agent roles were used and how.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked whether each ticket has used the configured agents from each repo and requested documentation changes so every `ai-log/` records why and how each agent was used.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Reviewed the role boundary to distinguish actual spec alignment from referencing an approved Linear spec. | `.agents/spec-partner.md`, `AGENTS.md` |
+| Planner/Slicer | Referenced | Reviewed planner responsibilities and documented when existing Linear tickets count as referenced planning rather than a new planner run. | `.agents/planner.md`, `docs/zed-worktree-agents.md` |
+| TDD Implementer | Referenced | Updated logging requirements for implementation tickets that use test-guided or TDD-style work. | `.agents/tdd-implementer.md`, `docs/ai-log-template.md` |
+| Judge | Referenced | Added guidance for recording self-audit versus a separate judge review. | `.agents/judge.md`, `docs/zed-worktree-agents.md` |
+| Mutation Tester | Referenced | Added explicit `Not used` / future `Used` guidance until mutation tooling is configured. | `.agents/mutation.md`, `docs/ai-log-template.md` |
+
+## Result Obtained
+
+Updated backend documentation so future logs must include an `Agent Roles Used` table with `Used`, `Referenced`, or `Not used` status for every configured role. Added `docs/ai-log-template.md` as the source template for future logs.
+
+## Verification
+
+- Documentation-only change; reviewed modified Markdown files.
+
+## Team Modifications Pending Human Review
+
+- Decide whether prior historical `ai-log/` entries should be retroactively annotated or left as-is to avoid overstating past agent usage.
+- Decide whether future PR templates should also require checking the `Agent Roles Used` section.
+
+## Lessons / Limitations
+
+Past work followed `AGENTS.md` constraints and role intent, but logs did not make the distinction between literal agent execution and same-session referenced roles. Future logs must be explicit and auditable.
+
+
+---
+
 # AI Log — Architecture Divergence Fixes
 
 **Date:** 2026-06-17  
@@ -1489,6 +1489,76 @@ User instructed to implement ticket AM-050 following the established workflow: r
 
 ---
 
+# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
+
+## Task / Problem
+
+Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
+
+- `ArrowSpec[]` level definitions.
+- Optional `attempts` with default 5.
+- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
+- OpenAPI and persistence updated for the new contract.
+
+## Tool and Model
+
+- Tool: Codex CLI coding agent.
+- Model: GPT-5 based Codex.
+
+## Prompt Used
+
+The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
+| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
+| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
+| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
+| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
+
+## Result Obtained
+
+- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
+- Replaced `LevelDefinition` with `{ arrows, attempts }`.
+- Replaced solvability logic with blocking-graph DAG detection.
+- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
+- Updated create/update/get level use cases and controller request handling.
+- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
+- Added migration `005_refactor_levels_to_arrow_specs.sql`.
+- Rewrote seed levels as Arrow Untangle examples.
+- Updated Swagger schemas and examples.
+- Rewrote Level Catalog tests for the new model.
+
+## Validation
+
+```sh
+npm run verify
+```
+
+Result: passed.
+
+- Lint: passed.
+- Typecheck: passed.
+- Test coverage: passed, 58 suites / 310 tests.
+- Build: passed.
+
+## Team Modifications Pending Human Review
+
+- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
+- Review production DB migration order before applying to an existing database.
+- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
+
+## Lessons / Limitations
+
+- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
+- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
+
+
+---
+
 # AI Log — fix: add runtime enum guards via parseEnumFromInput / parseEnumFromDb
 
 **Date:** 2026-06-18
@@ -1914,76 +1984,6 @@ Continuation of critical bug fix session. User granted one-time merge permission
 ## Lessons / limitations
 
 - A missing `DomainEventBus` implementation is a silent runtime failure: TypeScript compiles fine, but any use case that calls `eventBus.publishAll()` would throw at startup when the dependency is injected. Always wire concrete infrastructure before registering routes.
-
-
----
-
-# 2026-06-18 - MAZ-130 Backend ArrowSpec Level Catalog
-
-## Task / Problem
-
-Refactor the backend Level Catalog from the old maze-navigation model (`BoardSize`, `CellSpec`, `CellType`, start/exit pathfinding) to the approved Arrow Untangle contract:
-
-- `ArrowSpec[]` level definitions.
-- Optional `attempts` with default 5.
-- Solvability by detecting cycles in the arrow blocking graph (DAG), not by start-to-exit pathfinding.
-- OpenAPI and persistence updated for the new contract.
-
-## Tool and Model
-
-- Tool: Codex CLI coding agent.
-- Model: GPT-5 based Codex.
-
-## Prompt Used
-
-The user asked to implement MAZ-130 before MAZ-136 to avoid writing tests against backend functionality that did not exist yet. The implementation had to follow repo `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, and the refactor documents `Mecanica_Juego_Arrow_Untangle.md` and `Refactor_Arrow_Untangle_Tickets.md`.
-
-## Agent Roles Used
-
-| Agent | Status | How it was used | Evidence |
-| --- | --- | --- | --- |
-| Spec Partner | Referenced | Used the approved refactor mechanic/spec as the design source; no new design decision was invented. | `Mecanica_Juego_Arrow_Untangle.md`, `Refactor_Arrow_Untangle_Tickets.md`, Linear MAZ-130 |
-| Planner/Slicer | Referenced | Followed the T1 slice boundaries: backend DTO/domain/persistence/API/Swagger only. | `Refactor_Arrow_Untangle_Tickets.md` T1 |
-| TDD Implementer | Used | Added and rewrote tests for `ArrowSpec`, `LevelDefinition`, DAG solvability, use cases, mapper, repository, controller, and API behavior. | 310 backend tests passing in `npm run verify` |
-| Judge | Referenced | Checked Clean Architecture boundaries and validated the full backend verify command before handoff. | `npm run verify` |
-| Mutation Tester | Not used | Mutation testing was not part of MAZ-130 scope and no mutation tool was run. | N/A |
-
-## Result Obtained
-
-- Added backend `ArrowSpec` value object and updated `Position` to allow negative coordinates.
-- Replaced `LevelDefinition` with `{ arrows, attempts }`.
-- Replaced solvability logic with blocking-graph DAG detection.
-- Removed domain source files for `BoardSize`, `CellSpec`, and `CellType`.
-- Updated create/update/get level use cases and controller request handling.
-- Updated `PgLevelRepository` and `LevelMapper` to persist `arrows` JSONB and `attempts`.
-- Added migration `005_refactor_levels_to_arrow_specs.sql`.
-- Rewrote seed levels as Arrow Untangle examples.
-- Updated Swagger schemas and examples.
-- Rewrote Level Catalog tests for the new model.
-
-## Validation
-
-```sh
-npm run verify
-```
-
-Result: passed.
-
-- Lint: passed.
-- Typecheck: passed.
-- Test coverage: passed, 58 suites / 310 tests.
-- Build: passed.
-
-## Team Modifications Pending Human Review
-
-- Review whether backend should keep legacy `timeLimit` and `moveCount` as optional metadata. They are preserved for compatibility, but they are no longer part of the level-board definition.
-- Review production DB migration order before applying to an existing database.
-- Coordinate with mobile MAZ-136 after this branch is reviewed because backend DAG tests are now available.
-
-## Lessons / Limitations
-
-- This refactor should be merged before MAZ-136 backend test expansion, otherwise tests would target non-existent backend behavior.
-- The migration keeps compatibility for old `board_rows`/`board_cols` columns if already present, while fresh installs use the new `arrows`/`attempts` schema.
 
 
 ---
@@ -2977,6 +2977,2082 @@ La segunda pasada eliminó 22 de los 23 sobrevivientes originales. El único sob
 Score por encima del umbral (80%). Veredicto: **PASS**.
 
 El único sobreviviente restante puede ser tratado por el `tdd-implementer` en la siguiente iteración si se desea llegar al 100% en `LevelScore`. No bloquea el merge.
+
+
+---
+
+# AI Log — MAZ-155 / CA-002: Backend — Sacar generación de IDs y reloj real del dominio
+
+## Task / Problem
+
+CA-002: el dominio importaba `crypto` (para `randomUUID()`) y llamaba `new Date()` directamente en
+value-objects y agregados. Esto viola la regla de dependencias de Clean Architecture: el dominio
+no puede depender de infraestructura. El objetivo es que el dominio reciba IDs y timestamps como
+parámetros, delegando la generación a puertos en la capa de aplicación.
+
+## Tool and Model
+
+Claude Code — claude-sonnet-4-6
+
+## Commits
+
+| SHA | Descripción |
+|-----|-------------|
+| `268ebc2` | `refactor(domain): remove crypto and real clock from domain layer (CA-002)` — implementación completa |
+| `828f90d` | `fix(ca-002): address code review findings and rebase conflict resolutions` — 6 findings CONFIRMED + rebase contra develop (PRs #56–#59) |
+
+## Prompt Used
+
+Sesión continua sobre el branch `refactor/backend-id-clock-CA-002`. Se leyeron: AGENTS.md,
+MEMORY.md, todos los .md de `/docs`, el ai-log previo, los specs `specs/backend-id-clock-CA-002.*`
+y los archivos fuente involucrados. El contrato Gherkin fue aprobado por el humano antes de
+comenzar TDD. Implementación ejecutada en 6 batches (domain events → User → Level → progress
+domain → leaderboard domain → application layer + wiring).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Spec existente `specs/backend-id-clock-CA-002.spec.md` guió el diseño: dos puertos (`IdGenerator`, `Clock`) en `application/ports/`, adaptadores en `infrastructure/shared/` | `specs/backend-id-clock-CA-002.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Contrato Gherkin `specs/backend-id-clock-CA-002.feature` (11 escenarios @s1–@s11) aprobado por el humano antes de TDD | `specs/backend-id-clock-CA-002.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Ciclos Rojo→Verde por batch: escribir test fallido → implementar mínimo para verde → siguiente escenario. 421/421 tests verdes al cierre | tests/, src/, mapa @s → test abajo |
+| Judge (`.agents/judge.md`) | Used | APPROVED — todos los @s cubiertos, 0 violaciones arquitectónicas introducidas por CA-002 | `ai-log/2026-06-29-MAZ-155-CA-002-judge.md` |
+| Mutation Tester (`.agents/mutation.md`) | Used | PASS — 91.52% (205/224 killed) sobre 17 archivos diff, umbral 80% | `ai-log/2026-06-29-MAZ-155-CA-002-mutation.md` |
+
+## Scenario Coverage (@s ↔ test)
+
+- @s1 — dominio no importa `crypto` → verificado por `tsc --noEmit` (sin imports `crypto` en `src/domain`) + grep
+- @s2 — dominio no llama `new Date()` → verificado por `tsc --noEmit` + grep en `src/domain`
+- @s3 → `tests/domain/identity/User.test.ts` — describe "injected clock" — `should_set_createdAt_and_updatedAt_to_injected_now_when_registered`, `should_set_updatedAt_to_injected_now_when_password_is_changed`, `should_set_updatedAt_to_injected_now_when_suspended`
+- @s4 → `tests/domain/level-catalog/Level.test.ts` — describe "Level injected clock" — `should_set_createdAt_and_updatedAt_to_injected_now_when_drafted`, `should_set_updatedAt_to_injected_now_when_published`, `should_set_updatedAt_to_injected_now_when_definition_updated`, `should_set_updatedAt_to_injected_now_when_archived`
+- @s5 → `tests/domain/progress/PlayerProgress.test.ts` — describe "PlayerProgress injected clock (@s5)" — `should_use_injected_entry_id_when_recording_first_completion`, `should_set_updatedAt_to_injected_now_when_recording_completion`, `should_set_updatedAt_to_injected_now_when_empty_created`
+- @s6 → `tests/domain/leaderboard/Leaderboard.test.ts` — describe "Leaderboard injected clock (@s6)" — `should_set_updatedAt_to_injected_now_when_empty_leaderboard_created`, `should_set_updatedAt_to_injected_now_when_entry_submitted`; también `tests/domain/progress/PlayerProgress.test.ts` — describe "ProgressMergePolicy injected clock (@s6)" — `should_set_merged_updatedAt_to_injected_now`
+- @s7 → `tests/domain/DomainEvent.test.ts` — `should_store_injected_occurredOn_when_event_is_created`, `should_not_call_new_Date_internally_when_occurredOn_is_injected`
+- @s8 → `tests/application/identity/RegisterUserUseCase.test.ts` — `should_return_userId_when_registration_succeeds` verifica que `result.userId === FAKE_ID` (ID inyectado, no UUID aleatorio); `tests/application/level-catalog/CreateLevelUseCase.test.ts` — describe "@s8 — injected id generator and clock" — `should_use_injected_id_when_level_is_created`, `should_use_injected_clock_when_level_is_created`
+- @s9 → `tests/infrastructure/UuidIdGenerator.test.ts`
+- @s10 → `tests/infrastructure/SystemClock.test.ts`
+- @s11 → `npm run verify` → 454/454 GREEN (post-rebase contra develop); `npm run typecheck` → 0 errores
+
+## Result Obtained
+
+**Domain layer — eliminación de infraestructura:**
+- `src/domain/shared/DomainEvent.ts` — `occurredOn: Date` inyectado en constructor (eliminado `new Date()`)
+- `src/domain/identity/User.ts` — `register()` recibe `now: Date`; eliminado `new Date()`
+- `src/domain/identity/UserFactory.ts` — `create()` recibe `id: UserId` y `now: Date`
+- `src/domain/identity/events/*.ts` — `UserRegistered`, `UserPasswordChanged`, `UserSuspended`: `occurredOn` inyectado
+- `src/domain/leaderboard/Leaderboard.ts` — `empty()` y `submitEntry()` reciben `now: Date`
+- `src/domain/leaderboard/events/LeaderboardUpdatedEvent.ts` — `occurredOn` inyectado
+- `src/domain/leaderboard/value-objects/EntryId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/leaderboard/value-objects/LeaderboardId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/leaderboard/value-objects/SubmittedAt.ts` — eliminado `now()`
+- `src/domain/leaderboard/value-objects/UpdatedAt.ts` — eliminado `now()`
+- `src/domain/level-catalog/Level.ts` — `draft()`, `publish()`, `updateDefinition()`, `archive()` reciben `now: Date`
+- `src/domain/level-catalog/events/LevelPublished.ts` — `occurredOn` inyectado
+- `src/domain/progress/CompletedLevel.ts` — `withBetterScore()` recibe `now: Date`
+- `src/domain/progress/PlayerProgress.ts` — `empty()` recibe `now: Date`; `recordCompletion()` recibe `newEntryId: CompletedLevelId` y `now: Date`
+- `src/domain/progress/events/LevelCompletedEvent.ts`, `LevelBestScoreUpdatedEvent.ts` — `occurredOn` inyectado
+- `src/domain/progress/policies/ProgressMergePolicy.ts` — `merge()` recibe `now: Date`
+- `src/domain/progress/value-objects/CompletedAt.ts` — eliminado `now()`
+- `src/domain/progress/value-objects/CompletedLevelId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/progress/value-objects/ProgressId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/progress/value-objects/UpdatedAt.ts` — eliminado `now()`
+- `src/domain/shared/LevelId.ts` — eliminado `generate()` + import `crypto`
+- `src/domain/shared/UserId.ts` — eliminado `generate()` + import `crypto`
+
+**Application layer — puertos e inyección:**
+- `src/application/ports/IdGenerator.ts` — **New** — puerto `IdGenerator`
+- `src/application/ports/Clock.ts` — **New** — puerto `Clock`
+- `src/application/identity/use-cases/RegisterUserUseCase.ts` — inyecta `IdGenerator` + `Clock`
+- `src/application/leaderboard/use-cases/SubmitScoreService.ts` — inyecta `Clock`
+- `src/application/level-catalog/use-cases/ArchiveLevelUseCase.ts` — inyecta `Clock`
+- `src/application/level-catalog/use-cases/CreateLevelUseCase.ts` — inyecta `IdGenerator` + `Clock`
+- `src/application/level-catalog/use-cases/PublishLevelUseCase.ts` — inyecta `Clock`
+- `src/application/level-catalog/use-cases/UpdateLevelDefinitionUseCase.ts` — inyecta `Clock`
+- `src/application/progress/use-cases/CompleteLevelService.ts` — inyecta `IdGenerator` + `Clock`
+- `src/application/progress/use-cases/LoadProgressService.ts` — inyecta `IdGenerator` + `Clock`
+- `src/application/progress/use-cases/SyncProgressService.ts` — inyecta `IdGenerator` + `Clock`
+
+**Infrastructure layer — adaptadores:**
+- `src/infrastructure/shared/UuidIdGenerator.ts` — **New** — implementa `IdGenerator` con `crypto.randomUUID()`
+- `src/infrastructure/shared/SystemClock.ts` — **New** — implementa `Clock` con `new Date()`
+
+**Framework layer — wiring:**
+- `src/framework/app.ts` — instancia `UuidIdGenerator` y `SystemClock`; los inyecta en todos los use cases
+
+**Tests:**
+- `tests/domain/DomainEvent.test.ts` — **New** — @s7
+- `tests/infrastructure/UuidIdGenerator.test.ts` — **New** — @s9
+- `tests/infrastructure/SystemClock.test.ts` — **New** — @s10
+- `tests/domain/identity/User.test.ts` — @s3 describe block agregado
+- `tests/domain/identity/UserFactory.test.ts` — reescrito para IDs y clock inyectados
+- `tests/domain/identity/value-objects/UserId.test.ts` — eliminado describe `generate`
+- `tests/domain/level-catalog/Level.test.ts` — @s4 describe block; `LevelId.generate()` → `LevelId.create(FIXED_ID)`
+- `tests/domain/level-catalog/value-objects/LevelId.test.ts` — eliminado test `should_generate_a_valid_uuid`
+- `tests/domain/leaderboard/Leaderboard.test.ts` — @s6 describe block; `SubmittedAt.now()` → `new SubmittedAt(FIXED_NOW)`
+- `tests/domain/progress/PlayerProgress.test.ts` — @s5 y @s6 describe blocks; IDs y clock inyectados en toda la suite
+- `tests/application/identity/LoginUseCase.test.ts` — `makeActiveUser()` usa `UserId.create()` + `FIXED_NOW`
+- `tests/application/identity/RegisterUserUseCase.test.ts` — `FakeIdGenerator` + `FakeClock` inyectados
+- `tests/application/leaderboard/GetLeaderboardService.test.ts` — `Leaderboard.empty()` + `submitEntry()` con `FIXED_NOW`
+- `tests/application/leaderboard/SubmitScoreService.test.ts` — `FakeClock` inyectado
+- `tests/application/level-catalog/ArchiveLevelUseCase.test.ts` — `FakeClock` inyectado
+- `tests/application/level-catalog/CreateLevelUseCase.test.ts` — `FakeIdGenerator` + `FakeClock`; @s8 describe block
+- `tests/application/level-catalog/PublishLevelUseCase.test.ts` — `FakeClock` inyectado
+- `tests/application/level-catalog/UpdateLevelDefinitionUseCase.test.ts` — `FakeClock` inyectado
+- `tests/application/level-catalog/helpers/levelFixtures.ts` — `FIXED_LEVEL_NOW`; `Level.draft()`, `publish()`, `archive()` actualizados
+- `tests/application/progress/CompleteLevelService.test.ts` — `FakeIdGenerator` + `FakeClock`; `PlayerProgress.empty()` con `now`
+- `tests/application/progress/LoadProgressService.test.ts` — `FakeIdGenerator` + `FakeClock`
+- `tests/application/progress/SyncProgressService.test.ts` — `FakeIdGenerator` + `FakeClock`; `CompletedLevelId` + `now` en `recordCompletion()`
+- `tests/infrastructure/identity/PrismaUserRepository.test.ts` — `makeUser()` usa `UserId.create()` + `FIXED_NOW`
+
+**Specs:**
+- `specs/backend-id-clock-CA-002.spec.md` — **New**
+- `specs/backend-id-clock-CA-002.feature` — **New**
+
+## Code Review Findings (`/code-review --effort high`)
+
+3 ángulos independientes + verificador. 8 findings en total.
+
+### Corregidos en `828f90d`
+
+| ID | Severidad | Archivo | Fix |
+|----|-----------|---------|-----|
+| C8 | CONFIRMED | `src/domain/identity/UserFactory.ts` | `now: Date` (required) reordenado antes de `role = UserRole.USER` (defaulted) — evita API trampa |
+| C3 | CONFIRMED | `tests/application/identity/RegisterUserUseCase.test.ts` | 2 tests instanciaban `new RegisterUserUseCase(repo, hasher)` con `idGenerator`/`clock` undefined — pasados 4 args completos |
+| C7 | CONFIRMED | `tests/domain/level-catalog/Level.test.ts` | 6 llamadas `level.publish(policy)` sin `now` — `updatedAt` undefined silencioso — pasado `FIXED_LEVEL_NOW` |
+| C5 | CONFIRMED | `tests/infrastructure/progress/PrismaProgressRepository.test.ts` | `PlayerProgress.empty()` sin `now` — agregado `FIXED_NOW` |
+| C6 | CONFIRMED | `tests/infrastructure/leaderboard/PrismaLeaderboardRepository.test.ts` | `Leaderboard.empty()` sin `now` — agregado `FIXED_NOW` |
+| C4 | CONFIRMED | `tests/application/progress/SyncProgressService.test.ts` | `FakeIdGenerator.generate()` devolvía siempre el mismo UUID — reemplazado por counter para IDs únicos |
+
+### Pre-existing (no bloquean PR)
+
+| ID | Severidad | Decisión |
+|----|-----------|----------|
+| C1 | CONFIRMED | `SyncProgressService` — `publishAll([])` siempre vacío (pre-existing, requiere decisión de arquitectura) |
+| C2 | PLAUSIBLE | `SubmitScoreService` — `EntryId` debería generarse con `IdGenerator` (pre-existing) |
+
+## Verification
+
+- `npm run verify` → 454/454 tests GREEN; `npm run typecheck` → 0 errors; build PASSED (post-rebase)
+- **Judge** → APPROVED (`ai-log/2026-06-29-MAZ-155-CA-002-judge.md`)
+- **Mutation** → PASS 91.52% / 205 killed / 17 survived / 224 total (`ai-log/2026-06-29-MAZ-155-CA-002-mutation.md`)
+
+## Team Modifications Pending Human Review
+
+- La firma de `PlayerProgress.recordCompletion()` ahora requiere `CompletedLevelId` explícito. En
+  `SyncProgressService`, el idGenerator genera un nuevo ID por cada entrada del loop — si dos
+  entradas locales usan el mismo `levelId`, solo la primera gana (el map usa `levelId` como clave,
+  no el `entryId`). Comportamiento idéntico al anterior, pero ahora explícito.
+- `DomainEvent.occurredOn` es `Date`, no un VO. El equipo puede decidir envolverlo en un VO en el
+  futuro sin afectar la regla de dependencias.
+- Los tests de `RegisterUserUseCase` con 2 args (`new RegisterUserUseCase(repo, hasher)`) siguen
+  pasando porque los casos de error se lanzan antes de que se acceda al idGenerator/clock. Esto es
+  intencional (transpile-only), pero el equipo debería evaluar si prefiere hacerlo explícito.
+
+## Lessons / Limitations
+
+- La cascada de cambios es significativa (55+ archivos) pero completamente predecible: cada VO
+  con `generate()`/`now()` tiene exactamente un adaptador en infrastructure y exactamente un
+  FakeClock/FakeIdGenerator en sus tests.
+- Los DomainEvents heredan `occurredOn` del constructor base: un solo cambio en `DomainEvent.ts`
+  propagó correctamente a los 7 eventos concretos sin tocar cada evento.
+- La separación en batches (domain events → User → Level → progress → leaderboard → application)
+  permitió mantener los tests verdes en cada paso intermedio.
+
+
+---
+
+# AI Usage Log: MAZ-172 (M9/B1) — Backend: leaderboard best-score upsert (stop rejecting replays 422)
+
+## Task / Problem
+
+The leaderboard **rejected every replay**. `Leaderboard.submitEntry` threw
+`DuplicateEntryError` whenever the user already had an entry for the level, which
+`DomainErrorMapper` maps to HTTP 422. There was no "update if better" branch, so
+`Score.isHigherThan` was dead code and improved times could never be recorded.
+The DB constraint `@@unique([leaderboardId, userId])` enforces one entry per user,
+so the fix had to be an upsert, not a second insert. Once login becomes mandatory
+(MAZ-179) and players replay levels to improve, every second win would 422.
+
+Goal: turn `submitEntry` into a best-score upsert — replace the user's stored
+entry only when the new result is strictly better; otherwise keep the best as an
+idempotent no-op (never an error). Re-rank + truncate after an accepted
+improvement. Remove the duplicate-as-error path.
+
+## Tool and Model
+
+Claude Opus 4.8 via Claude Code CLI.
+
+## Prompt Used
+
+User requested starting MAZ-172 following the established team workflow (read both
+`AGENTS.md`, root `MEMORY.md`, `Linear_MCP_Guideline.md`, the M9 memory; new
+worktree; spec → Gherkin → TDD; ai-log + compile usage; commit/push/PR; update
+Linear), noting it is a refactor so all affected tickets/context must be reviewed.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Used | Wrote the spec after reading `Leaderboard`, `ScoreEntry`, `Score`/`TimeSeconds` VOs, `SubmitScoreService`, `PrismaLeaderboardRepository`, `DomainErrorMapper`, and the existing tests. Captured the root cause, the upsert decision, and the CA contract. | `specs/backend-leaderboard-upsert-MAZ-172.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Used | Distilled 9 Gherkin scenarios (`@s1..@s9`) covering replace-if-better, no-op on worse/equal, faster-time tiebreak, ranking/truncation, single-entry-per-user, service-level upsert, and the persistence unique-constraint guarantee. | `specs/backend-leaderboard-upsert-MAZ-172.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red→Green→Refactor: wrote 13 failing domain tests (confirmed RED), implemented `ScoreEntry.isBetterThan` + the upsert in `Leaderboard.submitEntry` (GREEN), then refactored the replace step from `findIndex`/index-assign to `find`/`filter` to remove a dead `undefined` branch. Added application + infra tests. | tests, code, commit, `@s → test` map below |
+| Judge (`.agents/judge.md`) | Referenced | Applied the `docs/reglas_clean_arch.md` checklist within this session (dependency rule, domain purity, invariants in aggregate/entity, no HTTP semantics in domain). No separate adversarial judge session was run. | CA contract in `specs/backend-leaderboard-upsert-MAZ-172.spec.md` |
+| Mutation Tester (`.agents/mutation.md`) | Used | Ran `stryker` scoped to the two changed domain files. First run: 90.74% with 2 survivors on the new `filter((e) => e !== existing)` predicate (single-user tests couldn't distinguish "remove old" from "remove all"). Added `should_keep_other_users_entries_when_one_user_improves`; re-run: `Leaderboard.ts` 100%. | scores below |
+
+## Scenario Coverage (@s ↔ test)
+
+| Scenario | Test | File |
+|----------|------|------|
+| @s1 — better resubmission replaces | `should_replace_entry_when_resubmitted_score_is_better` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s2 — worse resubmission no-op | `should_keep_existing_entry_when_resubmitted_score_is_worse` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s3 — equal resubmission no-op | `should_keep_existing_entry_when_resubmitted_score_and_time_are_equal` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s4 — equal score, faster time replaces | `should_replace_entry_when_same_score_but_faster_time` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s5 — new user added + ranked/truncated | `should_limit_entries_when_max_capacity_reached` (existing) + `should_keep_other_users_entries_when_one_user_improves` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s6 — single entry per user | `should_keep_single_entry_per_user_when_resubmitted` | `tests/domain/leaderboard/Leaderboard.test.ts` |
+| @s7 — service accepts better resubmission | `should_save_updated_entry_when_better_score_resubmitted` | `tests/application/leaderboard/SubmitScoreService.test.ts` |
+| @s8 — service accepts worse resubmission without throwing | `should_save_without_throwing_when_worse_score_resubmitted` | `tests/application/leaderboard/SubmitScoreService.test.ts` |
+| @s9 — repo persists one row per user | `should_persist_a_single_row_per_user_when_entry_replaced` | `tests/infrastructure/leaderboard/PrismaLeaderboardRepository.test.ts` |
+| (support) `isBetterThan` truth table | `ScoreEntry.isBetterThan` describe block (5 tests) | `tests/domain/leaderboard/Leaderboard.test.ts` |
+
+## TDD Cycles
+
+**Batch 1 — domain upsert (RED → GREEN)**
+- RED: removed the `DuplicateEntryError` test, added 8 upsert tests + a 5-test
+  `isBetterThan` describe. `npx jest` → 13 failed (`isBetterThan is not a function`).
+- GREEN: added `ScoreEntry.isBetterThan` (higher score wins, tiebreak by faster
+  time — reuses `Score.isHigherThan` + `TimeSeconds.isFasterThan`); rewrote
+  `Leaderboard.submitEntry` to upsert (replace-if-better, else no-op); deleted the
+  now-dead `DuplicateEntryError` class and its import. 47/47 green.
+
+**Batch 2 — application + infra (RED → GREEN)**
+- Added `SubmitScoreService` tests for better/worse resubmission and a
+  `PrismaLeaderboardRepository` test asserting `createMany` emits exactly one row
+  per user after a replacement (unique constraint respected). 79/79 leaderboard.
+
+**Batch 3 — refactor + mutation hardening**
+- Refactored the replace step (`find`/`filter`, no dead branch, no non-null
+  assertion). Mutation surfaced 2 survivors on the `filter` predicate; added a
+  multi-user "one improves, others kept" test. `Leaderboard.ts` → 100%.
+
+## Result Obtained
+
+**New files:**
+- `specs/backend-leaderboard-upsert-MAZ-172.spec.md` — CA spec + contract
+- `specs/backend-leaderboard-upsert-MAZ-172.feature` — 9 Gherkin scenarios
+
+**Modified source files:**
+- `src/domain/leaderboard/Leaderboard.ts` — `submitEntry` is now a best-score
+  upsert; removed the duplicate-as-error path and `DuplicateEntryError` import
+- `src/domain/leaderboard/ScoreEntry.ts` — new `isBetterThan(other)` (kills the
+  dead `Score.isHigherThan`)
+- `src/domain/leaderboard/errors/LeaderboardErrors.ts` — deleted `DuplicateEntryError`
+
+**Modified test files:**
+- `tests/domain/leaderboard/Leaderboard.test.ts` — upsert + `isBetterThan` tests
+- `tests/application/leaderboard/SubmitScoreService.test.ts` — service upsert tests
+- `tests/infrastructure/leaderboard/PrismaLeaderboardRepository.test.ts` —
+  single-row-per-user constraint test
+
+**Unchanged on purpose:** `SubmitScoreService` (already constructs the entry and
+delegates to the aggregate — the rule belongs in the domain), `PrismaLeaderboardRepository.save`
+(delete-then-recreate already serializes the deduped aggregate), `DomainErrorMapper`,
+`LeaderboardController`, and the OpenAPI/Swagger contract (status codes and bodies
+are identical: better/worse/new all return 201; VO violations still 422).
+
+## Verification
+
+- `npm run verify` — GREEN: lint + typecheck + coverage (63 suites / 418 tests) + build (exit 0).
+- Scoped mutation (`stryker --mutate src/domain/leaderboard/{Leaderboard,ScoreEntry}.ts`):
+  90.74% overall, above the 80% break threshold. `Leaderboard.ts` reached 100%
+  after the multi-user test. The 3 remaining `ScoreEntry.ts` survivors are all on
+  the pre-existing `toProps()` `if (this.rank !== undefined)` line (out of scope
+  for this ticket; not touched by MAZ-172).
+
+## Team Modifications Pending Human Review
+
+1. **HTTP behavior change:** a worse/equal replay now returns **201** instead of
+   **422**. This is the intended fix and unblocks MAZ-184 (client replay UX); any
+   client that switched on the old 422 must be updated (the client currently
+   swallows the 422, so this is strictly safer).
+2. **`DuplicateEntryError` deleted.** It was dead after removing the throw and had
+   no genuine invalid-state caller. If a future ticket needs a true "duplicate"
+   error semantics, reintroduce it explicitly.
+3. **Idempotent no-op still calls `repo.save`.** A worse/equal resubmission
+   persists the (unchanged) aggregate rather than short-circuiting. Kept for
+   simplicity and because the save is a harmless re-serialization of the same
+   best; a future optimization could skip the write when nothing changed.
+
+## Lessons / Limitations
+
+- The `PrismaLeaderboardRepository` test mocks Prisma (no live Postgres in
+  `verify`), so it pins that the adapter emits exactly one row per user rather than
+  exercising a real unique index. A true DB-level constraint test would need an
+  integration harness (out of scope here).
+- Mutation caught a real gap: with a single user on the board, "remove the old
+  entry" and "remove all entries then re-push the new one" are observationally
+  identical. Only a multi-user scenario distinguishes them — a good reminder that
+  per-user logic needs multi-user tests.
+
+
+---
+
+# AI Usage Log: MAZ-174 — Expose GET /users/me (current authenticated user)
+
+## Task / Problem
+
+The Identity API had no current-user endpoint. `PrismaUserRepository.findById` existed but
+was wired to no route, so a mobile client could not validate a persisted JWT or re-hydrate
+the user on relaunch — a blocker for the M9 mandatory-login work (`MAZ-179`). The original
+M1 ticket (`MAZ-78` / AM-007) listed `GET /users/me` in scope but it was never delivered.
+
+Goal: add `GET /users/me`, protected by the existing Bearer auth middleware, returning the
+authenticated user's profile (`userId`, `email`, `username`, `role`) derived strictly from
+the token, never leaking the password hash.
+
+## Tool and Model
+
+Claude Opus 4.8 (1M context) via Claude Code CLI.
+
+## Prompt Used
+
+User requested starting MAZ-174 following the team workflow (review both AGENTS.md, work in a
+new worktree, review root MEMORY.md + Linear_MCP_Guideline.md, register AI usage, run all checks,
+update MEMORY/AGENTS as needed, commit/push/PR/Linear). The `.feature` contract (@s1..@s8) was
+written first and approved by the human (Daniel) before any TDD, including the 3 explicit
+decisions (new `UserController`, `user-not-found → 404`, `malformed token userId → 401`).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the role discipline from AGENTS.md §0.2 (no separate `.agents/` session). Distilled the M9 audit finding into a Clean Architecture spec with the mandatory CA contract block. | `specs/users-me-MAZ-174.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Authored the executable contract: 8 `@s` scenarios (API + use-case + architecture), presented for the single human gate before TDD. | `specs/users-me-MAZ-174.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green→Refactor in one session: wrote the 2 test files first, ran to confirm RED (missing modules), implemented the use case + controller + route + wiring + Swagger, confirmed GREEN. | tests, src, this entry |
+| Judge (`.agents/judge.md`) | Referenced | Self-review against `docs/reglas_clean_arch.md`: dependency rule (application imports only domain/ports/shared-errors), simple-record DTO (no `Date`/entities), HTTP mapping only in framework, `@s → test` completeness. Verdict: PASS. | this entry, `specs/users-me-MAZ-174.spec.md` CA block |
+| Mutation Tester (`.agents/mutation.md`) | Referenced | Ran Stryker scoped to the 3 new files. First run 82.35% (3 survivors: 2 error-message literals + 1 `execute({})` object literal). Strengthened tests; second run **100% (17/17 killed)**. | `reports/mutation/index.html` |
+
+## Scenario Coverage (@s ↔ test)
+
+| Scenario | Test | File |
+|----------|------|------|
+| @s1 — valid token → 200 profile (+ forwards token userId) | `should_return_200_with_profile_and_forward_token_user_id_when_token_is_valid` | `tests/api/identity/getCurrentUser.test.ts` |
+| @s2 — no passwordHash in response | `should_not_expose_password_hash_in_response` / `should_not_expose_password_hash_in_output` | `tests/api/identity/getCurrentUser.test.ts`, `tests/application/identity/GetCurrentUserUseCase.test.ts` |
+| @s3 — missing token → 401 | `should_return_401_when_no_token_provided` | `tests/api/identity/getCurrentUser.test.ts` |
+| @s4 — invalid token → 401 | `should_return_401_when_token_is_invalid` | `tests/api/identity/getCurrentUser.test.ts` |
+| @s5 — user not found → 404 | `should_return_404_when_user_not_found` | `tests/api/identity/getCurrentUser.test.ts` |
+| @s6 — use case returns plain DTO | `should_return_profile_dto_when_user_exists` | `tests/application/identity/GetCurrentUserUseCase.test.ts` |
+| @s7 — use case throws NotFoundError | `should_throw_not_found_error_with_message_when_user_does_not_exist` | `tests/application/identity/GetCurrentUserUseCase.test.ts` |
+| @s8 — malformed userId → UnauthorizedError, repo not queried | `should_throw_unauthorized_error_with_message_and_not_query_repository_when_user_id_is_malformed` | `tests/application/identity/GetCurrentUserUseCase.test.ts` |
+
+## Result Obtained
+
+**New files:**
+- `src/application/identity/use-cases/GetCurrentUserUseCase.ts` — loads the user via the `UserRepository` port; returns `{ userId, email, username, role }`; `NotFoundError` if missing; `UnauthorizedError` (no repo query) on a malformed token userId.
+- `src/framework/identity/UserController.ts` — `me()` reads `userId` from `AuthenticatedRequest.user`, returns 200 envelope.
+- `src/framework/identity/userRoutes.ts` — `createUserRouter(controller, authMiddleware)` mounting `GET /users/me`.
+- `specs/users-me-MAZ-174.spec.md`, `specs/users-me-MAZ-174.feature`.
+- `tests/application/identity/GetCurrentUserUseCase.test.ts`, `tests/api/identity/getCurrentUser.test.ts`, `tests/helpers/createUserTestApp.ts`.
+
+**Modified files:**
+- `src/framework/app.ts` — wire `GetCurrentUserUseCase` (logging decorator) + `UserController` + mount `createUserRouter` behind `authMiddleware`.
+- `src/framework/swagger/openApiSpec.ts` — `/users/me` path (200/401/404) + `CurrentUserResponse` schema.
+- `README.md` — endpoint list adds `GET /users/me`.
+
+No domain change. No new top-level folder. `IdentityController`, `createTestApp`, and the
+register/login tests were intentionally left untouched (additive `UserController`).
+
+## Verification
+
+- `npm run verify` — lint 0, typecheck 0, **65 suites / 412 tests passing**, build clean (dist emitted).
+- Scoped mutation (Stryker) on the 3 new files: **100% (17/17 killed)**.
+
+## Team Modifications Pending Human Review
+
+1. **`user not found` → 404 (not 401).** Approved this session. Open alternative noted in the spec:
+   if the team prefers the client's planned 401→logout (MAZ-180) to auto-trigger on a deleted
+   account, flip the use case to `UnauthorizedError`.
+2. **`email` is returned in the self-profile DTO.** It is the token owner's own data; confirm it
+   is acceptable for account display.
+3. **No refresh/logout here.** Session lifetime (refresh-token rotation) is `MAZ-175`; this slice
+   only adds the read endpoint.
+
+## Lessons / Limitations
+
+- New git worktrees have no `node_modules`; symlinking the sibling checkout's `node_modules`
+  broke ts-jest's ESM transform resolution. A real `npm ci` in the worktree is the reliable path
+  (Prisma client generates via the `postinstall`). Run jest with `--experimental-vm-modules`.
+- The API tests use a fake use case, so the `execute({ userId })` → `execute({})` mutant only
+  dies when the fake records its input and the test asserts the controller forwards the
+  token-derived `userId` — important because "userId from token, never from body" is the security
+  invariant of every authed endpoint.
+
+
+---
+
+# Mutación — ticket MAZ-176
+
+**Veredicto:** PASS
+**Score:** 12/12 killed = 100% (umbral: 80%)
+
+## Alcance
+
+- `src/domain/progress/value-objects/CompletedAt.ts`
+
+## Comando
+
+```bash
+npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"
+```
+
+## Mutantes sobrevivientes
+
+- Ninguno.
+
+## Nota
+
+La primera corrida obtuvo 83.33% con dos mutantes sobrevivientes de string
+literal en mensajes de error. Se agregaron aserciones explícitas de mensaje en
+`tests/domain/progress/value-objects/CompletedAt.test.ts` y la repetición quedó
+en 100%.
+
+
+---
+
+# AI Usage Log: MAZ-176 Progress Timestamp And Referential Integrity
+
+## Task / Problem
+
+Implement Linear ticket `MAZ-176`: reject invalid progress `completedAt`
+timestamps before persistence and add database referential integrity for
+progress/leaderboard user and level references.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user requested implementation of `MAZ-176` in a new worktree, with
+mandatory review of backend/client `AGENTS.md`, `MEMORY.md`,
+`Linear_MCP_Guideline.md`, AI usage logging, checks, commit, push, PR, and
+Linear updates. No secrets were pasted or committed.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Read and applied the requirement to create a local spec with purpose, scope, behavior, Clean Architecture contract, decisions, and acceptance criteria before code. | `specs/progress-integrity.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Read and applied the executable-contract rule by creating stable `@s1..@s3` scenarios from the Linear acceptance criteria. | `specs/progress-integrity.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Followed red-green-refactor: added failing tests for invalid timestamps and migration FKs, implemented the minimum domain/schema/migration changes, then reran focused and full checks. | tests listed below, commit |
+| Judge (`.agents/judge.md`) | Not used | No separate judge review was run in this session. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Referenced | Read mutation rules and ran scoped Stryker on the touched domain value object. Initial run found two surviving message mutants; tests were tightened and rerun to 100%. | `ai-log/2026-06-28-MAZ-176-mutation.md` |
+
+## Scenario Coverage (@s ↔ test)
+
+- @s1 → `tests/api/progress/completeLevel.test.ts` `should_return_422_and_skip_save_when_completed_at_is_invalid`; `tests/application/progress/CompleteLevelService.test.ts` `should_reject_completion_and_skip_save_when_completed_at_is_invalid`; `tests/domain/progress/value-objects/CompletedAt.test.ts` `should_throw_invalid_argument_when_date_is_invalid`
+- @s2 → `tests/application/progress/SyncProgressService.test.ts` `should_reject_sync_and_skip_save_when_completed_at_is_invalid`; `tests/domain/progress/value-objects/CompletedAt.test.ts` `should_throw_invalid_argument_when_date_is_invalid`
+- @s3 → `tests/infrastructure/database/PrismaMigrationIntegrity.test.ts` `should_define_user_and_level_foreign_keys_when_migration_is_inspected`; `should_cast_level_references_to_uuid_before_adding_level_foreign_keys`
+
+## Result Obtained
+
+- Added `CompletedAt` validation for invalid and future dates in the domain
+  value object.
+- Added tests proving complete-level and sync flows reject invalid timestamps
+  before persistence.
+- Added Prisma schema relations for user/level ownership integrity.
+- Added migration `20260628000000_add_progress_integrity` to cast level
+  references to UUID and add restrict FKs:
+  `leaderboard_entries.user_id`, `player_progress.user_id`,
+  `leaderboards.level_id`, and `completed_levels.level_id`.
+- Updated Swagger/OpenAPI to document Progress `422 INVALID_ARGUMENT` timestamp
+  responses.
+
+## Verification
+
+- `npm test -- --runInBand tests/domain/progress/value-objects/CompletedAt.test.ts tests/application/progress/CompleteLevelService.test.ts tests/application/progress/SyncProgressService.test.ts tests/api/progress/completeLevel.test.ts tests/infrastructure/database/PrismaMigrationIntegrity.test.ts` — passed.
+- `npm run db:generate` — passed.
+- `DATABASE_URL=postgresql://arrow_maze:arrow_maze@localhost:55432/arrow_maze npm run db:migrate` against temporary Postgres 16 — passed; all 3 migrations applied cleanly.
+- `npm run export-openapi` — passed.
+- `npm run verify` — passed; 65 suites / 411 tests.
+- `npm run mutation -- --mutate "src/domain/progress/value-objects/CompletedAt.ts"` — passed; 12/12 killed, 100%.
+
+## Team Modifications Pending Human Review
+
+- Review the policy choice `ON DELETE RESTRICT` for new user/level FKs. It
+  prevents accidental orphaning and silent score/progress loss; explicit delete
+  cleanup can be added later if the team wants deletion workflows.
+- Existing databases with orphan rows or non-UUID `level_id` strings must clean
+  those rows before applying the migration.
+
+## Lessons / Limitations
+
+- Postgres requires compatible types for real FKs, so `level_id` columns had to
+  move from `varchar` to `uuid` to reference `levels.id`.
+- String-literal mutation survivors on public domain error messages were useful;
+  tests now pin those messages.
+
+
+---
+
+# Review — MAZ-155 / CA-002: Backend — Sacar generación de IDs y reloj real del dominio
+
+**Veredicto:** APPROVED
+
+Date: 2026-06-29
+Branch: `refactor/backend-id-clock-CA-002`
+Commits reviewed: `268ebc2` (impl) → `828f90d` (code review fixes + rebase resolution)
+
+---
+
+## Cobertura de escenarios (@s ↔ test)
+
+- @s1: [x] `rg "from 'crypto'" src/domain` → 0 matches. Verificado.
+- @s2: [x] `rg "new Date\(\)" src/domain` → 0 matches. Verificado.
+- @s3: [x] `tests/domain/identity/User.test.ts:179` — `should_set_createdAt_and_updatedAt_to_injected_now_when_registered`, `:199` — `should_set_updatedAt_to_injected_now_when_password_is_changed`, `:214` — `should_set_updatedAt_to_injected_now_when_suspended`
+- @s4: [x] `tests/domain/level-catalog/Level.test.ts:211` — `should_set_createdAt_and_updatedAt_to_injected_now_when_drafted`, `:217` published, `:224` definition updated, `:231` archived
+- @s5: [x] `tests/domain/progress/PlayerProgress.test.ts:192` — `should_use_injected_entry_id_when_recording_first_completion`, `:202` — `should_set_updatedAt_to_injected_now_when_recording_completion`, `:211` — `should_set_updatedAt_to_injected_now_when_empty_created`
+- @s6: [x] `tests/domain/leaderboard/Leaderboard.test.ts:402` — `should_set_updatedAt_to_injected_now_when_empty_leaderboard_created`, `:408` — `should_set_updatedAt_to_injected_now_when_entry_submitted`; `tests/domain/progress/PlayerProgress.test.ts:220` — ProgressMergePolicy injected clock
+- @s7: [x] `tests/domain/DomainEvent.test.ts:10` — `should_store_injected_occurredOn_when_event_is_created`, `:22` — `should_not_call_new_Date_internally_when_occurredOn_is_injected`
+- @s8: [x] `tests/application/identity/RegisterUserUseCase.test.ts:49` — `should_return_userId_when_registration_succeeds` (verifica `result.userId === FAKE_ID`); `tests/application/level-catalog/CreateLevelUseCase.test.ts:202` — `should_use_injected_id_when_level_is_created`, `:217` — `should_use_injected_clock_when_level_is_created`
+- @s9: [x] `tests/infrastructure/UuidIdGenerator.test.ts:8` — `should_return_valid_uuid_v4_when_generate_is_called`
+- @s10: [x] `tests/infrastructure/SystemClock.test.ts:4` — `SystemClock` suite — `should_return_a_Date_instance`
+- @s11: [x] `npm run verify` → 454/454 GREEN, 70 suites, 0 typecheck errors, build PASSED
+
+---
+
+## Disciplina TDD
+
+- ¿Producción sin test que la pida? NO — `IdGenerator.ts`, `Clock.ts`, `UuidIdGenerator.ts`, `SystemClock.ts` cubiertos por @s8–@s10. Cambios en agregados cubiertos por @s3–@s7.
+- ¿Evidencia de Rojo→Verde→Refactor? SÍ — ai-log `2026-06-24-MAZ-155-CA-002.md` documenta 6 batches de implementación con mapa `@s → test` completo.
+- `FakeIdGenerator` usa counter para IDs únicos (hallazgo C4 del code review, fixeado en `828f90d`).
+
+---
+
+## Regla de dependencia y calidad
+
+Checks arquitectónicos ejecutados:
+
+```
+rg "httpStatus|from 'crypto'|from '.*shared/errors/AppError'"  src/domain → 0 matches ✅
+rg "from '.*(infrastructure|framework)'"  src/domain src/application → 0 matches ✅
+rg "role !==|role ===|isAdmin|ADMIN"  src/framework → matches en LevelCatalogController.ts:45,76,101,115 y openApiSpec.ts — PRE-EXISTING (AM-012, no introducido por CA-002; alcance de CA-003)
+rg "createdAt: Date|updatedAt: Date|submittedAt: Date|completedAt: Date"  src/application → matches en LoadProgressService.ts, GetLeaderboardService.ts, GetLevelsUseCase.ts, GetLevelUseCase.ts — PRE-EXISTING (DTO types no modificados por CA-002; git show 268ebc2 lo confirma)
+```
+
+Ningún `new Date()` ni `from 'crypto'` fue agregado al dominio por este ticket.
+
+---
+
+## Checklist Clean Architecture / DDD
+
+- **Regla de dependencia**: PASS — 0 violations en domain/application tras grep exhaustivo
+- **Dominio independiente**: PASS — `src/domain` no importa `application`, `infrastructure`, `framework`, `AppError`, `crypto`, ni expone `httpStatus`
+- **Application solo orquesta**: PASS — `IdGenerator` y `Clock` son puertos (interfaces); use-cases solo coordinan y delegan; no hay reglas de negocio nuevas en application
+- **Repositorios: interfaz adentro, implementación afuera**: PASS — `IdGenerator` y `Clock` viven en `src/application/ports/`; `UuidIdGenerator` y `SystemClock` en `src/infrastructure/shared/`
+- **DTOs simples en fronteras**: PASS (para CA-002) — los `Date` en DTOs de output (`LoadProgressService`, `GetLeaderboardService`) son pre-existentes y no introducidos por este ticket; confirmado con `git show 268ebc2`
+- **Invariantes en VO/agregados**: PASS — no se movieron invariantes; la generación de IDs y timestamps pasó de estar en el dominio a ser inyectada, sin cambiar dónde viven las reglas de negocio
+- **Errores de dominio sin semántica HTTP**: PASS — out of scope; cubierto por CA-001
+- **MVVM**: N/A — ticket backend puro
+- **Impacto por capa declarado vs. real**: PASS
+  - Domain: ✅ eliminó `crypto` y `new Date()` de VOs y agregados, agregó `now: Date` params
+  - Application: ✅ dos nuevos puertos, 9 use-cases actualizados con DI
+  - Infrastructure: ✅ dos nuevos adaptadores
+  - Framework: ✅ solo wiring en `app.ts`
+
+---
+
+## Notas (pre-existing, no bloquean aprobación)
+
+1. `LevelCatalogController.ts:45,76,101,115` — `role !== 'ADMIN'` en controller. Lógica de autorización que debería vivir en application o domain. Pre-existing de AM-012. Candidato para CA-003.
+2. `LoadProgressService.ts`, `GetLeaderboardService.ts`, `GetLevelsUseCase.ts`, `GetLevelUseCase.ts` — output DTOs exponen `Date`. Viola "DTOs simples" del template. Pre-existing. Candidato para ticket CA separado (serializar a ISO string antes de cruzar frontera a framework).
+
+---
+
+## Commits Conventional
+
+- `268ebc2 refactor(domain): remove crypto and real clock from domain layer (CA-002)` ✅
+- `828f90d fix(ca-002): address code review findings and rebase conflict resolutions` ✅
+
+## Entrada ai-log presente
+
+- `ai-log/2026-06-24-MAZ-155-CA-002.md` — presente y completa con mapa @s→test ✅
+
+
+---
+
+# Mutación — ticket MAZ-155 (CA-002)
+
+**Veredicto:** PASS
+**Score:** 205/224 killed = 91.52% (umbral: 80%)
+**Fecha:** 2026-06-29
+**Branch:** `refactor/backend-id-clock-CA-002`
+**Pasada:** 1
+
+## Resumen por archivo
+
+| Archivo | Score total | Score cubierto | Killed | Survived | No cov | Errors |
+|---------|-------------|----------------|--------|----------|--------|--------|
+| **All files** | **91.52%** | **92.34%** | **205** | **17** | **2** | **0** |
+| RegisterUserUseCase.ts | 80.00% | 80.00% | 8 | 2 | 0 | 0 |
+| SubmitScoreService.ts | 100.00% | 100.00% | 6 | 0 | 0 | 0 |
+| ArchiveLevelUseCase.ts | 83.33% | 83.33% | 5 | 1 | 0 | 0 |
+| CreateLevelUseCase.ts | 70.59% | 80.00% | 12 | 3 | 2 | 0 |
+| PublishLevelUseCase.ts | 83.33% | 83.33% | 5 | 1 | 0 | 0 |
+| UpdateLevelDefinitionUseCase.ts | 83.33% | 83.33% | 5 | 1 | 0 | 0 |
+| CompleteLevelService.ts | 100.00% | 100.00% | 5 | 0 | 0 | 0 |
+| LoadProgressService.ts | 100.00% | 100.00% | 9 | 0 | 0 | 0 |
+| SyncProgressService.ts | 100.00% | 100.00% | 6 | 0 | 0 | 0 |
+| User.ts | 95.00% | 95.00% | 19 | 1 | 0 | 0 |
+| UserFactory.ts | 100.00% | 100.00% | 1 | 0 | 0 | 0 |
+| Leaderboard.ts | 100.00% | 100.00% | 38 | 0 | 0 | 0 |
+| Level.ts | 85.45% | 85.45% | 47 | 8 | 0 | 0 |
+| ProgressMergePolicy.ts | 100.00% | 100.00% | 14 | 0 | 0 | 0 |
+| CompletedLevel.ts | 100.00% | 100.00% | 4 | 0 | 0 | 0 |
+| PlayerProgress.ts | 100.00% | 100.00% | 21 | 0 | 0 | 0 |
+| DomainEvent.ts | n/a (no mutants) | — | 0 | 0 | 0 | 0 |
+
+## Mutantes sobrevivientes (17)
+
+Todos son pre-existentes — ninguno fue introducido por CA-002.
+
+### Patrón 1 — StringLiteral (12 survivors): error messages sin verificación exacta
+
+Los tests verifican que se lanza el error del tipo correcto pero no el mensaje exacto. Este es el patrón más común de sobreviviente y existía antes de CA-002.
+
+| Archivo | Línea | Mutación | Test que corrió |
+|---------|-------|----------|-----------------|
+| `RegisterUserUseCase.ts:37` | StringLiteral | `"Email already registered"` → `""` | `should_throw_conflict_error_when_email_already_exists` |
+| `RegisterUserUseCase.ts:41` | StringLiteral | `"Username already taken"` → `""` | `should_throw_conflict_error_when_username_already_taken` |
+| `ArchiveLevelUseCase.ts:19` | StringLiteral | `` `Level not found: ...` `` → ` `` ` | `should_throw_not_found_when_level_does_not_exist` |
+| `CreateLevelUseCase.ts:56` | StringLiteral | `'difficulty'` → `""` en `parseEnumFromInput` | 12 tests |
+| `CreateLevelUseCase.ts:88` | StringLiteral | `"direction"` → `""` en `parseEnumFromInput` | 12 tests |
+| `PublishLevelUseCase.ts:21` | StringLiteral | `Level not found: ...` → `` | `should_throw_not_found_when_level_does_not_exist` |
+| `UpdateLevelDefinitionUseCase.ts:28` | StringLiteral | `Level not found: ...` → `` | `should_throw_not_found_when_level_does_not_exist` |
+| `User.ts:64` | StringLiteral | `"User is already suspended"` → `""` | `should_throw_business_rule_violation_when_suspending_already_suspended_user` |
+| `Level.ts:103` | StringLiteral | `"Level has an arrow cell outside the board shape mask"` → `""` | 4 tests |
+| `Level.ts:110` | StringLiteral | `"Only draft levels can be published"` → `""` | `should_throw_when_already_published_level_is_published_again` |
+| `Level.ts:114` | StringLiteral | `"Level definition contains a circular arrow blocking dependency"` → `""` | 2 tests |
+| `Level.ts:127` | StringLiteral | `"Only draft levels can have their definition updated"` → `""` | `should_throw_when_updating_definition_of_published_level` |
+| `Level.ts:136` | StringLiteral | `"Only published levels can be archived"` → `""` | `should_throw_when_draft_level_is_archived` |
+
+**Falta para matarlos**: tests que verifiquen el mensaje exacto (`.message === "..."`) además del tipo de error.
+
+### Patrón 2 — ConditionalExpression / BlockStatement (4 survivors)
+
+| Archivo | Línea | Mutación | Problema |
+|---------|-------|----------|---------|
+| `CreateLevelUseCase.ts:85` | ConditionalExpression | `if (input.direction === undefined)` → `if (false)` | No hay test que pase `direction: undefined` y espere ValidationError |
+| `Level.ts:148` | BlockStatement | `get timeLimit()` → `{}` (retorna undefined siempre) | Ningún test lee `level.timeLimit` directamente |
+| `Level.ts:152` | ConditionalExpression | `get isDraft` → `return true` | Solo 1 test verifica `isDraft`; no hay test con nivel publicado chequeando `isDraft === false` |
+| `Level.ts:153` | ConditionalExpression | `get isPublished` → `return true` | Solo 1 test verifica `isPublished`; no hay test con nivel draft chequeando `isPublished === false` |
+
+### No Coverage (2)
+
+| Archivo | Línea | Tipo |
+|---------|-------|------|
+| `CreateLevelUseCase.ts:85` | BlockStatement | `if (input.direction === undefined) { throw ... }` — path no ejecutado por ningún test |
+| `CreateLevelUseCase.ts:86` | StringLiteral | mismo path |
+
+---
+
+## Análisis de cobertura para CA-002
+
+Los cambios específicos de CA-002 (ports `IdGenerator`/`Clock`, inyección en use-cases, eliminación de `crypto`/`new Date()` del dominio) están cubiertos correctamente:
+
+- `PlayerProgress.ts`: **100%** ✅
+- `Leaderboard.ts`: **100%** ✅
+- `ProgressMergePolicy.ts`: **100%** ✅
+- `CompletedLevel.ts`: **100%** ✅
+- `LoadProgressService.ts`: **100%** ✅
+- `SyncProgressService.ts`: **100%** ✅
+- `CompleteLevelService.ts`: **100%** ✅
+- `SubmitScoreService.ts`: **100%** ✅
+- `UserFactory.ts`: **100%** ✅
+
+Los sobrevivientes viven en código pre-existente (error messages, getters de Level) no modificado por CA-002.
+
+---
+
+## Acción requerida
+
+Score 91.52% por encima del umbral 80%. Veredicto: **PASS**.
+
+Los 17 sobrevivientes pueden ser objetivo del `tdd-implementer` en un ticket separado si se desea mejorar la cobertura de mensajes de error y los getters de `Level`. No bloquean el merge de CA-002.
+
+
+---
+
+# AI Usage Log: MAZ-156 (CA-003) — Audit: admin authorization migration coverage
+
+## Task / Problem
+
+Determine whether `MAZ-156 (CA-003)` — "Backend: mover autorización ADMIN desde
+controllers a application policy" — still has remaining implementation scope
+after the team merged `MAZ-177` (PR #64) to `develop` on 2026-06-30.
+
+The original CA-003 violation: `LevelCatalogController.ts` lines 45, 76, 101,
+and 115 contained inline `role !== 'ADMIN'` comparisons and threw `ForbiddenError`
+directly — a business rule living in the framework layer.
+
+## Tool and Model
+
+Claude Code / Claude Sonnet 4.6.
+
+## Prompt Used
+
+The user asked to pull `develop`, read the full project context (AGENTS.md,
+docs/, claude-memory.md, memory files), and start CA-003. After the pull
+surfaced MAZ-177's changes, the user asked for an architecture audit before
+deciding scope.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | The CA-003 exploration findings from the previous session guided the audit scope. No spec was produced because the implementation was already done by another ticket. | `claude-memory.md` §CA-003 exploration, `docs/reglas_clean_arch.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Not used | No Gherkin contract was needed — this was a coverage audit, not a new implementation. | N/A |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Not used | No production code was written. | N/A |
+| Judge (`.agents/judge.md`) | Not used | No implementation to judge. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No new domain/application code was added. | N/A |
+
+## Scenario Coverage (@s ↔ test)
+
+N/A — no implementation or Gherkin contract produced in this session.
+
+## Result Obtained
+
+**Audit findings:**
+
+1. `MAZ-177` (PR #64, merged 2026-06-30) fully implemented the CA-003 goal:
+   - Created `src/application/level-catalog/use-cases/authorizeLevelCatalogMutation.ts`
+     with `assertAdminActor(actorRole: string)` — authorization decision lives in
+     the application layer.
+   - All 4 mutation use-cases (`Create`, `UpdateDefinition`, `Publish`, `Archive`)
+     call `assertAdminActor(input.actorRole)` as the first statement.
+   - `LevelCatalogController` now only reads `actorRole` from the JWT payload and
+     passes it as input — zero inline `ForbiddenError` or role comparisons remain.
+   - Architecture boundary test (`tests/architecture/levelCatalogAuthorizationBoundary.test.ts`)
+     enforces the rule statically.
+
+2. Framework-layer grep confirmed: no remaining `role !== 'ADMIN'` or inline
+   `ForbiddenError` in any controller (`LevelCatalogController`,
+   `LeaderboardController`, `IdentityController`).
+
+3. One open observation (not a CA violation): `AuthenticatedRequest.user.role`
+   is typed as `string` rather than `UserRole`. The `assertAdminActor` parameter
+   is likewise `string`. This is a TypeScript type-safety gap, not an architecture
+   dependency violation. The dependency direction is correct.
+
+**Decision:** CA-003 is satisfied by MAZ-177. No further implementation needed.
+The `string` → `UserRole` type improvement, if desired, is a separate `chore`
+that does not require the CA pipeline.
+
+## Verification
+
+- `git log --oneline origin/develop -5` confirmed PR #64 merged.
+- `grep -rn "ADMIN\|ForbiddenError\|role" src/framework/` — no inline auth
+  decisions found in any controller.
+- `src/application/level-catalog/use-cases/authorizeLevelCatalogMutation.ts`
+  confirmed present and imported by all 4 mutation use-cases.
+
+## Team Modifications Pending Human Review
+
+- Update MAZ-156 (CA-003) in Linear to **Done** — the ticket objective is
+  covered by MAZ-177.
+- Optional follow-up: type `AuthenticatedRequest.user.role` as `UserRole` and
+  update `assertAdminActor` signature. Estimated effort: ~4 lines across 2 files.
+  Does not require spec/feature/TDD cycle — a plain `chore` commit suffices.
+
+## Lessons / Limitations
+
+- Cross-team ticket overlap is a real risk when multiple developers work on the
+  same milestone. MAZ-177 (Daniella/Daniel) implemented exactly what CA-003
+  required without coordinating via the CA ticket. Future CA tickets should be
+  communicated to the full team before starting to avoid silent duplication.
+- Pulling `develop` before starting any CA ticket is mandatory — the current
+  state of the codebase can render the planned work already done.
+
+
+---
+
+# Review — MAZ-158 (CA-005)
+
+**Veredicto:** APPROVED
+
+## Cobertura de escenarios (@s ↔ test)
+
+- @s1: [x] `crypto` bare import → lint exit 1 — verificado con probe file durante TDD; regla `no-restricted-imports` en `eslint.config.js` (domain block, pattern `crypto`). Sin Jest test permanente — aceptable: la spec declara explícitamente "Tests: No funcionales; validar `npm run lint`".
+- @s2: [x] `node:crypto` import → lint exit 1 — mismo pattern, mismo bloque ESLint.
+- @s3: [x] `AppError` import → lint exit 1 — verificado con probe file; pattern `**/shared/errors/AppError*` en mismo bloque.
+- @s4: [x] `leaderboard/ports/` sin prefijo `I` — cubierto por `tests/architecture/portNamingConvention.test.ts → should_not_use_I_prefix_in_port_filenames`.
+- @s5: [x] `progress/ports/` sin prefijo `I` — mismo test, itera todos los bounded contexts.
+- @s6: [x] `npm run verify` exit 0 — 82 suites, 526 tests GREEN, lint GREEN, typecheck GREEN, build GREEN.
+- @s7: [x] `docs/architecture.md` con sección "Port naming convention" y "ESLint architectural guardrails" — presentes en commit `ca27f59`.
+
+## Disciplina TDD
+
+- ¿Producción sin test que la pida? NO. Cada cambio tiene su verificación:
+  - Reglas ESLint: probe files (RED) → regla añadida (GREEN) → probe borrado.
+  - Port rename: `portNamingConvention.test.ts` escrito primero (RED con `ILeaderboardRepository.ts` existente) → rename (GREEN).
+- ¿Evidencia de Rojo→Verde→Refactor? SÍ — ciclos documentados en sesión: lint exit 0 sin regla → lint exit 1 con regla; test fallando con I-prefix → pasando tras rename.
+
+## Regla de dependencia y calidad
+
+- `eslint.config.js:33-46` — bloque `no-restricted-imports` correctamente scoped a `src/domain/**/*.ts`. Dos patterns: `crypto`/`node:crypto` y `**/shared/errors/AppError*`. Sin side effects en otras capas.
+- `src/application/leaderboard/ports/LeaderboardRepository.ts` — renombrado de `ILeaderboardRepository.ts`. Solo cambio de filename; contenido y tipo exportado (`LeaderboardRepository`) sin cambios.
+- `src/application/progress/ports/ProgressRepository.ts` — ídem.
+- 7 archivos con import path actualizado (`ILeaderboardRepository.js` → `LeaderboardRepository.js`, `IProgressRepository.js` → `ProgressRepository.js`) — cambio mecánico, sin lógica añadida.
+- `tests/architecture/portNamingConvention.test.ts` — lee `readdirSync` sobre dirs de ports, verifica nombre de archivo con `/^I[A-Z]/`. Correcto: testea comportamiento observable (filesystem), no detalles de implementación.
+
+**Hallazgos pre-existentes (no introducidos por CA-005 — no bloquean):**
+
+- `src/application/leaderboard/use-cases/GetLeaderboardService.ts:19`: `submittedAt: Date` en output DTO — viola "DTOs simples, no exponer `Date`". Pre-existente, fuera del scope de CA-005.
+- `src/application/level-catalog/use-cases/GetLevelsUseCase.ts:13`, `GetLevelUseCase.ts:17-18`, `LoadProgressService.ts:18,26`: mismo patrón `Date` en outputs. Pre-existente.
+- `src/framework/swagger/openApiSpec.ts:948,987`: referencias `'ADMIN'` en enum de Swagger schema — legítimas como documentación de API, no son reglas de negocio.
+
+## Checklist Clean Architecture / DDD / MVVM
+
+- **Regla de dependencia:** PASS — ningún archivo del commit introduce dependencias cruzadas. Grep `from.*infrastructure|framework` en domain/application: 0 matches.
+- **Dominio independiente:** PASS — domain tiene 0 imports de crypto/AppError/httpStatus. Reglas ESLint lo garantizan hacia el futuro.
+- **Application solo orquesta:** PASS — los 7 archivos de application/infrastructure modificados solo cambian una ruta de import; lógica intacta.
+- **Repositorios: interfaz adentro, implementación afuera:** PASS — `LeaderboardRepository` e `ProgressRepository` siguen siendo interfaces en `src/application`; implementaciones Prisma en `src/infrastructure`.
+- **DTOs simples en fronteras:** PASS para CA-005 (no introduce nuevos DTOs). Violaciones pre-existentes de `Date` documentadas como hallazgos, no atribuibles a este ticket.
+- **Invariantes en VO/agregados:** N/A — no se tocan entidades ni VOs.
+- **Errores de dominio sin semántica HTTP:** PASS — nueva regla ESLint enforcea esto.
+- **MVVM:** N/A
+- **Impacto por capa declarado vs. real:**
+  - Domain: declarado `no previsto` — real: 0 archivos tocados. PASS
+  - Application: declarado "rename 2 port files + update 5 imports" — real: exactamente eso. PASS
+  - Infrastructure: declarado "update 2 import paths" — real: `PrismaLeaderboardRepository.ts` + `PrismaProgressRepository.ts`. PASS
+  - Framework: declarado "`eslint.config.js`" — real: exactamente eso. PASS
+
+## npm run verify
+
+82 suites / 526 tests — GREEN. Commit `ca27f59`.
+
+
+---
+
+# AI Usage Log: MAZ-173 Leaderboard Submit/Read Contract Planning
+
+## Task / Problem
+
+Prepare MAZ-173 for implementation: harden the backend leaderboard submit/read
+contract so the client no longer controls leaderboard ids, entry ids, or
+username snapshots, and so known levels with no scores return an empty
+leaderboard instead of 404. The ticket is still in Linear Backlog and no
+approved executable contract existed in the repository, so production TDD work
+is blocked until the human approval gate is satisfied.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked Codex to work MAZ-173, review backend/client AGENTS.md,
+MEMORY.md, Linear guidance, AI usage logging, affected tickets, create a new
+worktree, and follow commit/PR/Linear rules. Local Linear was queried through
+the configured environment variable without printing secrets.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Read and applied the requirement for a source-touching spec with behavior, HTTP contract, Clean Architecture contract, decisions, edge cases, and affected tickets. | `specs/leaderboard-submit-read-contract.spec.md`, Linear MAZ-173 |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Read and applied the requirement for stable executable Gherkin scenarios before TDD. No new Linear tickets were created because MAZ-173 already exists. | `specs/leaderboard-submit-read-contract.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Read and applied the precondition that no production code may be written until the executable contract is approved and the ticket is approved for implementation. | Blocked before `src`/`tests` edits |
+| Judge (`.agents/judge.md`) | Referenced | Read and applied the requirement that source-touching tickets include a Clean Architecture contract with per-layer impact before implementation. | `specs/leaderboard-submit-read-contract.spec.md` |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No production code was changed, so mutation testing is not applicable yet. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+Pending implementation after human approval:
+
+- @s1 -> pending
+- @s2 -> pending
+- @s3 -> pending
+- @s4 -> pending
+- @s5 -> pending
+- @s6 -> pending
+- @s7 -> pending
+
+## Result Obtained
+
+- Created a new backend worktree at `worktrees/am-MAZ-173` on branch
+  `refactor/backend-leaderboard-contract-MAZ-173`.
+- Queried Linear MAZ-173 and confirmed it is in Backlog with `repo:backend`,
+  `type:contract`, and `layer:framework` labels.
+- Reviewed current leaderboard code and found that `LeaderboardController` and
+  `SubmitScoreInput` still accept client-owned `leaderboardId`, `entryId`, and
+  `usernameSnapshot`.
+- Reviewed current read behavior and found that `GetLeaderboardService` returns
+  `NotFoundError` whenever no leaderboard row exists, without checking whether
+  the level exists.
+- Reviewed affected tickets MAZ-174, MAZ-183, and MAZ-184 in Linear.
+- Added `specs/leaderboard-submit-read-contract.spec.md`.
+- Added `specs/leaderboard-submit-read-contract.feature` with scenarios `@s1`
+  through `@s7`.
+
+## Verification
+
+- `npm ci` (required because the new worktree did not have `node_modules`)
+- `npm run verify` - passed: lint, typecheck, coverage, and build; 67 test
+  suites / 436 tests passed.
+
+## Team Modifications Pending Human Review
+
+- Approve or change `specs/leaderboard-submit-read-contract.feature`.
+- Move MAZ-173 from Backlog to Todo/In Progress according to the team Linear
+  workflow before TDD implementation starts.
+- Confirm stale-token user behavior: preserve MAZ-174's current user-not-found
+  404, or remap missing authenticated user records to 401 for submit.
+- Coordinate client MAZ-183 and MAZ-184 against the slim submit DTO and empty
+  leaderboard response shape.
+
+## Lessons / Limitations
+
+The current backend already has the domain pieces needed for server-owned ids
+(`LeaderboardId.generate()` and `EntryId.generate()`), and MAZ-174 provides a
+precedent for resolving the authenticated user by token `userId`. The remaining
+work is a contract/application refactor, but TDD implementation is intentionally
+blocked until the executable contract is approved.
+
+
+---
+
+# AI Log — MAZ-173 Leaderboard submit/read contract hardening
+
+Date: 2026-06-29
+Ticket: MAZ-173
+
+## Task / Problem
+
+Implement the backend leaderboard contract that had previously landed only as planning/spec work. The backend needed to stop trusting client-owned leaderboard ids, entry ids, user ids, and username snapshots, while returning an empty leaderboard for known scoreless levels.
+
+## Tool and Model
+
+OpenAI Codex CLI, GPT-5 coding agent.
+
+## Prompt Used
+
+User requested completing the remaining M9 closure work after auditing that MAZ-173 was contract-only in `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing MAZ-173 backend contract spec. | `specs/leaderboard-submit-read-contract.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing `@s1..@s7` scenarios as the executable contract. | `specs/leaderboard-submit-read-contract.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Implemented against application/API/OpenAPI tests for slim submit and known-empty reads. | Tests listed in `@s → test` map |
+| Judge (`.agents/judge.md`) | Not used | No separate judge session was run in this pass. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Mutation testing was not run during this pass. | N/A |
+
+## Result Obtained
+
+- Slimmed `SubmitScoreInput` to authenticated `userId` plus gameplay facts.
+- Updated `LeaderboardController` to parse only `levelId`, `score`, `timeSeconds`, and `movesCount`; spoofed id/username fields are ignored.
+- Updated `SubmitScoreService` to load the authenticated user, validate the level, generate server-owned `LeaderboardId`/`EntryId`, and use the persisted username snapshot.
+- Updated `GetLeaderboardService` to return `{ levelId, entries: [] }` for known scoreless levels without creating a leaderboard row, while keeping `404` for unknown levels.
+- Updated OpenAPI source and generated `docs/openapi.json` for the slim submit schema and empty leaderboard response.
+
+## @s → Test Map
+
+| Scenario | Concrete tests |
+| --- | --- |
+| `@s1` Authenticated slim submit stores server-owned ids and username | `tests/application/leaderboard/SubmitScoreService.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s2` Spoofed identity fields ignored | `tests/framework/leaderboard/LeaderboardController.test.ts`, `tests/api/leaderboard/submitScore.test.ts` |
+| `@s3` Anonymous/invalid submit rejected | `tests/api/leaderboard/submitScore.test.ts` |
+| `@s4` Submit requires gameplay fields | `tests/api/leaderboard/submitScore.test.ts`, `tests/framework/leaderboard/LeaderboardController.test.ts` |
+| `@s5` Known scoreless level returns empty leaderboard | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s6` Unknown level returns not found | `tests/application/leaderboard/GetLeaderboardService.test.ts`, `tests/api/leaderboard/getLeaderboard.test.ts` |
+| `@s7` OpenAPI documents slim submit contract | `tests/framework/swagger/openApiSpec.test.ts` |
+
+## Verification
+
+- `npm run typecheck` passed.
+- Targeted leaderboard tests passed: 5 suites, 31 tests.
+- `npm run verify` passed: 72 suites, 467 tests.
+
+## Team Modifications Pending Human Review
+
+- Review the decision to keep stale-token missing users as `404`, preserving the current MAZ-174 behavior.
+- Review client compatibility: old clients sending extra id/username fields will not break, but those fields are ignored.
+
+## Lessons / Limitations
+
+- The original MAZ-173 work in `develop` was planning-only; implementation required wiring existing user and level repositories into the leaderboard use cases.
+- Full mutation testing was not run in this pass.
+
+
+---
+
+# AI Log — MAZ-175 Refresh-token rotation and logout
+
+Date: 2026-06-29
+Ticket: MAZ-175
+
+## Task / Problem
+
+Reapply the backend refresh-token rotation and server-side logout slice on top of the current `develop` branch without losing later M9 work. The previous MAZ-175 branch was stale and would have removed MAZ-178 demo credential and auth E2E assets if merged directly.
+
+## Tool and Model
+
+OpenAI Codex CLI, GPT-5 coding agent.
+
+## Prompt Used
+
+User requested completing the remaining M9 closure work after auditing that MAZ-175 was missing from backend `develop`, with repository rules from `AGENTS.md`, AI usage logging, checks, PR, and Linear updates.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Followed the existing approved refresh-token spec and preserved its scope while reapplying on current `develop`. | `specs/refresh-token-MAZ-175.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing Gherkin scenarios as the executable contract. | `specs/refresh-token-MAZ-175.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Reapplied production code against concrete tests and ran targeted tests before full verify. | Tests listed in `@s → test` map |
+| Judge (`.agents/judge.md`) | Not used | No separate judge session was run in this pass. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Referenced | Started `npm run mutation`, but stopped the full run because Stryker estimated hours for the full backend suite. | Console run: interrupted at 143/1250 mutants |
+
+## Result Obtained
+
+- Added a `RefreshToken` domain entity and `RefreshTokenId` value object.
+- Added application ports for refresh-token persistence and generation.
+- Extended login to issue and persist a hashed opaque refresh token.
+- Added refresh-token rotation with reuse detection and family revocation.
+- Added idempotent logout/revocation.
+- Added Prisma `refresh_tokens` model and migration.
+- Added `/auth/refresh` and `/auth/logout` routes, controller methods, Swagger/OpenAPI documentation, environment variables, and README notes.
+- Preserved MAZ-178 demo credentials and auth E2E tests from current `develop`.
+
+## @s → Test Map
+
+| Scenario | Concrete tests |
+| --- | --- |
+| `@s1` Login issues access + refresh token | `tests/application/identity/LoginUseCase.test.ts`, `tests/api/identity/login.test.ts`, `tests/integration/authFlow.e2e.test.ts` |
+| `@s2` Refresh rotates the token | `tests/application/identity/RefreshAccessTokenUseCase.test.ts`, `tests/api/identity/refresh.test.ts`, `tests/integration/authFlow.e2e.test.ts` |
+| `@s3` Expired refresh token is rejected | `tests/application/identity/RefreshAccessTokenUseCase.test.ts` |
+| `@s4` Unknown refresh token is rejected | `tests/application/identity/RefreshAccessTokenUseCase.test.ts`, `tests/api/identity/refresh.test.ts` |
+| `@s5` Reused revoked token revokes the family | `tests/application/identity/RefreshAccessTokenUseCase.test.ts` |
+| `@s6` Logout revokes refresh token | `tests/application/identity/LogoutUseCase.test.ts`, `tests/api/identity/logout.test.ts` |
+| `@s7` Active only when not revoked or expired | `tests/domain/identity/RefreshToken.test.ts` |
+
+## Verification
+
+- `npm run typecheck` passed.
+- Targeted auth tests passed: 8 suites, 38 tests.
+- `npm run verify` passed: 80 suites, 503 tests.
+- `npm run mutation` was attempted and interrupted at 143/1250 mutants because the estimated remaining time was still over one hour and not practical for this pass.
+
+## Team Modifications Pending Human Review
+
+- Review the new `RefreshToken` domain entity because AGENTS requires human approval for new entities/pattern-impacting design.
+- Review the access-token default TTL (`JWT_ACCESS_EXPIRES_IN=15m`) against deployment expectations.
+- Apply Prisma migration in the target environment before deploying the client refresh-and-retry flow.
+
+## Lessons / Limitations
+
+- The old MAZ-175 branch was not safe to merge because it was based before later M9 work; reapplying the changes on top of current `develop` avoided regressions.
+- Full mutation testing remains pending for the final M9 closure gate.
+
+
+---
+
+# AI Usage Log: MAZ-177 Backend Level Catalog Admin Authorization Planning
+
+## Task / Problem
+
+Prepare MAZ-177 for implementation: enforce ADMIN authorization for
+level-catalog mutations without leaving role decisions in framework controllers.
+The ticket is still in Linear Backlog and no approved executable contract existed
+in the repository, so production TDD work is blocked until the human approval
+gate is satisfied.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked Codex to work MAZ-177, review backend/client AGENTS.md,
+MEMORY.md, Linear guidance, AI usage logging, affected tickets, create a new
+worktree, and follow commit/PR/Linear rules. Local Linear was queried through
+the configured environment variable without printing secrets.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Read and applied the rule that source-touching work needs a spec with behavior, HTTP contract, Clean Architecture contract, edge cases, decisions, and open questions. | `specs/level-catalog-admin-authorization.spec.md`, Linear MAZ-177 |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Read and applied the rule that a Gherkin `.feature` with stable `@s` tags is the executable contract before TDD. No new Linear tickets were created because MAZ-177 already exists. | `specs/level-catalog-admin-authorization.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Read and applied the precondition that no production code may be written until the executable contract is approved and the ticket is approved for implementation. | Blocked before `src`/`tests` edits |
+| Judge (`.agents/judge.md`) | Referenced | Read and applied the requirement that source-touching tickets include a Clean Architecture contract with per-layer impact before implementation. | `specs/level-catalog-admin-authorization.spec.md` |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No production code was changed, so mutation testing is not applicable yet. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+Pending implementation after human approval:
+
+- @s1 -> pending
+- @s2 -> pending
+- @s3 -> pending
+- @s4 -> pending
+- @s5 -> pending
+- @s6 -> pending
+- @s7 -> pending
+
+## Result Obtained
+
+- Created a new backend worktree at `worktrees/am-MAZ-177` on branch
+  `refactor/backend-admin-level-auth-MAZ-177`.
+- Queried Linear MAZ-177 and confirmed it is in Backlog with `repo:backend`,
+  `type:refactor`, and `layer:application` labels.
+- Reviewed current backend code and found the existing implementation already
+  performs ADMIN checks in `LevelCatalogController`, which means MAZ-177 should
+  move/enforce authorization in application code rather than add another
+  framework check.
+- Added `specs/level-catalog-admin-authorization.spec.md`.
+- Added `specs/level-catalog-admin-authorization.feature` with scenarios
+  `@s1` through `@s7`.
+
+## Verification
+
+- `npm ci` (required because the new worktree did not have `node_modules`; the
+  first sandboxed attempt was blocked by Prisma cache permissions, then rerun
+  with approval)
+- `npm run verify` - passed: lint, typecheck, coverage, and build; 63 test
+  suites / 403 tests passed.
+
+## Team Modifications Pending Human Review
+
+- Approve or change `specs/level-catalog-admin-authorization.feature`.
+- Move MAZ-177 from Backlog to Todo/In Progress according to the team Linear
+  workflow before TDD implementation starts.
+- Confirm whether MAZ-177 fully covers the level-catalog portion of MAZ-156
+  (CA-003) or should remain a narrower defect fix.
+
+## Lessons / Limitations
+
+The current backend already protects level-catalog mutations, but the protection
+lives in the framework controller. The security defect is therefore best handled
+as a Clean Architecture refactor that preserves the HTTP contract while moving
+authorization into the application boundary. TDD implementation is intentionally
+blocked until the executable contract is approved.
+
+
+---
+
+# AI Usage Log: MAZ-177 Level catalog admin authorization implementation
+
+## Task / Problem
+
+Implement backend ticket `MAZ-177`: level-catalog mutation endpoints must remain
+authenticated and require ADMIN authorization, with the authorization decision
+enforced in the application layer instead of the framework controller.
+
+## Tool and Model
+
+Codex CLI / GPT-5.
+
+## Prompt Used
+
+The user asked to continue closing milestone M9 after MAZ-187/MAZ-180 were
+merged to `develop`, following both repository `AGENTS.md` files, root
+`MEMORY.md`, `Linear_MCP_Guideline.md`, fresh worktrees, AI usage logging,
+checks, commit/push/PR, Linear updates, and review of affected tickets.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Used the existing MAZ-177 spec to preserve scope and architecture constraints. No separate agent session was run. | `specs/level-catalog-admin-authorization.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used the existing Gherkin scenarios as the executable contract for tests. No separate planner session was run. | `specs/level-catalog-admin-authorization.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Added/updated focused tests for application authorization, API behavior, and architecture boundary before implementation was verified. | tests listed in the scenario coverage map |
+| Judge (`.agents/judge.md`) | Not used | No separate judge review session was run in this turn. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Full mutation testing was not run for this slice. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test coverage |
+| --- | --- |
+| `@s1` anonymous users cannot mutate | `tests/api/level-catalog/createLevel.test.ts` -> anonymous create/update/publish/archive assertions |
+| `@s2` non-admin users cannot mutate | `tests/api/level-catalog/createLevel.test.ts` -> user create/update/publish/archive assertions; application use-case forbidden tests |
+| `@s3` admin users can create | `tests/api/level-catalog/createLevel.test.ts` -> `should_return_201_with_levelId_when_admin_creates_a_valid_level`; `tests/application/level-catalog/CreateLevelUseCase.test.ts` |
+| `@s4` admin users can update definition | `tests/api/level-catalog/createLevel.test.ts` -> `should_return_200_when_admin_updates_level_definition`; `tests/application/level-catalog/UpdateLevelDefinitionUseCase.test.ts` |
+| `@s5` admin users can publish | `tests/api/level-catalog/createLevel.test.ts` -> `should_return_200_when_admin_publishes_level`; `tests/application/level-catalog/PublishLevelUseCase.test.ts` |
+| `@s6` admin users can archive | `tests/api/level-catalog/createLevel.test.ts` -> `should_return_200_when_admin_archives_level`; `tests/application/level-catalog/ArchiveLevelUseCase.test.ts` |
+| `@s7` authorization outside framework adapter | `tests/architecture/levelCatalogAuthorizationBoundary.test.ts`; `tests/framework/level-catalog/LevelCatalogController.test.ts` |
+
+## Result Obtained
+
+- Added `assertAdminActor` in application level-catalog use cases.
+- Added `actorRole` primitive input to create/update/publish/archive level use
+  cases and reject non-admin actors before repository mutation.
+- Removed `ForbiddenError`/`ADMIN` decisions from `LevelCatalogController`.
+- Kept framework responsibility limited to parsing transport data and passing
+  the authenticated actor role into the application input.
+- Added API coverage for anonymous, USER, and ADMIN behavior across all
+  mutation endpoints.
+- Added architecture coverage to prevent framework-level ADMIN checks from
+  returning.
+
+## Verification
+
+- `npm ci`
+- `npm run typecheck` GREEN
+- Focused tests GREEN:
+  `tests/application/level-catalog/CreateLevelUseCase.test.ts`,
+  `tests/application/level-catalog/UpdateLevelDefinitionUseCase.test.ts`,
+  `tests/application/level-catalog/PublishLevelUseCase.test.ts`,
+  `tests/application/level-catalog/ArchiveLevelUseCase.test.ts`,
+  `tests/framework/level-catalog/LevelCatalogController.test.ts`,
+  `tests/api/level-catalog/createLevel.test.ts`,
+  `tests/architecture/levelCatalogAuthorizationBoundary.test.ts`
+- Full `npm run verify` GREEN: lint, typecheck, coverage, build; 73 suites /
+  475 tests.
+
+## Team Modifications Pending Human Review
+
+- Review whether the `actorRole` primitive should later become a shared
+  application actor DTO for broader CA-003 work.
+- Review the architecture test wording if the team later introduces an approved
+  application authorization abstraction.
+
+## Lessons / Limitations
+
+- This slice fixes the level-catalog part only; broader role policy cleanup
+  remains a separate architecture topic if the team wants it.
+- No OpenAPI change was needed because the HTTP status contract was already
+  documented as admin-only; the behavioral owner moved from controller to
+  application.
+
+
+---
+
+# AI Usage Log: MAZ-178 (M9/B7) — Usable seeded credentials + register→login→authed E2E + runbook
+
+## Task / Problem
+
+Two gaps blocked demonstrating/verifying the mandatory-login flow:
+1. The three seeded demo users shared one hardcoded bcrypt hash (`prisma/seed.ts`)
+   whose plaintext was recorded nowhere — nobody could log in as a demo user. The
+   seed hash was bcrypt cost 10 while the app hasher uses cost 12 — inconsistent.
+2. Every auth API test injected fakes; there was no end-to-end test chaining real
+   JWT issuance + bcrypt + the use cases through the router. The critical
+   "register → login → authenticated request" path was unverified.
+
+## Tool and Model
+
+Claude Opus 4.8 via Claude Code CLI.
+
+## Prompt Used
+
+User requested implementing `MAZ-178` following both repository `AGENTS.md` files,
+root `MEMORY.md`, `Linear_MCP_Guideline.md`, the worktree flow, AI usage logging,
+checks, commit/push/PR, Linear update, and a context review of affected tickets.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Used | Wrote the spec after reading `seed.ts`, `BcryptPasswordHasher`, the identity use cases/ports/routes, `JwtTokenService`, the auth API tests, and the README runbook. Found `/users/me` (MAZ-174) is already on develop and that tests run without a live DB (so the E2E needs an in-memory repo). | `specs/backend-auth-e2e-seed-MAZ-178.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Used | Distilled 6 Gherkin scenarios (`@s1..@s6`): valid demo passwords, cost-12 round-trip, register 201, login 200, `/users/me` 200, wrong password 401. | `specs/backend-auth-e2e-seed-MAZ-178.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red→Green: `tests/seed/demoCredentials.test.ts` (RED: module missing) → `prisma/seed-data/demoCredentials.ts` + `seed.ts` hashes at cost 12; `tests/integration/authFlow.e2e.test.ts` wires the real chain over an in-memory repo. | tests, code, `@s → test` map below |
+| Judge (`.agents/judge.md`) | Referenced | Applied the CA checklist in-session: no production `src` change (use cases/JWT/bcrypt reused); the seed is a build script that stops carrying a stale hash; the E2E substitutes only persistence with an in-memory port double; no real secret committed. | CA contract in `specs/backend-auth-e2e-seed-MAZ-178.spec.md` |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No new mutable production code: the change is seed data (`prisma/`, outside the Stryker `src/{domain,application}` mutate scope) + tests + README. MAZ-178's DoD has no mutation gate (it is a `type:test` ticket). | N/A |
+
+## Scenario Coverage (@s ↔ test)
+
+| Scenario | Test | File |
+|----------|------|------|
+| @s1 — demo passwords are valid | `should_define_valid_raw_passwords_for_every_demo_user` | `tests/seed/demoCredentials.test.ts` |
+| @s2 — cost-12 round-trip | `should_use_a_bcrypt_cost_of_12_consistent_with_the_app_hasher` + `should_log_in_with_a_cost_12_hash_of_the_documented_password` | `tests/seed/demoCredentials.test.ts` |
+| @s3 — register 201 | `should_register_then_login_then_authorize_users_me_with_the_real_chain` (register step) | `tests/integration/authFlow.e2e.test.ts` |
+| @s4 — login 200 + token | `should_register_then_login_then_authorize_users_me_with_the_real_chain` (login step) | `tests/integration/authFlow.e2e.test.ts` |
+| @s5 — `/users/me` 200 with profile | `should_register_then_login_then_authorize_users_me_with_the_real_chain` (me step) | `tests/integration/authFlow.e2e.test.ts` |
+| @s6 — wrong password 401 | `should_reject_login_with_the_wrong_password` | `tests/integration/authFlow.e2e.test.ts` |
+
+## TDD Cycles
+
+**Batch 1 — seed credentials (RED → GREEN)**
+- RED: `demoCredentials.test.ts` → module not found.
+- GREEN: `prisma/seed-data/demoCredentials.ts` exports `DEMO_USER_CREDENTIALS`
+  (documented per-user passwords) + `DEMO_PASSWORD_BCRYPT_COST = 12`; `seed.ts`
+  imports it, removes the shared cost-10 hash, and stores
+  `bcrypt.hash(password, 12)` per user. 4/4 green (cost-12 round-trip ~1.3s).
+
+**Batch 2 — E2E (GREEN, behavior already in src)**
+- `authFlow.e2e.test.ts` builds a real Express app: real `RegisterUserUseCase`/
+  `LoginUseCase`/`GetCurrentUserUseCase` + `BcryptPasswordHasher(12)` +
+  `JwtTokenService` + auth middleware + the real routers, over an in-memory
+  `UserRepository`. register(201) → login(200) → `/users/me`(200) + wrong
+  password(401). 2/2 green (~0.45s each with real bcrypt).
+
+## Result Obtained
+
+**New files:**
+- `prisma/seed-data/demoCredentials.ts` — documented demo users + cost constant
+- `tests/seed/demoCredentials.test.ts` — valid passwords + cost-12 round-trip
+- `tests/integration/authFlow.e2e.test.ts` — real register→login→authed E2E
+- `specs/backend-auth-e2e-seed-MAZ-178.{spec.md,feature}`
+
+**Modified files:**
+- `prisma/seed.ts` — uses `DEMO_USER_CREDENTIALS`, hashes each password at cost 12,
+  drops the shared cost-10 hash
+- `README.md` — `0_init` baseline note + a "Demo credentials (local/dev only)" table
+  and the login runbook
+
+**Unchanged on purpose:** all `src/` production code (use cases, `BcryptPasswordHasher`,
+`JwtTokenService`, routers, controllers, auth middleware) — the E2E reuses them.
+
+## Verification
+
+- `npm run verify` — GREEN: lint + typecheck + 72 suites / 460 tests + build (exit 0).
+
+## Team Modifications Pending Human Review
+
+1. **Demo passwords are documented local/dev values** (`prisma/seed-data/demoCredentials.ts`
+   + README). They are non-secret by design (to make the demo loggable) and must
+   never be reused in production.
+2. **Seed bcrypt cost is now 12** (was 10), consistent with `BcryptPasswordHasher`.
+   Re-running `npm run db:seed` recomputes the hashes (idempotent upsert).
+3. **The E2E substitutes persistence with an in-memory `UserRepository`** so it runs
+   under `npm run verify` without a live Postgres. A true Postgres-backed run is the
+   documented runbook path (`npm run db:setup`).
+
+## Lessons / Limitations
+
+- Extracting `DEMO_USER_CREDENTIALS` to a pure `prisma/seed-data/` module makes the
+  documented credentials testable without instantiating the seed's Prisma client
+  (precedent: `tests/seed/authoredLevels.test.ts`).
+- The E2E proves the real JWT + bcrypt + use-case + router chain; only the DB is
+  substituted. Real bcrypt at cost 12 keeps each E2E case ~0.45s — acceptable.
+- `RawPassword` only enforces length ≥ 8 (no complexity rule), so the demo passwords
+  just need to be ≥ 8 chars.
+
+
+---
+
+# Mutación — MAZ-158 (CA-005)
+
+**Veredicto:** PASS
+**Score:** 50/54 killed = 92.59% (umbral: 80%)
+
+## Alcance del run
+
+Archivos de `src/application` tocados por CA-005 (no se tocó `src/domain`):
+
+```
+src/application/leaderboard/ports/LeaderboardRepository.ts
+src/application/leaderboard/use-cases/GetLeaderboardService.ts
+src/application/leaderboard/use-cases/SubmitScoreService.ts
+src/application/progress/ports/ProgressRepository.ts
+src/application/progress/use-cases/CompleteLevelService.ts
+src/application/progress/use-cases/LoadProgressService.ts
+src/application/progress/use-cases/SyncProgressService.ts
+```
+
+Los archivos de ports (LeaderboardRepository.ts, ProgressRepository.ts) son interfaces TypeScript puras — Stryker no genera mutantes sobre declaraciones de tipo. Los use-cases de progress alcanzaron 100%.
+
+## Resultados por archivo
+
+| Archivo | Score | Killed | Survived |
+|---------|-------|--------|----------|
+| `GetLeaderboardService.ts` | 88.24% | 15 | 2 |
+| `SubmitScoreService.ts` | 88.24% | 15 | 2 |
+| `CompleteLevelService.ts` | 100% | 5 | 0 |
+| `LoadProgressService.ts` | 100% | 9 | 0 |
+| `SyncProgressService.ts` | 100% | 6 | 0 |
+| **Total** | **92.59%** | **50** | **4** |
+
+## Mutantes sobrevivientes
+
+Los 4 son `StringLiteral` en mensajes de error. Todos **pre-existentes** — CA-005 solo cambió el path del import en estos archivos, no tocó la lógica.
+
+1. `src/application/leaderboard/use-cases/GetLeaderboardService.ts` — StringLiteral en mensaje de error de ranking/leaderboard.
+2. `src/application/leaderboard/use-cases/GetLeaderboardService.ts` — StringLiteral en otro mensaje de error.
+3. `src/application/leaderboard/use-cases/SubmitScoreService.ts:53` — `throw new NotFoundError(\`User not found: ${input.userId}\`)` → `throw new NotFoundError('')`. Test `should_throw_not_found_when_user_does_not_exist` verifica el tipo de error pero no el mensaje.
+4. `src/application/leaderboard/use-cases/SubmitScoreService.ts:57` — `throw new NotFoundError(\`Level not found: ${input.levelId}\`)` → `throw new NotFoundError('')`. Mismo patrón.
+
+**Clasificación:** Mutantes equivalentes funcionales — el comportamiento observable (tipo de error lanzado) está testeado. El contenido del mensaje de error es informativo, no contractual. No se requiere acción del tdd-implementer para este ticket.
+
+## Nota de entorno
+
+`npm run mutation` falla en Windows con cmd.exe (no soporta `NODE_OPTIONS=...` inline). Workaround: `bash -c "NODE_OPTIONS='--experimental-vm-modules' npx stryker run ..."`. Documentado para sesiones futuras.
+
+
+---
+
+# AI Usage Log: MAZ-158 (CA-005) — Backend: reforzar lint arquitectónico y limpiar estructura
+
+## Task / Problem
+
+Ticket `MAZ-158 (CA-005)`: agregar guardrails ESLint que conviertan regresiones en
+`src/domain` en errores de CI, renombrar archivos de puertos con prefijo `I`
+inconsistente, y documentar la convención de naming en `docs/architecture.md`.
+Sin cambios funcionales — ticket puramente estructural y preventivo.
+
+## Tool and Model
+
+Claude Code / Claude Sonnet 4.6.
+
+## Prompt Used
+
+The user asked to start CA-005 (MAZ-158) after reviewing the project context
+from AGENTS.md, docs/, and memory files, and after confirming that CA-003 was
+already covered by MAZ-177.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Used | Investigated codebase (ESLint config, port filenames, framework structure, domain imports), identified 4 concrete work items, wrote `specs/backend-clean-guardrails-CA-005.spec.md` with full CA contract. | `specs/backend-clean-guardrails-CA-005.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Used | Distilled 7 Gherkin scenarios from spec, human-approved before implementation. | `specs/backend-clean-guardrails-CA-005.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red-Green cycles: probe files for ESLint rules (@s1-@s3), arch test written before rename (@s4-@s5). | Commit `ca27f59`, tests green. |
+| Judge (`.agents/judge.md`) | Used | APPROVED — all @s covered, CA contract verified, no dependency violations. | `ai-log/2026-06-29-MAZ-158-CA-005-judge.md` |
+| Mutation Tester (`.agents/mutation.md`) | Used | PASS 92.59% (50/54 killed). 4 survivors: pre-existing StringLiteral in error messages, not introduced by CA-005. | `ai-log/2026-06-30-MAZ-158-CA-005-mutation.md` |
+
+## Scenario Coverage (@s ↔ test)
+
+| Scenario | Verification |
+|----------|-------------|
+| @s1 `crypto` import in domain → lint exit 1 | ESLint probe file RED → rule added GREEN. Lint gate in `npm run verify`. |
+| @s2 `node:crypto` import in domain → lint exit 1 | Same rule, `node:crypto` pattern. |
+| @s3 `AppError` import in domain → lint exit 1 | ESLint probe file RED → rule added GREEN. |
+| @s4 `leaderboard/ports/` has no I prefix | `tests/architecture/portNamingConvention.test.ts → should_not_use_I_prefix_in_port_filenames` (RED with ILeaderboardRepository.ts → GREEN after rename) |
+| @s5 `progress/ports/` has no I prefix | Same test, iterates all bounded contexts. |
+| @s6 `npm run verify` exits zero | 82 suites / 526 tests GREEN, lint GREEN, typecheck GREEN, build GREEN. |
+| @s7 `docs/architecture.md` has port naming convention | Sections "Port naming convention" and "ESLint architectural guardrails" added. |
+
+## Result Obtained
+
+- `eslint.config.js`: new `no-restricted-imports` block scoped to `src/domain/**/*.ts` blocking `crypto`, `node:crypto`, and `**/shared/errors/AppError*`.
+- `src/application/leaderboard/ports/ILeaderboardRepository.ts` → `LeaderboardRepository.ts` (filename only; exported type `LeaderboardRepository` was already correct).
+- `src/application/progress/ports/IProgressRepository.ts` → `ProgressRepository.ts` (same).
+- 7 import paths updated across use-cases and infrastructure repos.
+- `tests/architecture/portNamingConvention.test.ts` — new architecture boundary test.
+- `docs/architecture.md` — port naming convention and ESLint guardrails documented.
+- `specs/backend-clean-guardrails-CA-005.spec.md` + `.feature` — spec and Gherkin contract.
+
+## Verification
+
+- `npm run verify` — 82 suites / 526 tests GREEN (commit `ca27f59`).
+- ESLint probe for `crypto` / `node:crypto` / `AppError` — all exit 1 with new rules.
+- `portNamingConvention.test.ts` — PASS after rename.
+- Mutation: 92.59% (umbral 80%) — PASS.
+
+## Team Modifications Pending Human Review
+
+- Merge PR and update MAZ-158 to Done in Linear.
+- Pre-existing finding (not CA-005): `Date` in output DTOs of `GetLeaderboardService`, `GetLevelsUseCase`, `GetLevelUseCase`, `LoadProgressService` — violates "DTOs simples, no exponer Date". Separate tech debt item.
+- Mutation workaround for Windows: `npm run mutation` fails with cmd.exe. Use `bash -c "NODE_OPTIONS='--experimental-vm-modules' npx stryker run ..."`. Consider adding `cross-env` to package.json in a future chore.
+
+## Lessons / Limitations
+
+- ESLint `import/no-restricted-paths` does not reliably match TypeScript `.ts` files by full path on this setup — `no-restricted-imports` with glob patterns is more robust for fine-grained domain purity rules.
+- CA-003 was silently implemented by MAZ-177 before this session. Pulling `develop` and auditing what changed before starting a CA ticket is mandatory — otherwise effort is wasted re-implementing or the ticket scope is wrong.
+- Port files with `I` prefix only had wrong filenames — the exported TypeScript types were already correct. Rename was mechanical with no type changes needed.
+
+
+---
+
+# AI Usage Log: MAZ-190 Tolerate mobile clock skew for completedAt (backend)
+
+## Task / Problem
+
+Device QA produced backend failures completing progress:
+
+```txt
+Application use case failed {
+  operationName: 'CompleteLevelService',
+  status: 'error',
+  errorName: 'InvalidArgumentError',
+  errorMessage: 'CompletedAt cannot be in the future'
+}
+```
+
+The `CompletedAt` value object (added in MAZ-176) rejected **any** timestamp greater
+than `Date.now()`. A mobile device whose clock is a few seconds/minutes ahead of the
+backend therefore got every completion rejected with HTTP 422, leaving the client's
+progress stuck `pendingSync` forever (the client retried the same future timestamp on
+every drain — see client MAZ-185). MAZ-190 makes progress completion robust to clock
+skew without accepting clearly invalid far-future timestamps.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8.
+
+## Prompt Used
+
+The user asked to implement `MAZ-190` following both repository `AGENTS.md` files,
+root `MEMORY.md`, `Linear_MCP_Guideline.md`, fresh worktrees, AI usage logging,
+checks, commit/push/PR, Linear updates, and a review of affected tickets (this is a
+cross-repo refactor touching MAZ-176 and the MAZ-185 sync path).
+
+## Chosen Policy (Open Product Decision)
+
+The ticket required the team to choose one of: tolerate a small future window, clamp
+small future values to server time, or server-side timestamping. **Chosen: tolerate a
+bounded future window of 5 minutes; reject beyond it.**
+
+Why (vs. alternatives):
+
+- **Server-side timestamping** would corrupt offline/batch sync, where the real
+  completion time is genuinely earlier than the server-receive time.
+- **Clamping** mutates an immutable domain value object as a construction side effect
+  and discards the (harmless) real device time.
+- **Tolerance** is the minimal, low-risk change to the MAZ-176 invariant, unsticks the
+  realistic device-skew case, and still rejects clearly invalid far-future timestamps.
+
+The rule stays entirely inside the `CompletedAt` domain value object where MAZ-176
+placed it; no new framework date logic was added to the domain.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/progress-clock-skew-MAZ-190.spec.md` capturing the problem, the three policy options, and the rationale for the chosen tolerance policy. No separate agent session was run. | `specs/progress-clock-skew-MAZ-190.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin contract `@s1..@s5`. No separate planner session was run. | `specs/progress-clock-skew-MAZ-190.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Wrote failing domain + API tests (Red), then the minimal `CompletedAt` tolerance change (Green). | tests in the coverage map below; `src/domain/progress/value-objects/CompletedAt.ts` |
+| Judge (`.agents/judge.md`) | Not used | No separate judge review session was run in this turn (PR/Linear review is the human gate). | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Full mutation not re-run this slice; the change is a single bounded comparison covered by accept/boundary/reject tests. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test coverage |
+| --- | --- |
+| `@s1` accept slightly-future (skew) | `tests/domain/progress/value-objects/CompletedAt.test.ts` -> `should_accept_when_date_is_slightly_in_the_future_within_skew_tolerance` and `should_accept_when_date_is_at_the_skew_tolerance_boundary` |
+| `@s2` reject far-future | `tests/domain/progress/value-objects/CompletedAt.test.ts` -> `should_throw_invalid_argument_when_date_is_far_in_the_future` |
+| `@s3` reject non-parseable date | `tests/domain/progress/value-objects/CompletedAt.test.ts` -> `should_throw_invalid_argument_when_date_is_invalid` |
+| `@s4` complete with skew returns 201 + saves | `tests/api/progress/completeLevel.test.ts` -> `should_return_201_and_save_when_completed_at_is_slightly_in_the_future` |
+| `@s5` complete with far-future returns 422, no save | `tests/api/progress/completeLevel.test.ts` -> `should_return_422_and_skip_save_when_completed_at_is_far_in_the_future` |
+
+## Result Obtained
+
+- Added `CompletedAt.CLOCK_SKEW_TOLERANCE_MS = 5 * 60 * 1000`.
+- Changed the future check to `value.getTime() > Date.now() + CLOCK_SKEW_TOLERANCE_MS`
+  and updated the message to `CompletedAt is too far in the future` (the only other
+  reference was its own test).
+- `SyncProgressService` inherits the same tolerance because it constructs the same VO.
+- No new layers, patterns, or ports; AGENTS architecture rules unchanged.
+
+## Verification
+
+- `npm ci` GREEN.
+- Focused tests GREEN: `tests/domain/progress/value-objects/CompletedAt.test.ts`,
+  `tests/api/progress/completeLevel.test.ts`.
+- `npm run verify` GREEN: lint + typecheck + coverage (83 suites / 550 tests) + build.
+
+## Team Modifications Pending Human Review
+
+- Confirm 5 minutes is the desired tolerance window (easy to tune via the constant).
+- Domain/API tests are subject to mandatory human review.
+
+## Lessons / Limitations
+
+- The VO reads `Date.now()` directly (inherited from MAZ-176). Tolerance is testable
+  against the real clock because the tests offset from `Date.now()` themselves.
+- The companion client branch (MAZ-190) handles the remaining edge: a genuinely broken
+  device clock (hours ahead) still gets a permanent 422, and the client must resolve
+  the pending state instead of retrying forever.
+
+
+---
+
+# AI Usage Log: MAZ-195 (BE-01) requireAdmin route-level middleware (backend)
+
+## Task / Problem
+
+The upcoming admin dashboard needs `/admin/*` endpoints gated to ADMIN users. This
+ticket adds the coarse, transport-level `requireAdmin` Express middleware (runs after
+`authMiddleware`): anonymous → 401, authenticated non-ADMIN → 403, ADMIN → passes.
+First ticket of milestone **M11 — Admin Dashboard**.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M context).
+
+## Prompt Used
+
+The user asked to implement `MAZ-195` following both repository `AGENTS.md` files, root
+`MEMORY.md`, `Linear_MCP_Guideline.md`, a fresh worktree, AI usage logging, checks,
+commit/push/PR, Linear updates, and a review of affected tickets (this middleware is
+consumed by BE-02/BE-03; per-action authorization `assertAdminActor` from MAZ-177 stays
+unchanged).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/admin-authorization-middleware-MAZ-195.spec.md` with the `Clean Architecture contract` (framework-only impact) + the transport-vs-application authorization decision. No separate agent session. | `specs/admin-authorization-middleware-MAZ-195.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin `@s1..@s4`. No separate planner session. | `specs/admin-authorization-middleware-MAZ-195.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green: wrote the supertest integration + unit tests first, then the minimal middleware. | `tests/api/requireAdmin.test.ts`; `src/framework/middleware/requireAdmin.ts` |
+| Judge (`.agents/judge.md`) | Referenced | Applied the judge checklist while writing (dependency rule inward-only, Clean Architecture contract declared per layer, `@s`→test map, `npm run verify` green). No separate judge session. | this log + spec CA contract |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Framework-only change; `src/framework` is outside Stryker's `mutate` globs (`src/domain/**` + `src/application/**` only), so there is no mutation gate for this middleware. | `stryker.conf.json` mutate globs |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test |
+| --- | --- |
+| `@s1` no token → 401 | `tests/api/requireAdmin.test.ts` -> `should_return_401_when_no_token` |
+| `@s2` USER → 403 (FORBIDDEN) | `should_return_403_when_authenticated_user_is_not_admin` |
+| `@s3` ADMIN → handler runs (200) | `should_pass_to_handler_when_authenticated_user_is_admin` |
+| `@s4` no authenticated user → UnauthorizedError (401) | `should_forward_unauthorized_when_request_has_no_authenticated_user` |
+
+## Result Obtained
+
+- New `src/framework/middleware/requireAdmin.ts`: reads `req.user` (set by
+  `authMiddleware`), forwards `UnauthorizedError` (401) if absent, `ForbiddenError`
+  (403) if `role !== UserRole.ADMIN`, else `next()`. Reuses the existing
+  `UnauthorizedError`/`ForbiddenError` and the domain `UserRole` enum (no magic string).
+- **Framework-only** change: domain/application/infrastructure untouched; the
+  per-action `assertAdminActor` (MAZ-177) is unchanged. No route wired yet — BE-02/BE-03
+  mount it on the real `/admin/*` routes.
+- No new pattern/entity/service; consistent with `authMiddleware`.
+
+## Verification
+
+- `npm ci` GREEN.
+- Focused tests GREEN: `tests/api/requireAdmin.test.ts` (4 tests).
+- `npm run verify` GREEN: lint + typecheck + coverage + build — 84 suites / 554 tests.
+- Mutation: N/A — `src/framework` is outside Stryker's `mutate` globs (no mutation gate).
+
+## Team Modifications Pending Human Review
+
+- Confirm the coarse route gate belongs in `framework` (transport authz) while
+  fine-grained authorization stays in the application use cases. Adapter/API tests are
+  subject to human review.
+
+## Lessons / Limitations
+
+- Under the backend ESM jest runner, `jest` must be imported from `@jest/globals` for
+  `jest.fn()` (globals `describe/it/expect` are available; `jest` is not).
+- No `/admin/*` route exists yet, so the guard is proven via a minimal in-test app
+  (`authMiddleware` + `requireAdmin` + dummy handler) plus a unit test for the defensive
+  no-user path.
+
+
+---
+
+# AI Usage Log: MAZ-196 (BE-02) GET /admin/levels — list all levels with status (backend)
+
+## Task / Problem
+
+The admin dashboard must see every level, including DRAFT and ARCHIVED, which the
+public `GET /levels` (published only) never returns. This ticket adds an ADMIN-only
+`GET /admin/levels` that lists all levels with their `status`, optionally filtered by
+`?status=`. Milestone **M11 — Admin Dashboard**. Depends on MAZ-195 (`requireAdmin`) —
+stacked branch.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M context).
+
+## Prompt Used
+
+Implement `MAZ-196` following both `AGENTS.md` files, root `MEMORY.md`,
+`Linear_MCP_Guideline.md`, a fresh worktree, AI usage logging, checks, commit/push/PR,
+Linear updates, and a review of affected tickets (uses BE-01's `requireAdmin`; public
+`GET /levels` unchanged; OpenAPI docs land in BE-05).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/admin-list-levels-MAZ-196.spec.md` with the `Clean Architecture contract` (impact per layer) + the separate-controller decision. | `specs/admin-list-levels-MAZ-196.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin `@s1..@s5`. | `specs/admin-list-levels-MAZ-196.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green twice: application use-case test then use case + port + impls; API test then controller + router + wiring. | tests + code below |
+| Judge (`.agents/judge.md`) | Referenced | Applied the checklist (dependency rule inward-only, CA contract per layer, `@s`→test map, `npm run verify` green). | this log + spec CA contract |
+| Mutation Tester (`.agents/mutation.md`) | Used | Scoped Stryker on `ListAdminLevelsUseCase.ts`: first run 75% (a `timeLimitSeconds` ConditionalExpression survived) → added a timed-level test → **100%**. | scoped Stryker run |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test |
+| --- | --- |
+| `@s1` admin lists all levels with status | `tests/application/level-catalog/ListAdminLevelsUseCase.test.ts` -> `should_return_all_levels_with_their_status_when_no_filter` + `should_expose_summary_fields_for_each_level`; `tests/api/level-catalog/adminLevels.test.ts` -> `should_return_200_with_levels_including_status_when_admin` |
+| `@s2` filter by status | `ListAdminLevelsUseCase.test.ts` -> `should_filter_by_status_when_a_status_is_given`; `adminLevels.test.ts` -> `should_pass_the_status_filter_to_the_use_case` |
+| `@s3` USER → 403 | `adminLevels.test.ts` -> `should_return_403_when_authenticated_user_is_not_admin` |
+| `@s4` no token → 401 | `adminLevels.test.ts` -> `should_return_401_when_no_token` |
+| `@s5` unknown status → 400 | `adminLevels.test.ts` -> `should_return_400_when_status_is_unknown` |
+
+## Result Obtained
+
+- **Application:** `ListAdminLevelsUseCase` (pure read; maps aggregates → summary incl.
+  `status`); new `LevelRepository.findAll(status?)` port method.
+- **Infrastructure:** `PrismaLevelRepository.findAll` (findMany, optional status filter,
+  `createdAt asc`); `FakeLevelRepository` test helper gains `findAll`.
+- **Framework:** `AdminLevelController.listLevels` (parses/validates `?status` → 400 on
+  unknown) + `createAdminLevelRouter` (`authMiddleware` + `requireAdmin`); wired in
+  `app.ts` (`GET /admin/levels`). Public `GET /levels` unchanged.
+- Separate admin controller/router avoids touching `LevelCatalogController`'s constructor
+  (used across many tests). No new pattern; Controller/Repository are existing patterns.
+
+## Verification
+
+- Focused tests GREEN: `ListAdminLevelsUseCase.test.ts` (3), `adminLevels.test.ts` (5).
+- `npm run verify` GREEN: lint + typecheck + coverage + build.
+- Mutation: scoped Stryker on `ListAdminLevelsUseCase.ts` (in the mutate globs) — score in
+  the PR comment / mutation note.
+
+## Team Modifications Pending Human Review
+
+- Confirm the read use case carries no authorization (route `requireAdmin` is the gate),
+  consistent with the public read use cases. Application + adapter tests are subject to
+  human review.
+
+## Lessons / Limitations
+
+- Stacked on MAZ-195 (requireAdmin); merge PR #69 first, then this PR.
+- OpenAPI docs for `/admin/levels` are intentionally deferred to BE-05 (which documents
+  all `/admin/*` endpoints together) to avoid overlap.
+
+
+---
+
+# AI Usage Log: MAZ-197 (BE-03) GET /admin/users — read-only paginated list (backend)
+
+## Task / Problem
+
+The admin dashboard needs to view platform users. This ticket adds an ADMIN-only,
+read-only, paginated `GET /admin/users` exposing `userId, email, username, role, status,
+createdAt` and **never** `passwordHash`. Milestone **M11 — Admin Dashboard**. Depends on
+MAZ-195 (`requireAdmin`) — stacked branch.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8 (1M context).
+
+## Prompt Used
+
+Implement `MAZ-197` following both `AGENTS.md` files, root `MEMORY.md`,
+`Linear_MCP_Guideline.md`, a fresh worktree, AI usage logging, checks, commit/push/PR,
+Linear updates, and a review of affected tickets (uses BE-01's `requireAdmin`; OpenAPI
+docs for `/admin/*` land in BE-05).
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Wrote `specs/admin-list-users-MAZ-197.spec.md` with the `Clean Architecture contract` + the ISP narrow-port decision. | `specs/admin-list-users-MAZ-197.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable Gherkin `@s1..@s6`. | `specs/admin-list-users-MAZ-197.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Red→Green twice: application use-case test then port + use case + impl; API test then controller + router + wiring. | tests + code below |
+| Judge (`.agents/judge.md`) | Referenced | Applied the checklist (dependency rule inward-only, no `passwordHash` leak, CA contract per layer, `@s`→test map, `npm run verify` green). | this log + spec CA contract |
+| Mutation Tester (`.agents/mutation.md`) | Used | Scoped Stryker on `ListUsersUseCase.ts` → **100%** (page→offset arithmetic mutants killed by the offset test). | scoped Stryker run |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test |
+| --- | --- |
+| `@s1` admin lists users, no passwordHash | `tests/application/identity/ListUsersUseCase.test.ts` -> `should_return_users_without_password_hash`; `tests/api/identity/adminUsers.test.ts` -> `should_return_200_with_users_and_no_password_hash_when_admin` |
+| `@s2` page/limit → offset | `ListUsersUseCase.test.ts` -> `should_convert_page_to_offset_before_querying`; `adminUsers.test.ts` -> `should_apply_page_and_limit_from_query` |
+| `@s3` default pagination | `adminUsers.test.ts` -> `should_default_pagination_when_absent` (+ `should_cap_limit_at_the_maximum`) |
+| `@s4` invalid pagination → 400 | `adminUsers.test.ts` -> `should_return_400_when_page_is_not_a_positive_integer` |
+| `@s5` USER → 403 | `adminUsers.test.ts` -> `should_return_403_when_authenticated_user_is_not_admin` |
+| `@s6` no token → 401 | `adminUsers.test.ts` -> `should_return_401_when_no_token` |
+
+Pagination metadata: `ListUsersUseCase.test.ts` -> `should_return_pagination_metadata`.
+
+## Result Obtained
+
+- **Application:** new narrow `AdminUserRepository` port (`findAll(offset, limit)` →
+  `{ users, total }`) + `ListUsersUseCase` (page→offset; maps to DTO **without**
+  `passwordHash`; returns `{ users, page, limit, total }`).
+- **Infrastructure:** `PrismaUserRepository` now `implements UserRepository,
+  AdminUserRepository` with `findAll` (findMany skip/take + count, `createdAt asc`).
+- **Framework:** `AdminUserController.listUsers` (defaults page=1/limit=20; caps limit at
+  100; non-positive-integer → 400) + `createAdminUserRouter` (`authMiddleware` +
+  `requireAdmin`); wired in `app.ts` (`GET /admin/users`).
+- **ISP decision:** the narrow `AdminUserRepository` avoids adding `findAll` to
+  `UserRepository`, so the ~5 inline `UserRepository` fakes in other identity tests are
+  untouched.
+
+## Verification
+
+- Focused tests GREEN: `ListUsersUseCase.test.ts` (3), `adminUsers.test.ts` (7).
+- `npm run verify` GREEN: lint + typecheck + coverage + build — 86 suites / 564 tests.
+- Mutation: scoped Stryker on `ListUsersUseCase.ts` → **100%**.
+
+## Team Modifications Pending Human Review
+
+- Confirm the read use case carries no authorization (route `requireAdmin` is the gate)
+  and the DTO omits `passwordHash`. Application + adapter tests are subject to human review.
+
+## Lessons / Limitations
+
+- Stacked on MAZ-195 (requireAdmin); merge PR #69 first, then this PR.
+- OpenAPI docs for `/admin/users` are deferred to BE-05.
+- ISP (a narrow read port) was the cleanest way to add a repository method without a
+  cross-test-fake ripple.
+
+
+---
+
+# AI Usage Log: MAZ-198 CORS multi-origin for admin web
+
+## Task / Problem
+
+The admin web dashboard needs browser access to the backend while preserving the existing Expo
+client origin. MAZ-198 changes `CORS_ORIGIN` from a single-origin string into a comma-separated
+allowlist and documents the format.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked to implement Linear ticket `MAZ-198`, following backend/client `AGENTS.md`,
+`MEMORY.md`, `Linear_MCP_Guideline.md`, worktree discipline, AI usage logging, verification,
+commit, push, PR, Linear update, and review of affected tickets. The backend M11 context and
+MAZ-195/196/197 admin tickets were reviewed before implementation. No secrets were included.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Produced the local spec in the same Codex session using the prompt rules; no separate agent session was run. | `specs/admin-cors-multi-origin-MAZ-198.spec.md`, Linear `MAZ-198` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Distilled the approved executable contract with stable `@s1..@s5` tags in the same Codex session; no separate agent session was run. | `specs/admin-cors-multi-origin-MAZ-198.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Followed Red-Green-Refactor manually: wrote failing CORS/environment tests first, then the minimal framework config change, then docs. | `tests/api/cors.test.ts`, `tests/framework/environment.test.ts` |
+| Judge (`.agents/judge.md`) | Referenced | Applied the Clean Architecture contract requirements and manual grep checks; no separate judge verdict was run. | Architecture grep results in this log |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Production change is limited to `src/framework`; mandatory mutation scope is domain/application per `docs/mutation-testing.md`. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+- @s1 -> `should_allow_expo_origin_when_origin_is_configured`
+- @s2 -> `should_allow_admin_web_origin_when_origin_is_configured`
+- @s3 -> `should_not_allow_unknown_origin_when_origin_is_not_configured`
+- @s4 -> `should_not_reject_request_when_origin_header_is_missing`
+- @s5 -> `should_configure_trimmed_non_empty_cors_origins_when_CORS_ORIGIN_contains_commas`
+
+## TDD Evidence
+
+- Red: `npm test -- --runInBand tests/framework/environment.test.ts tests/api/cors.test.ts`
+  failed because the previous implementation returned the entire comma-separated string as
+  `Access-Control-Allow-Origin` and exposed no `corsOrigins` list.
+- Green: `src/framework/config/environment.ts` now parses trimmed non-empty origins and
+  `src/framework/app.ts` passes that list to `cors()`.
+- Refactor/docs: `.env.example`, `README.md`, and `docs/RELEASE.md` document the
+  comma-separated format.
+
+## Result Obtained
+
+- Added `Environment.corsOrigins: string[]`.
+- `CORS_ORIGIN` now accepts exact comma-separated origins such as
+  `http://localhost:8081,http://localhost:5173`.
+- Allowed origins receive their own `Access-Control-Allow-Origin` value.
+- Unknown origins and no-origin requests do not receive a CORS allow header; no-origin health
+  checks still return 200.
+- Added executable contract files for MAZ-198.
+
+## Clean Architecture / DDD Check
+
+- `rg -n "httpStatus|from ['\"]crypto|from ['\"].*shared/errors/AppError" src/domain` -> no matches.
+- `rg -n "from ['\"].*(infrastructure|framework)" src/domain src/application` -> no matches.
+- `rg -n "role !==|role ===|isAdmin|ADMIN" src/framework` -> only pre-existing admin route/docs and `requireAdmin` matches from MAZ-195/196/197.
+- `rg -n "createdAt: Date|updatedAt: Date|submittedAt: Date|completedAt: Date" src/application` -> pre-existing DTO `Date` fields from earlier use cases; MAZ-198 added no DTOs.
+- Layer impact matched the spec: Domain/Application/Infrastructure untouched; Framework config and app wiring changed.
+
+## Verification
+
+- `npm test -- --runInBand tests/framework/environment.test.ts tests/api/cors.test.ts` -> GREEN (2 suites / 5 tests).
+- `npm run verify` -> GREEN (90 suites / 578 tests).
+
+## Team Modifications Pending Human Review
+
+- Confirm the deployed admin web origin before production release and add it to `CORS_ORIGIN`.
+- Human review should confirm that the disallowed-origin behavior should remain "omit CORS header"
+  rather than returning a transport error.
+
+## Lessons / Limitations
+
+- The `cors` package accepts an array allowlist and reflects the matched request origin, which fits
+  the ticket without introducing custom middleware.
+- Mutation was not run because the changed production behavior is framework configuration, outside
+  the mandatory domain/application mutation gate.
+
+
+---
+
+# AI Usage Log: MAZ-199 Admin seed user and OpenAPI docs
+
+## Task / Problem
+
+The backend needs a documented local/dev ADMIN account for the admin dashboard and OpenAPI/README
+documentation for the existing `/admin/*` read endpoints. MAZ-199 adds one non-secret admin seed
+credential, persists the credential role during seed, documents `/admin/levels` and `/admin/users`,
+and proves the contract with tests.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked to implement Linear ticket `MAZ-199`, following backend/client `AGENTS.md`,
+`MEMORY.md`, `Linear_MCP_Guideline.md`, worktree discipline, AI usage logging, verification,
+commit, push, PR, Linear update, and a review of affected tickets. The user approved the generated
+`@s1..@s6` specs before TDD implementation. No secrets were included.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Produced the local spec in the same Codex session using the prompt rules; no separate agent session was run. | `specs/admin-seed-openapi-MAZ-199.spec.md`, Linear `MAZ-199` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Distilled the approved executable contract with stable `@s1..@s6` tags in the same Codex session; no separate agent session was run. | `specs/admin-seed-openapi-MAZ-199.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Followed Red-Green-Refactor manually: wrote failing seed/OpenAPI/README tests first, then the minimal seed/docs changes. | Tests listed in the `@s -> test` map |
+| Judge (`.agents/judge.md`) | Referenced | Applied the Clean Architecture contract requirements and manual grep checks; no separate judge verdict was run. | Architecture grep results in this log |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Production changes are limited to Prisma seed data/script, framework OpenAPI docs, generated OpenAPI JSON, and README. Mandatory mutation scope is domain/application per `docs/mutation-testing.md`; no domain/application production code changed. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+- @s1 -> `should_define_one_active_admin_credential_for_local_admin_access`, `should_use_unique_ids_emails_and_usernames`, `should_mark_every_seed_credential_active`, `should_define_valid_raw_passwords_for_every_demo_user`
+- @s2 -> `should_use_a_bcrypt_cost_of_12_consistent_with_the_app_hasher`, `should_log_in_with_a_cost_12_hash_of_the_documented_password`
+- @s3 -> `should_return_admin_role_when_admin_user_logs_in`
+- @s4 -> `should_document_admin_levels_with_bearer_auth_and_status_filter`
+- @s5 -> `should_document_admin_users_with_bearer_auth_pagination_and_no_password_hash`
+- @s6 -> `should_document_the_local_dev_admin_credential_as_non_secret`, `should_list_the_admin_read_endpoints`
+
+## TDD Evidence
+
+- Red: `npm test -- --runInBand tests/seed/demoCredentials.test.ts tests/application/identity/LoginUseCase.test.ts tests/framework/swagger/openApiSpec.test.ts tests/docs/readmeAdminDocs.test.ts`
+  failed because the seed data had no admin credential, OpenAPI had no `/admin/levels` or
+  `/admin/users` paths, and README did not document the admin credential/endpoints.
+- Green: added the admin seed credential and role/status seed support; documented the two admin
+  read endpoints in `openApiSpec`; updated README and regenerated `docs/openapi.json`.
+- Refactor/docs: no broad refactor. Changes stayed scoped to seed data, OpenAPI docs, README, and
+  contract tests.
+
+## Result Obtained
+
+- Added one documented local/dev admin credential:
+  `admin@arrowmaze.test` / `admin_arrow` / `ArrowDemo!Admin`.
+- Existing demo credentials now carry explicit `role` and `status` seed metadata.
+- `prisma/seed.ts` persists each seed credential's role/status instead of hard-coding all users as
+  `USER`.
+- `POST /auth/login` use-case coverage proves an admin user returns `role: "ADMIN"`.
+- OpenAPI documents `GET /admin/levels` and `GET /admin/users` with `bearerAuth`, query params,
+  success schemas, and error responses.
+- `/admin/users` documentation excludes `passwordHash`.
+- README documents local/dev-only demo credentials and the admin read endpoints.
+
+## Clean Architecture / DDD Check
+
+- `rg -n "httpStatus|from ['\"]crypto|from ['\"].*shared/errors/AppError" src/domain` -> no matches.
+- `rg -n "from ['\"].*(infrastructure|framework)" src/domain src/application` -> no matches.
+- `rg -n "role !==|role ===|isAdmin|ADMIN" src/framework` -> only pre-existing admin route checks and framework OpenAPI/admin docs references.
+- `rg -n "createdAt: Date|updatedAt: Date|submittedAt: Date|completedAt: Date" src/application` -> pre-existing DTO `Date` fields from earlier use cases; MAZ-199 added no DTOs.
+- Layer impact matched the spec: Domain/Application production code untouched; Prisma seed data/script, Framework OpenAPI docs, README, generated OpenAPI JSON, and tests changed.
+
+## Verification
+
+- `npm test -- --runInBand tests/seed/demoCredentials.test.ts tests/application/identity/LoginUseCase.test.ts tests/framework/swagger/openApiSpec.test.ts tests/docs/readmeAdminDocs.test.ts` -> GREEN (4 suites / 24 tests).
+- `npm run export-openapi` -> GREEN; regenerated `docs/openapi.json`.
+- `npm run verify` -> GREEN (91 suites / 585 tests).
+- `npm run db:seed` was not run in this worktree because the new worktree has no `.env`; the seed behavior is covered by focused seed tests and should be exercised by a human in an environment with local database credentials.
+
+## Team Modifications Pending Human Review
+
+- Human review should confirm the documented local/dev admin password remains acceptable for the
+  classroom/demo environment.
+- Human review should run `npm run db:seed` against a local database with `.env` configured before
+  relying on the admin demo credential manually.
+- Domain and application tests remain subject to mandatory human review per `AGENTS.md`.
+
+## Lessons / Limitations
+
+- Keeping role/status in `demoCredentials.ts` makes the seed credential source explicit and avoids
+  splitting identity and role decisions across files.
+- Mutation was not run because no domain/application production code was modified.
+
+
+---
+
+# AI Usage Log: MAZ-200 Archive preserves score history
+
+## Task / Problem
+
+The admin dashboard needs confidence that archiving a published level is a soft state change:
+archived levels disappear from the public catalog, but leaderboard entries and progress history
+for that level remain readable. MAZ-200 closes this backend slice with executable regression
+coverage.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked to implement Linear ticket `MAZ-200`, following backend/client `AGENTS.md`,
+`MEMORY.md`, `Linear_MCP_Guideline.md`, worktree discipline, AI usage logging, verification,
+commit, push, PR, Linear update, and a review of affected tickets. The user approved the generated
+`@s1..@s6` specs before implementation. No secrets were included.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Produced the local spec in the same Codex session using the prompt rules; no separate agent session was run. | `specs/archive-score-preservation-MAZ-200.spec.md`, Linear `MAZ-200` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Distilled the approved executable contract with stable `@s1..@s6` tags in the same Codex session; no separate agent session was run. | `specs/archive-score-preservation-MAZ-200.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Added regression tests for the approved contract. The existing production behavior already satisfied the tests, so no production code was changed. | Tests listed in the `@s -> test` map |
+| Judge (`.agents/judge.md`) | Referenced | Applied the Clean Architecture contract requirements and manual grep checks; no separate judge verdict was run. | Architecture grep results in this log |
+| Mutation Tester (`.agents/mutation.md`) | Not used | MAZ-200 changed tests/specs/logs only. No domain/application production code was modified, so there were no feature lines to mutate under `docs/mutation-testing.md`. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+- @s1 -> `should_archive_published_level_without_leaderboard_or_progress_collaborators`
+- @s2 -> `should_not_return_archived_levels`
+- @s3 -> `should_return_entries_when_level_is_archived`, `should_hide_archived_level_from_public_catalog_but_keep_leaderboard_readable`
+- @s4 -> `should_return_empty_entries_when_archived_level_has_no_leaderboard`
+- @s5 -> `should_restrict_level_history_relations_when_levels_are_archived`
+- @s6 -> `should_hide_archived_level_from_public_catalog_but_keep_leaderboard_readable`
+
+## TDD / Characterization Evidence
+
+- Characterization run:
+  `npm test -- --runInBand tests/application/level-catalog/ArchiveLevelUseCase.test.ts tests/application/leaderboard/GetLeaderboardService.test.ts tests/api/archivePreservation.test.ts tests/infrastructure/database/PrismaArchivePreservation.test.ts`
+  -> GREEN (4 suites / 13 tests).
+- Result: current production behavior already matched the approved MAZ-200 contract.
+- No production code was written; this ticket is a regression/test gate for the existing archive
+  behavior.
+
+## Result Obtained
+
+- Added application regression coverage proving archive saves only the level state and does not
+  require leaderboard/progress collaborators.
+- Added leaderboard use-case coverage proving archived known levels remain readable with entries
+  and return empty entries when no leaderboard exists yet.
+- Added API regression coverage proving public catalog hiding and leaderboard readability can
+  intentionally diverge for the same archived `levelId`.
+- Added Prisma schema regression coverage proving level history relations use `onDelete: Restrict`
+  for `Leaderboard.level` and `CompletedLevel.level`.
+- Added approved MAZ-200 spec and Gherkin contract.
+
+## Clean Architecture / DDD Check
+
+- `rg -n "httpStatus|from ['\"]crypto|from ['\"].*shared/errors/AppError" src/domain` -> no matches.
+- `rg -n "from ['\"].*(infrastructure|framework)" src/domain src/application` -> no matches.
+- `rg -n "role !==|role ===|isAdmin|ADMIN" src/framework` -> only pre-existing admin route checks and framework OpenAPI/admin docs references.
+- `rg -n "createdAt: Date|updatedAt: Date|submittedAt: Date|completedAt: Date" src/application` -> pre-existing DTO `Date` fields from earlier use cases; MAZ-200 added no DTOs.
+- Layer impact matched the spec: production Domain/Application/Infrastructure/Framework code
+  untouched; only tests, specs, and AI usage logs changed.
+
+## Verification
+
+- `npm test -- --runInBand tests/application/level-catalog/ArchiveLevelUseCase.test.ts tests/application/leaderboard/GetLeaderboardService.test.ts tests/api/archivePreservation.test.ts tests/infrastructure/database/PrismaArchivePreservation.test.ts` -> GREEN (4 suites / 13 tests).
+- `npm run verify` -> GREEN (93 suites / 590 tests).
+
+## Team Modifications Pending Human Review
+
+- Human review should confirm that a schema-level regression test is acceptable for preserving the
+  "archive never deletes history" guarantee without requiring a live database smoke test.
+- Domain and application tests remain subject to mandatory human review per `AGENTS.md`.
+
+## Lessons / Limitations
+
+- The existing implementation already uses status-based archive plus restrictive level relations,
+  so the correct MAZ-200 change is regression coverage rather than production edits.
+- A live DB smoke test was not run; the guarantee is covered by use-case/API characterization tests
+  and a Prisma schema relation test.
 
 
 <!-- AI_LOG_ENTRIES_END -->

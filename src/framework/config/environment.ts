@@ -1,11 +1,20 @@
 export type Environment = {
   nodeEnv: string;
   port: number;
-  corsOrigin: string;
+  corsOrigins: string[];
   databaseUrl: string;
   databaseSsl: boolean;
   jwtSecret: string;
+  jwtAccessExpiresIn: string;
+  refreshTokenTtlDays: number;
 };
+
+function parseCorsOrigins(value: string): string[] {
+  return value
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+}
 
 export function loadEnvironment(): Environment {
   const databaseUrl = process.env.DATABASE_URL;
@@ -24,9 +33,11 @@ export function loadEnvironment(): Environment {
   return {
     nodeEnv,
     port: Number(process.env.PORT ?? 3000),
-    corsOrigin: process.env.CORS_ORIGIN ?? "http://localhost:8081",
+    corsOrigins: parseCorsOrigins(process.env.CORS_ORIGIN ?? "http://localhost:8081"),
     databaseUrl,
     databaseSsl,
-    jwtSecret
+    jwtSecret,
+    jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? "15m",
+    refreshTokenTtlDays: Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? 30)
   };
 }

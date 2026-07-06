@@ -1,6 +1,8 @@
 import { jest } from '@jest/globals';
 import { GetLeaderboardService } from '../../../src/application/leaderboard/use-cases/GetLeaderboardService.js';
-import type { LeaderboardRepository } from '../../../src/application/leaderboard/ports/ILeaderboardRepository.js';
+import type { LeaderboardRepository } from '../../../src/application/leaderboard/ports/LeaderboardRepository.js';
+import type { LevelRepository } from '../../../src/application/level-catalog/ports/LevelRepository.js';
+import type { Level } from '../../../src/domain/level-catalog/Level.js';
 import { NotFoundError } from '../../../src/shared/errors/ApplicationError.js';
 import { Leaderboard } from '../../../src/domain/leaderboard/Leaderboard.js';
 import { ScoreEntry } from '../../../src/domain/leaderboard/ScoreEntry.js';
@@ -14,10 +16,12 @@ import { TimeSeconds } from '../../../src/domain/leaderboard/value-objects/TimeS
 import { UsernameSnapshot } from '../../../src/domain/leaderboard/value-objects/UsernameSnapshot.js';
 import { LevelId } from '../../../src/domain/shared/LevelId.js';
 import { UserId } from '../../../src/domain/shared/UserId.js';
+import { makeArchivedLevel } from '../level-catalog/helpers/levelFixtures.js';
 
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const LEVEL_1 = '550e8400-e29b-41d4-a716-446655440010';
 const LEVEL_99 = '550e8400-e29b-41d4-a716-446655440099';
+const FIXED_NOW = new Date('2026-06-18T00:00:00Z');
 
 function makeRepo(leaderboard: Leaderboard | null): jest.Mocked<LeaderboardRepository> {
   return {
@@ -26,11 +30,20 @@ function makeRepo(leaderboard: Leaderboard | null): jest.Mocked<LeaderboardRepos
   };
 }
 
+function makeLevelRepo(level: Level | null = {} as Level): jest.Mocked<LevelRepository> {
+  return {
+    save: jest.fn().mockResolvedValue(undefined),
+    findById: jest.fn().mockResolvedValue(level),
+    findAllPublished: jest.fn().mockResolvedValue([]),
+  };
+}
+
 function makeLeaderboardWithEntry(): Leaderboard {
   const lb = Leaderboard.empty(
     new LeaderboardId('lb-1'),
     LevelId.create(LEVEL_1),
     new MaxLeaderboardEntries(10),
+    FIXED_NOW,
   );
   lb.submitEntry(
     ScoreEntry.create({
@@ -41,8 +54,9 @@ function makeLeaderboardWithEntry(): Leaderboard {
       score: new Score(100),
       timeSeconds: new TimeSeconds(30),
       movesCount: new MoveCount(15),
-      submittedAt: SubmittedAt.now(),
+      submittedAt: new SubmittedAt(FIXED_NOW),
     }),
+    FIXED_NOW,
   );
   return lb;
 }
@@ -51,7 +65,7 @@ describe('GetLeaderboardService', () => {
   describe('execute', () => {
     it('should_return_leaderboard_dto_when_leaderboard_exists', async () => {
       const leaderboard = makeLeaderboardWithEntry();
-      const service = new GetLeaderboardService(makeRepo(leaderboard));
+      const service = new GetLeaderboardService(makeRepo(leaderboard), makeLevelRepo());
 
       const result = await service.execute({ levelId: LEVEL_1 });
 
@@ -62,7 +76,7 @@ describe('GetLeaderboardService', () => {
 
     it('should_return_entry_with_rank_when_leaderboard_has_entries', async () => {
       const leaderboard = makeLeaderboardWithEntry();
-      const service = new GetLeaderboardService(makeRepo(leaderboard));
+      const service = new GetLeaderboardService(makeRepo(leaderboard), makeLevelRepo());
 
       const result = await service.execute({ levelId: LEVEL_1 });
 
@@ -70,8 +84,35 @@ describe('GetLeaderboardService', () => {
       expect(result.entries[0]?.score).toBe(100);
     });
 
-    it('should_throw_not_found_when_leaderboard_does_not_exist', async () => {
-      const service = new GetLeaderboardService(makeRepo(null));
+    it('should_return_entries_when_level_is_archived', async () => {
+      const leaderboard = makeLeaderboardWithEntry();
+      const service = new GetLeaderboardService(makeRepo(leaderboard), makeLevelRepo(makeArchivedLevel(LEVEL_1)));
+
+      const result = await service.execute({ levelId: LEVEL_1 });
+
+      expect(result.levelId).toBe(LEVEL_1);
+      expect(result.entries).toHaveLength(1);
+      expect(result.entries[0]?.usernameSnapshot).toBe('Player1');
+    });
+
+    it('should_return_empty_entries_when_known_level_has_no_leaderboard', async () => {
+      const service = new GetLeaderboardService(makeRepo(null), makeLevelRepo({ id: LevelId.create(LEVEL_99) } as Level));
+
+      const result = await service.execute({ levelId: LEVEL_99 });
+
+      expect(result).toEqual({ levelId: LEVEL_99, entries: [] });
+    });
+
+    it('should_return_empty_entries_when_archived_level_has_no_leaderboard', async () => {
+      const service = new GetLeaderboardService(makeRepo(null), makeLevelRepo(makeArchivedLevel(LEVEL_99)));
+
+      const result = await service.execute({ levelId: LEVEL_99 });
+
+      expect(result).toEqual({ levelId: LEVEL_99, entries: [] });
+    });
+
+    it('should_throw_not_found_when_level_does_not_exist', async () => {
+      const service = new GetLeaderboardService(makeRepo(null), makeLevelRepo(null));
 
       await expect(service.execute({ levelId: LEVEL_99 })).rejects.toThrow(NotFoundError);
     });

@@ -17,7 +17,7 @@ DATABASE_URL=<your-database-url>
 DATABASE_SSL=true
 JWT_SECRET=<strong-random-secret>
 PORT=3000
-CORS_ORIGIN=<your-frontend-origin>
+CORS_ORIGIN=<mobile-origin>,<admin-web-origin>
 ```
 
 ## Local Docker setup

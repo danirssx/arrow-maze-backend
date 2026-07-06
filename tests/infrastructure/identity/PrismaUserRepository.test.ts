@@ -29,11 +29,16 @@ function makePrisma(overrides: Partial<UserDelegate> = {}): { prisma: PrismaClie
   return { prisma: { user } as unknown as PrismaClient, user };
 }
 
+const FIXED_USER_ID = "550e8400-e29b-41d4-a716-446655440001";
+const FIXED_NOW = new Date("2024-01-15T10:00:00.000Z");
+
 const makeUser = () =>
   UserFactory.create(
+    UserId.create(FIXED_USER_ID),
     Email.create("alice@example.com"),
     Username.create("alice"),
-    PasswordHash.fromHash("$2b$12$hashedvalue")
+    PasswordHash.fromHash("$2b$12$hashedvalue"),
+    FIXED_NOW,
   );
 
 const makeRecord = () => ({

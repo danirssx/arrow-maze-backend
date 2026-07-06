@@ -173,6 +173,7 @@
                   "status": "success",
                   "data": {
                     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc1MDIwMDAwMH0.signature",
+                    "refreshToken": "b9f1c2e3a4d5...opaque-base64url",
                     "userId": "550e8400-e29b-41d4-a716-446655440000",
                     "username": "arrow_player",
                     "role": "USER"
@@ -235,6 +236,202 @@
         }
       }
     },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Exchange a refresh token for a new access + rotated refresh token",
+        "tags": [
+          "Identity"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              },
+              "example": {
+                "refreshToken": "b9f1c2e3a4d5...opaque-base64url"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token rotated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                },
+                "example": {
+                  "status": "success",
+                  "data": {
+                    "accessToken": "eyJ...new.access",
+                    "refreshToken": "c0d1e2...new-opaque"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing refreshToken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "refreshToken is required"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, or revoked refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid refresh token"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Revoke a refresh token (idempotent)",
+        "tags": [
+          "Identity"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              },
+              "example": {
+                "refreshToken": "b9f1c2e3a4d5...opaque-base64url"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged out (token revoked if it existed)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "status": "success",
+                  "data": null
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing refreshToken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "refreshToken is required"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "summary": "Get the authenticated user profile",
+        "tags": [
+          "Identity"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated user profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                },
+                "example": {
+                  "status": "success",
+                  "data": {
+                    "userId": "550e8400-e29b-41d4-a716-446655440000",
+                    "email": "player@example.com",
+                    "username": "arrow_player",
+                    "role": "USER"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid or expired token"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Authenticated user no longer exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "User not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/leaderboard/scores": {
       "post": {
         "summary": "Submit a player score to the leaderboard",
@@ -254,10 +451,7 @@
                 "$ref": "#/components/schemas/SubmitScoreRequest"
               },
               "example": {
-                "leaderboardId": "550e8400-e29b-41d4-a716-446655440001",
-                "entryId": "550e8400-e29b-41d4-a716-446655440002",
                 "levelId": "550e8400-e29b-41d4-a716-446655440020",
-                "usernameSnapshot": "arrow_player",
                 "score": 1500,
                 "timeSeconds": 45,
                 "movesCount": 30
@@ -291,7 +485,7 @@
                   "status": "error",
                   "error": {
                     "code": "BAD_REQUEST",
-                    "message": "leaderboardId, entryId, levelId, usernameSnapshot, score, timeSeconds and movesCount are required"
+                    "message": "levelId, score, timeSeconds and movesCount are required"
                   }
                 }
               }
@@ -480,6 +674,23 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Invalid completion timestamp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "INVALID_ARGUMENT",
+                    "message": "CompletedAt must be a valid date"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -574,6 +785,23 @@
                   "error": {
                     "code": "UNAUTHORIZED",
                     "message": "Invalid or expired token"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid completion timestamp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "INVALID_ARGUMENT",
+                    "message": "CompletedAt must be a valid date"
                   }
                 }
               }
@@ -1184,6 +1412,230 @@
         }
       }
     },
+    "/admin/levels": {
+      "get": {
+        "summary": "List all levels for admin",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "PUBLISHED",
+                "ARCHIVED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin level list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLevelsResponse"
+                },
+                "example": {
+                  "status": "success",
+                  "data": {
+                    "levels": [
+                      {
+                        "levelId": "550e8400-e29b-41d4-a716-446655440020",
+                        "name": "Corridor",
+                        "difficulty": "EASY",
+                        "status": "DRAFT",
+                        "arrowCount": 2,
+                        "attempts": 5,
+                        "createdAt": "2026-06-18T00:00:00Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown status filter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "Unknown status filter: NONSENSE"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid or expired token"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "Admin access required"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "summary": "List users for admin",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin user list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserListResponse"
+                },
+                "example": {
+                  "status": "success",
+                  "data": {
+                    "users": [
+                      {
+                        "userId": "660e8400-e29b-41d4-a716-446655440001",
+                        "email": "demo@arrowmaze.test",
+                        "username": "demo_player",
+                        "role": "USER",
+                        "status": "ACTIVE",
+                        "createdAt": "2026-06-18T00:00:00Z"
+                      }
+                    ],
+                    "page": 1,
+                    "limit": 20,
+                    "total": 1
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid pagination query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "BAD_REQUEST",
+                    "message": "page must be a positive integer"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid or expired token"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": "error",
+                  "error": {
+                    "code": "FORBIDDEN",
+                    "message": "Admin access required"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/leaderboard/{levelId}": {
       "get": {
         "summary": "Get leaderboard for a level",
@@ -1411,12 +1863,16 @@
             "type": "object",
             "required": [
               "accessToken",
+              "refreshToken",
               "userId",
               "username",
               "role"
             ],
             "properties": {
               "accessToken": {
+                "type": "string"
+              },
+              "refreshToken": {
                 "type": "string"
               },
               "userId": {
@@ -1437,32 +1893,103 @@
           }
         }
       },
+      "RefreshRequest": {
+        "type": "object",
+        "required": [
+          "refreshToken"
+        ],
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "data"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "accessToken",
+              "refreshToken"
+            ],
+            "properties": {
+              "accessToken": {
+                "type": "string"
+              },
+              "refreshToken": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "CurrentUserResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "data"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "userId",
+              "email",
+              "username",
+              "role"
+            ],
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "username": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "USER",
+                  "ADMIN"
+                ]
+              }
+            }
+          }
+        }
+      },
       "SubmitScoreRequest": {
         "type": "object",
         "required": [
-          "leaderboardId",
-          "entryId",
           "levelId",
-          "usernameSnapshot",
           "score",
           "timeSeconds",
           "movesCount"
         ],
         "properties": {
-          "leaderboardId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "entryId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "levelId": {
             "type": "string",
             "format": "uuid"
-          },
-          "usernameSnapshot": {
-            "type": "string"
           },
           "score": {
             "type": "integer",
@@ -1665,6 +2192,30 @@
           }
         }
       },
+      "BoardShapeInput": {
+        "type": "object",
+        "description": "Optional abstract board mask (Option A): a visual + authoring/placement mask, not a physical wall.",
+        "required": [
+          "type",
+          "cells"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CELL_MASK"
+            ]
+          },
+          "cells": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 600,
+            "items": {
+              "$ref": "#/components/schemas/PositionInput"
+            }
+          }
+        }
+      },
       "LevelDefinitionDto": {
         "type": "object",
         "required": [
@@ -1682,6 +2233,9 @@
           "attempts": {
             "type": "integer",
             "minimum": 1
+          },
+          "boardShape": {
+            "$ref": "#/components/schemas/BoardShapeInput"
           }
         }
       },
@@ -1727,6 +2281,9 @@
             "type": "integer",
             "minimum": 1,
             "nullable": true
+          },
+          "boardShape": {
+            "$ref": "#/components/schemas/BoardShapeInput"
           }
         }
       },
@@ -1849,6 +2406,60 @@
           }
         }
       },
+      "AdminLevelSummary": {
+        "type": "object",
+        "required": [
+          "levelId",
+          "name",
+          "difficulty",
+          "status",
+          "arrowCount",
+          "attempts",
+          "createdAt"
+        ],
+        "properties": {
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "EASY",
+              "MEDIUM",
+              "HARD"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED",
+              "ARCHIVED"
+            ]
+          },
+          "arrowCount": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "timeLimitSeconds": {
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "LevelsListResponse": {
         "type": "object",
         "required": [
@@ -1873,6 +2484,122 @@
                 "items": {
                   "$ref": "#/components/schemas/LevelSummary"
                 }
+              }
+            }
+          }
+        }
+      },
+      "AdminLevelsResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "data"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "levels"
+            ],
+            "properties": {
+              "levels": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AdminLevelSummary"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AdminUserSummary": {
+        "type": "object",
+        "required": [
+          "userId",
+          "email",
+          "username",
+          "role",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "ADMIN"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AdminUserListResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "data"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "users",
+              "page",
+              "limit",
+              "total"
+            ],
+            "properties": {
+              "users": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AdminUserSummary"
+                }
+              },
+              "page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0
               }
             }
           }
@@ -1981,10 +2708,8 @@
           "data": {
             "type": "object",
             "required": [
-              "leaderboardId",
               "levelId",
-              "entries",
-              "updatedAt"
+              "entries"
             ],
             "properties": {
               "leaderboardId": {

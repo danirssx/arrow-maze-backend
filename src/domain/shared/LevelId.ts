@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { InvalidArgumentError } from "../errors/DomainError.js";
 
 const UUID_REGEX =
@@ -16,10 +15,6 @@ export class LevelId {
       throw new InvalidArgumentError("Invalid level ID format");
     }
     return new LevelId(value);
-  }
-
-  static generate(): LevelId {
-    return new LevelId(randomUUID());
   }
 
   equals(other: LevelId): boolean {

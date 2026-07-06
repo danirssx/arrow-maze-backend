@@ -31,13 +31,13 @@ export class CompletedLevel extends Entity<CompletedLevelId> {
     return new CompletedLevel(props);
   }
 
-  withBetterScore(score: LevelScore): CompletedLevel {
+  withBetterScore(score: LevelScore, now: Date): CompletedLevel {
     return CompletedLevel.create({
       id: this.id,
       levelId: this.levelId,
       bestScore: score,
       completedAt: this.completedAt,
-      updatedAt: UpdatedAt.now(),
+      updatedAt: new UpdatedAt(now),
     });
   }
 }

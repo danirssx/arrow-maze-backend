@@ -23,21 +23,6 @@ describe("UserId", () => {
     });
   });
 
-  describe("generate", () => {
-    it("should_generate_valid_uuid_v4_when_called", () => {
-      const id = UserId.generate();
-      expect(id.value).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-      );
-    });
-
-    it("should_generate_unique_ids_on_each_call", () => {
-      const a = UserId.generate();
-      const b = UserId.generate();
-      expect(a.value).not.toBe(b.value);
-    });
-  });
-
   describe("equals", () => {
     it("should_return_true_when_both_ids_have_same_value", () => {
       const a = UserId.create(VALID_UUID);
@@ -46,8 +31,8 @@ describe("UserId", () => {
     });
 
     it("should_return_false_when_ids_have_different_values", () => {
-      const a = UserId.generate();
-      const b = UserId.generate();
+      const a = UserId.create(VALID_UUID);
+      const b = UserId.create("550e8400-e29b-41d4-a716-446655440001");
       expect(a.equals(b)).toBe(false);
     });
   });
