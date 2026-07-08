@@ -5055,6 +5055,85 @@ commit, push, PR, Linear update, and a review of affected tickets. The user appr
   and a Prisma schema relation test.
 
 
+---
+
+# AI Usage Log: MAZ-194 Resolve PR #68 QA seed conflict (backend)
+
+## Task / Problem
+
+PR #68 (`feat(seed): add documented full-catalog QA test user (MAZ-194)`) was left
+conflicting against current `develop`. Later backend work introduced the local/dev admin
+demo user (MAZ-199) and used the same user id that PR #68 originally assigned to
+`qa_catalog`. The task was to recover the MAZ-194 QA account and runbook without
+breaking admin seed data or creating duplicate seed identities.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked to perform the same PR-conflict review and replacement flow used for the
+client PR #72: inspect backend `AGENTS.md`, root `MEMORY.md`, `Linear_MCP_Guideline.md`,
+analyze PR #68, resolve it, push a new PR, and close the old PR.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Recovered the existing MAZ-194 intent from Linear/PR and refined the conflict resolution around MAZ-199's admin seed. No separate agent session was run. | Linear MAZ-194 read-only check; `specs/qa-full-catalog-user-MAZ-194.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Restored the executable `@s1..@s5` contract from the conflicted PR. No separate planner session was run. | `specs/qa-full-catalog-user-MAZ-194.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Added failing QA seed/progress tests first, then added the QA credential and extracted pure demo progress seed data. | `tests/seed/demoCredentials.test.ts`; `tests/seed/demoProgress.test.ts`; seed-data files |
+| Judge (`.agents/judge.md`) | Referenced | Reviewed the merge risk before implementation: accepting PR #68 wholesale would duplicate the admin user id and risk corrupting seed uniqueness. | `git merge-tree origin/develop origin/pr/68`; PR #68 conflict analysis |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Seed-data/docs/tests change; no `src/` production behavior changed, so mutation gate was not applicable. | N/A |
+
+## Scenario Coverage (@s -> test)
+
+| Scenario | Concrete test coverage |
+| --- | --- |
+| `@s1` seed defines the QA account | `tests/seed/demoCredentials.test.ts` -> `should_include_a_dedicated_qa_full_catalog_account` |
+| `@s2` QA account cost-12 hash verifies | `tests/seed/demoCredentials.test.ts` -> `should_log_in_with_a_cost_12_hash_of_the_documented_password` |
+| `@s3` chosen policy is normal progression | `tests/seed/demoCredentials.test.ts` -> `should_choose_normal_progression_as_the_qa_account_policy` |
+| `@s4` QA account starts empty | `tests/seed/demoProgress.test.ts` -> `should_start_the_qa_account_with_no_seeded_progress_normal_progression` |
+| `@s5` seeded progress references only known demo users | `tests/seed/demoProgress.test.ts` -> `should_reference_only_known_demo_users_in_seeded_progress_and_leaderboards` |
+
+## Result Obtained
+
+- Added `qa_catalog` as a normal `USER` demo credential with documented non-secret local/dev
+  password `ArrowDemo!QaCatalog`.
+- Assigned `QA_FULL_CATALOG_USER_ID = "660e8400-e29b-41d4-a716-446655440005"` so the QA
+  user does not collide with MAZ-199's admin user id `...0004`.
+- Preserved MAZ-199 admin behavior: `admin_arrow` remains `ADMIN`, and admin seeded
+  all-level progress remains in `seed.ts`.
+- Extracted `DEMO_PROGRESS` and `DEMO_LEADERBOARDS` into
+  `prisma/seed-data/demoProgress.ts` so tests can assert the QA account starts empty
+  without executing the DB seed.
+- Restored MAZ-194 spec/feature files and documented the QA runbook in `README.md`.
+
+## Verification
+
+- Red check: focused seed tests failed because `QA_FULL_CATALOG_USER_ID` and
+  `demoProgress.ts` did not exist yet.
+- Focused tests GREEN: 2 suites / 11 tests.
+- Full gate GREEN: `npm run verify` -> lint + typecheck + coverage + build, 94 suites /
+  595 tests.
+
+## Team Modifications Pending Human Review
+
+- Use the resolved branch as a replacement for PR #68. The old PR should not be merged
+  as-is because it assigns the QA user to the id now used by the admin demo account.
+- Human review should confirm the normal-progression policy remains the desired MAZ-194
+  product decision.
+- A live `npm run db:seed` smoke test was not run in this worktree.
+
+## Lessons / Limitations
+
+- The conflict was dangerous because of seed identity collision, not because of the QA
+  account itself.
+- Current `develop` already has an admin account for exploratory all-level access, so
+  MAZ-194 is cleaner as a normal-user QA path that exercises progression end to end.
+
+
 <!-- AI_LOG_ENTRIES_END -->
 
 ## Critical Evaluation

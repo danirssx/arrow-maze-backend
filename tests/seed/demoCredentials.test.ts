@@ -1,5 +1,10 @@
 import bcrypt from "bcryptjs";
-import { DEMO_USER_CREDENTIALS, DEMO_PASSWORD_BCRYPT_COST } from "../../prisma/seed-data/demoCredentials.js";
+import {
+  DEMO_USER_CREDENTIALS,
+  DEMO_PASSWORD_BCRYPT_COST,
+  QA_FULL_CATALOG_USER_ID,
+  QA_PROGRESSION_POLICY,
+} from "../../prisma/seed-data/demoCredentials.js";
 import { RawPassword } from "../../src/domain/identity/value-objects/RawPassword.js";
 import { PasswordHash } from "../../src/domain/identity/value-objects/PasswordHash.js";
 import { UserRole } from "../../src/domain/identity/enums/UserRole.js";
@@ -45,6 +50,28 @@ describe("demo seed credentials", () => {
     for (const credential of DEMO_USER_CREDENTIALS) {
       expect(credential.status).toBe(UserStatus.ACTIVE);
     }
+  });
+
+  // --- MAZ-194: dedicated full-catalog QA account ---
+  it("should_include_a_dedicated_qa_full_catalog_account", () => {
+    const qa = DEMO_USER_CREDENTIALS.find((credential) => credential.id === QA_FULL_CATALOG_USER_ID);
+    const admin = DEMO_USER_CREDENTIALS.find((credential) => credential.email === "admin@arrowmaze.test");
+
+    expect(qa).toMatchObject({
+      email: "qa@arrowmaze.test",
+      username: "qa_catalog",
+      password: "ArrowDemo!QaCatalog",
+      role: UserRole.USER,
+      status: UserStatus.ACTIVE,
+    });
+    expect(qa?.id).not.toBe(admin?.id);
+    expect(() => RawPassword.create(qa!.password)).not.toThrow();
+  });
+
+  it("should_choose_normal_progression_as_the_qa_account_policy", () => {
+    // Chosen for MAZ-194: the QA account progresses like a normal user, with no
+    // local/dev lock bypass that could weaken normal progression.
+    expect(QA_PROGRESSION_POLICY).toBe("normal-progression");
   });
 
   it("should_log_in_with_a_cost_12_hash_of_the_documented_password", async () => {
