@@ -211,6 +211,80 @@ describe("CreateLevelUseCase", () => {
     });
   });
 
+  describe("flexible rectangular boards (MAZ-216)", () => {
+    it("should_persist_full_rectangle_board_shape_when_board_size_is_present", async () => {
+      // Arrange
+      const repo = new FakeLevelRepository();
+      const useCase = new CreateLevelUseCase(repo, new FakeIdGenerator(), new FakeClock());
+
+      // Act
+      await useCase.execute({
+        ...VALID_INPUT,
+        boardSize: { rows: 2, cols: 3 },
+      });
+
+      // Assert
+      expect(repo.savedLevels[0].boardShape).toBeDefined();
+      expect(repo.savedLevels[0].boardShape!.cells.map((cell) => ({ row: cell.row, col: cell.col }))).toEqual([
+        { row: 0, col: 0 },
+        { row: 0, col: 1 },
+        { row: 0, col: 2 },
+        { row: 1, col: 0 },
+        { row: 1, col: 1 },
+        { row: 1, col: 2 },
+      ]);
+    });
+
+    it("should_throw_when_board_size_exceeds_m12_limits", async () => {
+      // Arrange
+      const repo = new FakeLevelRepository();
+      const useCase = new CreateLevelUseCase(repo, new FakeIdGenerator(), new FakeClock());
+
+      // Act / Assert
+      await expect(
+        useCase.execute({
+          ...VALID_INPUT,
+          boardSize: { rows: 13, cols: 12 },
+        })
+      ).rejects.toThrow("must not exceed");
+      expect(repo.savedLevels).toHaveLength(0);
+    });
+
+    it("should_throw_when_arrow_cell_lies_outside_board_size", async () => {
+      // Arrange
+      const repo = new FakeLevelRepository();
+      const useCase = new CreateLevelUseCase(repo, new FakeIdGenerator(), new FakeClock());
+
+      // Act / Assert
+      await expect(
+        useCase.execute({
+          ...VALID_INPUT,
+          boardSize: { rows: 1, cols: 1 },
+          arrows: [
+            { id: "a", color: "#5262FB", path: [{ row: 0, col: 1 }], direction: "UP" },
+          ],
+        })
+      ).rejects.toThrow("outside the board shape mask");
+      expect(repo.savedLevels).toHaveLength(0);
+    });
+
+    it("should_throw_when_board_size_and_board_shape_are_combined", async () => {
+      // Arrange
+      const repo = new FakeLevelRepository();
+      const useCase = new CreateLevelUseCase(repo, new FakeIdGenerator(), new FakeClock());
+
+      // Act / Assert
+      await expect(
+        useCase.execute({
+          ...VALID_INPUT,
+          boardSize: { rows: 2, cols: 2 },
+          boardShape: { type: "CELL_MASK", cells: [{ row: 0, col: 0 }] },
+        })
+      ).rejects.toThrow(ValidationError);
+      expect(repo.savedLevels).toHaveLength(0);
+    });
+  });
+
   // @s8 — CreateLevelUseCase uses injected IdGenerator and Clock
   describe("@s8 — injected id generator and clock", () => {
     it("should_use_injected_id_when_level_is_created", async () => {

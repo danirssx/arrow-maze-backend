@@ -193,6 +193,22 @@ describe("Level board shape (Option A)", () => {
       )
     ).toThrow(InvalidArgumentError);
   });
+
+  it("should_throw_when_updating_definition_with_an_arrow_outside_the_shape", () => {
+    // Arrange
+    const shape = BoardShape.cellMask([
+      Position.create(0, 0),
+      Position.create(0, 1),
+      Position.create(1, 0),
+    ]);
+    const level = draftWithShape(shape);
+    const outsideDefinition = LevelDefinition.create([
+      ArrowSpec.create("b", "#5262FB", [Position.create(2, 2)], Direction.UP),
+    ]);
+
+    // Act / Assert
+    expect(() => level.updateDefinition(outsideDefinition, new Date())).toThrow(InvalidArgumentError);
+  });
 });
 
 // @s4 — injected clock
