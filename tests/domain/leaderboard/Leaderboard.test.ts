@@ -1,6 +1,6 @@
 import { Leaderboard } from '../../../src/domain/leaderboard/Leaderboard.js';
 import { ScoreEntry } from '../../../src/domain/leaderboard/ScoreEntry.js';
-import { DuplicateEntryError, LeaderboardLevelMismatchError } from '../../../src/domain/leaderboard/errors/LeaderboardErrors.js';
+import { LeaderboardLevelMismatchError } from '../../../src/domain/leaderboard/errors/LeaderboardErrors.js';
 import { LeaderboardUpdatedEvent } from '../../../src/domain/leaderboard/events/LeaderboardUpdatedEvent.js';
 import { Rank } from '../../../src/domain/leaderboard/value-objects/Rank.js';
 import { EntryId } from '../../../src/domain/leaderboard/value-objects/EntryId.js';
@@ -13,6 +13,7 @@ import { TimeSeconds } from '../../../src/domain/leaderboard/value-objects/TimeS
 import { UsernameSnapshot } from '../../../src/domain/leaderboard/value-objects/UsernameSnapshot.js';
 import { LevelId } from '../../../src/domain/shared/LevelId.js';
 import { UserId } from '../../../src/domain/shared/UserId.js';
+import { InvalidArgumentError } from '../../../src/domain/errors/DomainError.js';
 
 const USER_1 = '550e8400-e29b-41d4-a716-446655440001';
 const USER_2 = '550e8400-e29b-41d4-a716-446655440002';
@@ -23,6 +24,7 @@ const LB_1 = '550e8400-e29b-41d4-a716-446655440020';
 const ENTRY_1 = '550e8400-e29b-41d4-a716-446655440030';
 const ENTRY_2 = '550e8400-e29b-41d4-a716-446655440031';
 const ENTRY_3 = '550e8400-e29b-41d4-a716-446655440032';
+const FIXED_LB_NOW = new Date('2024-01-15T10:00:00.000Z');
 
 function makeEntry(overrides?: {
   entryId?: string;
@@ -39,7 +41,7 @@ function makeEntry(overrides?: {
     score: new Score(overrides?.score ?? 100),
     timeSeconds: new TimeSeconds(overrides?.timeSeconds ?? 30),
     movesCount: new MoveCount(15),
-    submittedAt: SubmittedAt.now(),
+    submittedAt: new SubmittedAt(FIXED_LB_NOW),
   });
 }
 
@@ -48,6 +50,7 @@ function makeLeaderboard(maxEntries = 10): Leaderboard {
     LeaderboardId.create(LB_1),
     LevelId.create(LEVEL_1),
     new MaxLeaderboardEntries(maxEntries),
+    FIXED_LB_NOW,
   );
 }
 
@@ -57,7 +60,7 @@ describe('Leaderboard', () => {
       const leaderboard = makeLeaderboard();
       const entry = makeEntry();
 
-      leaderboard.submitEntry(entry);
+      leaderboard.submitEntry(entry, FIXED_LB_NOW);
 
       expect(leaderboard.entries).toHaveLength(1);
     });
@@ -66,7 +69,7 @@ describe('Leaderboard', () => {
       const leaderboard = makeLeaderboard();
       const entry = makeEntry();
 
-      leaderboard.submitEntry(entry);
+      leaderboard.submitEntry(entry, FIXED_LB_NOW);
 
       expect(leaderboard.entries[0]?.rank?.value).toBe(1);
     });
@@ -75,7 +78,7 @@ describe('Leaderboard', () => {
       const leaderboard = makeLeaderboard();
       const entry = makeEntry();
 
-      leaderboard.submitEntry(entry);
+      leaderboard.submitEntry(entry, FIXED_LB_NOW);
 
       expect(leaderboard.domainEvents).toHaveLength(1);
       expect(leaderboard.domainEvents[0]).toBeInstanceOf(LeaderboardUpdatedEvent);
@@ -86,8 +89,8 @@ describe('Leaderboard', () => {
       const lowScore = makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 50 });
       const highScore = makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 200 });
 
-      leaderboard.submitEntry(lowScore);
-      leaderboard.submitEntry(highScore);
+      leaderboard.submitEntry(lowScore, FIXED_LB_NOW);
+      leaderboard.submitEntry(highScore, FIXED_LB_NOW);
 
       expect(leaderboard.entries[0]?.score.value).toBe(200);
       expect(leaderboard.entries[0]?.rank?.value).toBe(1);
@@ -98,8 +101,8 @@ describe('Leaderboard', () => {
       const slower = makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 });
       const faster = makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 100, timeSeconds: 20 });
 
-      leaderboard.submitEntry(slower);
-      leaderboard.submitEntry(faster);
+      leaderboard.submitEntry(slower, FIXED_LB_NOW);
+      leaderboard.submitEntry(faster, FIXED_LB_NOW);
 
       expect(leaderboard.entries[0]?.timeSeconds.value).toBe(20);
       expect(leaderboard.entries[0]?.rank?.value).toBe(1);
@@ -107,9 +110,9 @@ describe('Leaderboard', () => {
 
     it('should_limit_entries_when_max_capacity_reached', () => {
       const leaderboard = makeLeaderboard(2);
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 50 }));
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 80 }));
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_3, userId: USER_3, score: 200 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 50 }), FIXED_LB_NOW);
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 80 }), FIXED_LB_NOW);
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_3, userId: USER_3, score: 200 }), FIXED_LB_NOW);
 
       expect(leaderboard.entries).toHaveLength(2);
       expect(leaderboard.entries[0]?.score.value).toBe(200);
@@ -119,16 +122,141 @@ describe('Leaderboard', () => {
       const leaderboard = makeLeaderboard();
       const wrongLevel = makeEntry({ levelId: LEVEL_99 });
 
-      expect(() => leaderboard.submitEntry(wrongLevel)).toThrow(LeaderboardLevelMismatchError);
+      expect(() => leaderboard.submitEntry(wrongLevel, FIXED_LB_NOW)).toThrow(LeaderboardLevelMismatchError);
     });
 
-    it('should_throw_when_user_already_has_entry', () => {
+    // --- MAZ-172: best-score upsert (replaces the old duplicate-as-error path) ---
+    it('should_replace_entry_when_resubmitted_score_is_better', () => {
       const leaderboard = makeLeaderboard();
-      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1 }));
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 }), FIXED_LB_NOW);
 
-      expect(() =>
-        leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1 })),
-      ).toThrow(DuplicateEntryError);
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200, timeSeconds: 50 }), FIXED_LB_NOW);
+
+      expect(leaderboard.entries).toHaveLength(1);
+      expect(leaderboard.entries[0]?.score.value).toBe(200);
+      expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_2);
+    });
+
+    it('should_keep_existing_entry_when_resubmitted_score_is_worse', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200, timeSeconds: 30 }), FIXED_LB_NOW);
+
+      // Worse score even though the time is faster: score dominates, so this is a no-op.
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 10 }), FIXED_LB_NOW);
+
+      expect(leaderboard.entries).toHaveLength(1);
+      expect(leaderboard.entries[0]?.score.value).toBe(200);
+      expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_1);
+    });
+
+    it('should_keep_existing_entry_when_resubmitted_score_and_time_are_equal', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 30 }), FIXED_LB_NOW);
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 30 }), FIXED_LB_NOW);
+
+      expect(leaderboard.entries).toHaveLength(1);
+      expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_1);
+    });
+
+    it('should_replace_entry_when_same_score_but_faster_time', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100, timeSeconds: 60 }), FIXED_LB_NOW);
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100, timeSeconds: 20 }), FIXED_LB_NOW);
+
+      expect(leaderboard.entries[0]?.id.value).toBe(ENTRY_2);
+      expect(leaderboard.entries[0]?.timeSeconds.value).toBe(20);
+    });
+
+    it('should_keep_single_entry_per_user_when_resubmitted', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }), FIXED_LB_NOW);
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200 }), FIXED_LB_NOW);
+
+      const userEntries = leaderboard.entries.filter((e) => e.userId.value === USER_1);
+      expect(userEntries).toHaveLength(1);
+    });
+
+    it('should_keep_other_users_entries_when_one_user_improves', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }), FIXED_LB_NOW);
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_2, score: 150 }), FIXED_LB_NOW);
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_3, userId: USER_1, score: 300 }), FIXED_LB_NOW);
+
+      expect(leaderboard.entries).toHaveLength(2);
+      expect(leaderboard.entries.find((e) => e.userId.value === USER_2)?.score.value).toBe(150);
+      expect(leaderboard.entries.find((e) => e.userId.value === USER_1)?.score.value).toBe(300);
+    });
+
+    it('should_record_event_when_resubmission_is_better', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 100 }), FIXED_LB_NOW);
+      leaderboard.clearEvents();
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 200 }), FIXED_LB_NOW);
+
+      expect(leaderboard.domainEvents).toHaveLength(1);
+      expect(leaderboard.domainEvents[0]).toBeInstanceOf(LeaderboardUpdatedEvent);
+    });
+
+    it('should_not_record_event_when_resubmission_is_a_no_op', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200 }), FIXED_LB_NOW);
+      leaderboard.clearEvents();
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100 }), FIXED_LB_NOW);
+
+      expect(leaderboard.domainEvents).toHaveLength(0);
+    });
+
+    it('should_not_bump_updated_at_when_resubmission_is_a_no_op', () => {
+      const leaderboard = makeLeaderboard();
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_1, userId: USER_1, score: 200 }), FIXED_LB_NOW);
+      const updatedAtBefore = leaderboard.updatedAt.value;
+
+      leaderboard.submitEntry(makeEntry({ entryId: ENTRY_2, userId: USER_1, score: 100 }), FIXED_LB_NOW);
+
+      expect(leaderboard.updatedAt.value).toBe(updatedAtBefore);
+    });
+  });
+
+  describe('ScoreEntry.isBetterThan', () => {
+    it('should_return_true_when_score_is_higher', () => {
+      const high = makeEntry({ score: 200 });
+      const low = makeEntry({ score: 100 });
+
+      expect(high.isBetterThan(low)).toBe(true);
+    });
+
+    it('should_return_false_when_score_is_lower', () => {
+      const low = makeEntry({ score: 100 });
+      const high = makeEntry({ score: 200 });
+
+      expect(low.isBetterThan(high)).toBe(false);
+    });
+
+    it('should_return_true_when_score_equal_and_time_faster', () => {
+      const faster = makeEntry({ score: 100, timeSeconds: 20 });
+      const slower = makeEntry({ score: 100, timeSeconds: 60 });
+
+      expect(faster.isBetterThan(slower)).toBe(true);
+    });
+
+    it('should_return_false_when_score_equal_and_time_equal', () => {
+      const a = makeEntry({ score: 100, timeSeconds: 30 });
+      const b = makeEntry({ score: 100, timeSeconds: 30 });
+
+      expect(a.isBetterThan(b)).toBe(false);
+    });
+
+    it('should_return_false_when_score_lower_even_if_time_faster', () => {
+      const lowerFaster = makeEntry({ score: 100, timeSeconds: 10 });
+      const higherSlower = makeEntry({ score: 200, timeSeconds: 90 });
+
+      expect(lowerFaster.isBetterThan(higherSlower)).toBe(false);
     });
   });
 
@@ -137,20 +265,150 @@ describe('Leaderboard', () => {
       expect(() => LeaderboardId.create('')).toThrow();
     });
 
-    it('should_throw_when_score_is_negative', () => {
-      expect(() => new Score(-1)).toThrow();
+    it('should_throw_invalid_argument_error_when_score_is_negative', () => {
+      expect(() => new Score(-1)).toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_when_time_seconds_is_zero', () => {
-      expect(() => new TimeSeconds(0)).toThrow();
+    it('should_throw_invalid_argument_error_when_score_is_decimal', () => {
+      expect(() => new Score(1.5)).toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_when_rank_is_zero', () => {
-      expect(() => new Rank(0)).toThrow();
+    it('should_throw_invalid_argument_error_when_time_seconds_is_zero', () => {
+      expect(() => new TimeSeconds(0)).toThrow(InvalidArgumentError);
     });
 
-    it('should_throw_when_max_entries_is_zero', () => {
-      expect(() => new MaxLeaderboardEntries(0)).toThrow();
+    it('should_throw_invalid_argument_error_when_move_count_is_zero', () => {
+      expect(() => new MoveCount(0)).toThrow(InvalidArgumentError);
     });
+
+    it('should_throw_invalid_argument_error_when_rank_is_zero', () => {
+      expect(() => new Rank(0)).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_invalid_argument_error_when_max_entries_is_zero', () => {
+      expect(() => new MaxLeaderboardEntries(0)).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_invalid_argument_error_when_username_snapshot_is_empty', () => {
+      expect(() => new UsernameSnapshot('')).toThrow(InvalidArgumentError);
+    });
+
+    it('should_not_expose_http_status_on_invalid_argument_error', () => {
+      expect.assertions(2);
+      try {
+        new Score(-1);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InvalidArgumentError);
+        expect('httpStatus' in (e as object)).toBe(false);
+      }
+    });
+
+    // --- StringLiteral survivors ---
+    it('should_throw_with_exact_message_when_score_is_negative', () => {
+      expect(() => new Score(-1)).toThrow('Score must be a non-negative integer');
+    });
+
+    it('should_throw_with_exact_message_when_time_seconds_is_zero', () => {
+      expect(() => new TimeSeconds(0)).toThrow('TimeSeconds must be greater than zero');
+    });
+
+    it('should_throw_with_exact_message_when_move_count_is_zero', () => {
+      expect(() => new MoveCount(0)).toThrow('MoveCount must be a positive integer');
+    });
+
+    it('should_throw_with_exact_message_when_rank_is_zero', () => {
+      expect(() => new Rank(0)).toThrow('Rank must be a positive integer starting at 1');
+    });
+
+    it('should_throw_with_exact_message_when_max_entries_is_zero', () => {
+      expect(() => new MaxLeaderboardEntries(0)).toThrow('MaxLeaderboardEntries must be a positive integer');
+    });
+
+    it('should_throw_with_exact_message_when_username_snapshot_is_empty', () => {
+      expect(() => new UsernameSnapshot('')).toThrow('UsernameSnapshot cannot be empty');
+    });
+
+    // --- Boundary exact survivors ---
+    it('should_be_valid_when_score_is_zero', () => {
+      expect(() => new Score(0)).not.toThrow();
+      expect(new Score(0).value).toBe(0);
+    });
+
+    it('should_be_valid_when_move_count_is_one', () => {
+      expect(() => new MoveCount(1)).not.toThrow();
+      expect(new MoveCount(1).value).toBe(1);
+    });
+
+    it('should_be_valid_when_max_entries_is_one', () => {
+      expect(() => new MaxLeaderboardEntries(1)).not.toThrow();
+      expect(new MaxLeaderboardEntries(1).value).toBe(1);
+    });
+
+    // --- UsernameSnapshot whitespace-only survivor ---
+    it('should_throw_when_username_snapshot_is_whitespace_only', () => {
+      expect(() => new UsernameSnapshot('   ')).toThrow(InvalidArgumentError);
+    });
+
+    it('should_throw_with_exact_message_when_username_snapshot_is_whitespace_only', () => {
+      expect(() => new UsernameSnapshot('   ')).toThrow('UsernameSnapshot cannot be empty');
+    });
+
+    // --- NoCoverage methods ---
+    it('should_return_true_when_score_is_higher_than_other', () => {
+      const high = new Score(100);
+      const low = new Score(50);
+      expect(high.isHigherThan(low)).toBe(true);
+    });
+
+    it('should_return_false_when_score_is_lower_than_other', () => {
+      const low = new Score(50);
+      const high = new Score(100);
+      expect(low.isHigherThan(high)).toBe(false);
+    });
+
+    it('should_return_false_when_score_equals_other', () => {
+      const a = new Score(75);
+      const b = new Score(75);
+      expect(a.isHigherThan(b)).toBe(false);
+    });
+
+    it('should_return_true_when_time_is_faster_than_other', () => {
+      const fast = new TimeSeconds(10);
+      const slow = new TimeSeconds(30);
+      expect(fast.isFasterThan(slow)).toBe(true);
+    });
+
+    it('should_return_false_when_time_is_slower_than_other', () => {
+      const slow = new TimeSeconds(30);
+      const fast = new TimeSeconds(10);
+      expect(slow.isFasterThan(fast)).toBe(false);
+    });
+
+    it('should_return_false_when_time_equals_other', () => {
+      const a = new TimeSeconds(20);
+      const b = new TimeSeconds(20);
+      expect(a.isFasterThan(b)).toBe(false);
+    });
+
+    it('should_return_value_string_when_username_snapshot_toString_called', () => {
+      const username = new UsernameSnapshot('PlayerOne');
+      expect(username.toString()).toBe('PlayerOne');
+    });
+  });
+});
+
+// @s6 — Leaderboard injected clock
+describe('Leaderboard injected clock (@s6)', () => {
+  it('should_set_updatedAt_to_injected_now_when_empty_leaderboard_created', () => {
+    const now = FIXED_LB_NOW;
+    const lb = Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10), now);
+    expect(lb.updatedAt.value).toBe(now);
+  });
+
+  it('should_set_updatedAt_to_injected_now_when_entry_submitted', () => {
+    const submitNow = new Date('2024-01-16T10:00:00.000Z');
+    const lb = Leaderboard.empty(LeaderboardId.create(LB_1), LevelId.create(LEVEL_1), new MaxLeaderboardEntries(10), FIXED_LB_NOW);
+    lb.submitEntry(makeEntry(), submitNow);
+    expect(lb.updatedAt.value).toBe(submitNow);
   });
 });

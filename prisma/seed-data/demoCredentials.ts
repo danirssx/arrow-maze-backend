@@ -1,0 +1,83 @@
+/**
+ * Demo user credentials for the seeded LOCAL / DEV database.
+ *
+ * These passwords are NOT secrets: they exist only so the mandatory-login flow can
+ * be demonstrated and tested against a freshly seeded database. They must never be
+ * reused in production. `seed.ts` hashes each password at `DEMO_PASSWORD_BCRYPT_COST`
+ * (12 — consistent with `BcryptPasswordHasher`) and stores the hash; the plaintext
+ * here is the documented credential a developer logs in with.
+ *
+ * The list is the single source of truth for the demo users (id/email/username),
+ * so the seed and the credential tests cannot drift.
+ */
+
+export type DemoCredential = {
+  readonly id: string;
+  readonly email: string;
+  readonly username: string;
+  readonly password: string;
+  readonly role: "USER" | "ADMIN";
+  readonly status: "ACTIVE";
+  readonly createdDaysAgo: number;
+};
+
+export const DEMO_PASSWORD_BCRYPT_COST = 12;
+
+/**
+ * Dedicated QA account for end-to-end full-catalog level progression (MAZ-194).
+ *
+ * `QA_PROGRESSION_POLICY` records the chosen policy for the ticket's open question:
+ * the QA account follows normal progression from level 1. It starts with no seeded
+ * completed levels and unlocks levels by playing them in order, exactly like any
+ * USER account. It does not bypass locks, so normal progression is not weakened.
+ */
+export const QA_FULL_CATALOG_USER_ID = "660e8400-e29b-41d4-a716-446655440005";
+export const QA_PROGRESSION_POLICY = "normal-progression" as const;
+
+export const DEMO_USER_CREDENTIALS: readonly DemoCredential[] = [
+  {
+    id: "660e8400-e29b-41d4-a716-446655440001",
+    email: "demo@arrowmaze.test",
+    username: "demo_player",
+    password: "ArrowDemo!Player",
+    role: "USER",
+    status: "ACTIVE",
+    createdDaysAgo: 6,
+  },
+  {
+    id: "660e8400-e29b-41d4-a716-446655440002",
+    email: "mika@arrowmaze.test",
+    username: "mika_arrows",
+    password: "ArrowDemo!Mika",
+    role: "USER",
+    status: "ACTIVE",
+    createdDaysAgo: 5,
+  },
+  {
+    id: "660e8400-e29b-41d4-a716-446655440003",
+    email: "noah@arrowmaze.test",
+    username: "noah_escape",
+    password: "ArrowDemo!Noah",
+    role: "USER",
+    status: "ACTIVE",
+    createdDaysAgo: 4,
+  },
+  {
+    id: "660e8400-e29b-41d4-a716-446655440004",
+    email: "admin@arrowmaze.test",
+    username: "admin_arrow",
+    password: "ArrowDemo!Admin",
+    role: "ADMIN",
+    status: "ACTIVE",
+    createdDaysAgo: 3,
+  },
+  {
+    id: QA_FULL_CATALOG_USER_ID,
+    email: "qa@arrowmaze.test",
+    username: "qa_catalog",
+    password: "ArrowDemo!QaCatalog",
+    role: "USER",
+    status: "ACTIVE",
+    createdDaysAgo: 7,
+  },
+];

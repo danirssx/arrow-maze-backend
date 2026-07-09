@@ -1,0 +1,12 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440099",
+  "name": "Broken",
+  "description": "An arrow cell lies outside the mask.",
+  "difficulty": "EASY",
+  "order": 1,
+  "attempts": 3,
+  "arrows": [
+    { "id": "a", "color": "blue", "direction": "UP", "path": [{ "row": 0, "col": 0 }] }
+  ],
+  "boardShape": { "type": "CELL_MASK", "cells": [{ "row": 5, "col": 5 }] }
+}

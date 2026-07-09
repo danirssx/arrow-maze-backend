@@ -11,7 +11,7 @@ import { createProgressTestApp } from '../../helpers/createProgressTestApp.js';
 
 const EMPTY_OUTPUT: LoadProgressOutput = {
   progressId: 'progress-user-1', userId: 'user-1',
-  completedLevels: [], version: 0, updatedAt: new Date(),
+  completedLevels: [], version: 0, updatedAt: new Date().toISOString(),
 };
 
 class FakeLoadUseCase implements UseCase<LoadProgressInput, LoadProgressOutput> {

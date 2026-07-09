@@ -4,7 +4,7 @@ import importPlugin from "eslint-plugin-import";
 
 export default [
   {
-    ignores: ["dist/**", "coverage/**", "node_modules/**"]
+    ignores: ["dist/**", "coverage/**", "node_modules/**", "prisma/seed-data/**"]
   },
   {
     files: ["**/*.ts"],
@@ -52,6 +52,26 @@ export default [
               "target": "./src/infrastructure",
               "from": "./src/framework",
               "message": "Infrastructure must not depend on Express/framework code."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    files: ["src/domain/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          "patterns": [
+            {
+              "group": ["crypto", "node:crypto"],
+              "message": "Domain must not import crypto. Use IdGenerator/Clock ports instead."
+            },
+            {
+              "group": ["**/shared/errors/AppError*"],
+              "message": "Domain must not import AppError (HTTP semantics). Use DomainError instead."
             }
           ]
         }

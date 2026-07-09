@@ -5,7 +5,8 @@ export class LeaderboardUpdatedEvent extends DomainEvent {
     leaderboardId: string,
     readonly entryId: string,
     readonly userId: string,
+    occurredOn: Date,
   ) {
-    super(leaderboardId);
+    super(leaderboardId, occurredOn);
   }
 }

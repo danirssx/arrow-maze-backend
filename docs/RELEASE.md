@@ -17,7 +17,7 @@ DATABASE_URL=<your-database-url>
 DATABASE_SSL=true
 JWT_SECRET=<strong-random-secret>
 PORT=3000
-CORS_ORIGIN=<your-frontend-origin>
+CORS_ORIGIN=<mobile-origin>,<admin-web-origin>
 ```
 
 ## Local Docker setup
@@ -37,13 +37,22 @@ npm run dev
 
 ## Database migrations
 
-Apply in order before first run:
+Migrations are managed by Prisma Migrate (`prisma/migrations`). Apply them before
+first run:
 
 ```bash
-psql $DATABASE_URL -f src/infrastructure/database/migrations/001_create_users.sql
-psql $DATABASE_URL -f src/infrastructure/database/migrations/002_create_leaderboard.sql
-psql $DATABASE_URL -f src/infrastructure/database/migrations/003_create_player_progress.sql
+npm run db:migrate   # prisma migrate deploy
 ```
+
+Then seed the published level catalog and demo data (idempotent upserts):
+
+```bash
+npm run db:seed      # prisma db seed -> prisma/seed.ts
+```
+
+`npm run db:setup` runs both in order for a fresh database. The published-level
+seed data is generated — re-run `npm run seed:generate` to regenerate
+`prisma/seed-data/levels.ts` after changing the level definitions.
 
 ## Cloud database setup (Neon / Supabase / Railway / Render)
 

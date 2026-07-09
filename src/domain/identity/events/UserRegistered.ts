@@ -6,8 +6,9 @@ export class UserRegistered extends DomainEvent {
     public readonly userId: string,
     public readonly email: string,
     public readonly username: string,
-    public readonly role: UserRole
+    public readonly role: UserRole,
+    occurredOn: Date,
   ) {
-    super(userId);
+    super(userId, occurredOn);
   }
 }

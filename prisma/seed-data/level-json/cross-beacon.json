@@ -1,0 +1,29 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440030",
+  "name": "Cross Beacon",
+  "description": "An abstract plus-shaped board: arrows untangle inside a cross mask.",
+  "difficulty": "MEDIUM",
+  "order": 16,
+  "attempts": 6,
+  "arrows": [
+    { "id": "v-top", "color": "cyan", "direction": "UP", "path": [{ "row": 1, "col": 2 }, { "row": 0, "col": 2 }] },
+    { "id": "v-bottom", "color": "blue", "direction": "UP", "path": [{ "row": 4, "col": 2 }, { "row": 3, "col": 2 }] },
+    { "id": "h-left", "color": "green", "direction": "RIGHT", "path": [{ "row": 2, "col": 0 }, { "row": 2, "col": 1 }] },
+    { "id": "h-right", "color": "yellow", "direction": "RIGHT", "path": [{ "row": 2, "col": 3 }, { "row": 2, "col": 4 }] },
+    { "id": "center", "color": "pink", "direction": "UP", "path": [{ "row": 2, "col": 2 }] }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      { "row": 0, "col": 2 },
+      { "row": 1, "col": 2 },
+      { "row": 2, "col": 0 },
+      { "row": 2, "col": 1 },
+      { "row": 2, "col": 2 },
+      { "row": 2, "col": 3 },
+      { "row": 2, "col": 4 },
+      { "row": 3, "col": 2 },
+      { "row": 4, "col": 2 }
+    ]
+  }
+}

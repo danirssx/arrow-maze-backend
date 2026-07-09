@@ -1,5 +1,7 @@
 import type { UseCase } from '../../aspects/UseCase.js';
-import type { ProgressRepository } from '../ports/IProgressRepository.js';
+import type { ProgressRepository } from '../ports/ProgressRepository.js';
+import type { IdGenerator } from '../../ports/IdGenerator.js';
+import type { Clock } from '../../ports/Clock.js';
 import { PlayerProgress } from '../../../domain/progress/PlayerProgress.js';
 import { ProgressId } from '../../../domain/progress/value-objects/ProgressId.js';
 import { UserId } from '../../../domain/shared/UserId.js';
@@ -13,7 +15,7 @@ export interface CompletedLevelDto {
   score: number;
   timeSeconds: number;
   movesCount: number;
-  completedAt: Date;
+  completedAt: string;
 }
 
 export interface LoadProgressOutput {
@@ -21,19 +23,23 @@ export interface LoadProgressOutput {
   userId: string;
   completedLevels: CompletedLevelDto[];
   version: number;
-  updatedAt: Date;
+  updatedAt: string;
 }
 
 export class LoadProgressService implements UseCase<LoadProgressInput, LoadProgressOutput> {
-  constructor(private readonly repo: ProgressRepository) {}
+  constructor(
+    private readonly repo: ProgressRepository,
+    private readonly idGenerator: IdGenerator,
+    private readonly clock: Clock,
+  ) {}
 
   async execute(input: LoadProgressInput): Promise<LoadProgressOutput> {
     const userId = UserId.create(input.userId);
+    const now = this.clock.now();
     let progress = await this.repo.findByUserId(userId);
 
     if (progress === null) {
-      progress = PlayerProgress.empty(ProgressId.generate(), userId);
-      await this.repo.save(progress);
+      progress = PlayerProgress.empty(ProgressId.create(this.idGenerator.generate()), userId, now);
     }
 
     return toProgressOutput(progress);
@@ -45,13 +51,13 @@ export function toProgressOutput(progress: PlayerProgress): LoadProgressOutput {
     progressId: progress.id.value,
     userId: progress.userId.value,
     version: progress.version.value,
-    updatedAt: progress.updatedAt.value,
+    updatedAt: progress.updatedAt.value.toISOString(),
     completedLevels: progress.completedLevels.map((cl) => ({
       levelId: cl.levelId.value,
       score: cl.bestScore.score,
       timeSeconds: cl.bestScore.timeSeconds,
       movesCount: cl.bestScore.movesCount,
-      completedAt: cl.completedAt.value,
+      completedAt: cl.completedAt.value.toISOString(),
     })),
   };
 }

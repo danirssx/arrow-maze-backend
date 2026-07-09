@@ -1,26 +1,25 @@
 import { Level } from "../../../../src/domain/level-catalog/Level";
 import { LevelSolvabilityPolicy } from "../../../../src/domain/level-catalog/LevelSolvabilityPolicy";
-import { CellType } from "../../../../src/domain/level-catalog/enums/CellType";
 import { Difficulty } from "../../../../src/domain/level-catalog/enums/Difficulty";
 import { Direction } from "../../../../src/domain/level-catalog/enums/Direction";
 import { LevelStatus } from "../../../../src/domain/level-catalog/enums/LevelStatus";
-import { BoardSize } from "../../../../src/domain/level-catalog/value-objects/BoardSize";
-import { CellSpec } from "../../../../src/domain/level-catalog/value-objects/CellSpec";
+import { ArrowSpec } from "../../../../src/domain/level-catalog/value-objects/ArrowSpec";
+import { BoardShape } from "../../../../src/domain/level-catalog/value-objects/BoardShape";
 import { LevelDefinition } from "../../../../src/domain/level-catalog/value-objects/LevelDefinition";
 import { LevelDescription } from "../../../../src/domain/level-catalog/value-objects/LevelDescription";
 import { LevelId } from "../../../../src/domain/shared/LevelId.js";
 import { LevelName } from "../../../../src/domain/level-catalog/value-objects/LevelName";
 import { LevelVersion } from "../../../../src/domain/level-catalog/value-objects/LevelVersion";
 import { Position } from "../../../../src/domain/level-catalog/value-objects/Position";
+import { TimeLimit } from "../../../../src/domain/level-catalog/value-objects/TimeLimit";
 import type { LevelRepository } from "../../../../src/application/level-catalog/ports/LevelRepository";
 
 export const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
+export const FIXED_LEVEL_NOW = new Date("2024-01-15T10:00:00.000Z");
 
 export function makeSolvableDefinition(): LevelDefinition {
-  return LevelDefinition.create(BoardSize.create(3, 3), [
-    CellSpec.create(Position.create(0, 0), CellType.START, Direction.RIGHT),
-    CellSpec.create(Position.create(0, 1), CellType.ARROW, Direction.DOWN),
-    CellSpec.create(Position.create(1, 1), CellType.EXIT),
+  return LevelDefinition.create([
+    ArrowSpec.create("a", "#5262FB", [Position.create(0, 0)], Direction.UP),
   ]);
 }
 
@@ -31,20 +30,73 @@ export function makeDraftLevel(id = VALID_UUID): Level {
     LevelDescription.create("A test level"),
     makeSolvableDefinition(),
     Difficulty.EASY,
-    LevelVersion.initial()
+    LevelVersion.initial(),
+    FIXED_LEVEL_NOW
   );
 }
 
 export function makePublishedLevel(id = VALID_UUID): Level {
   const level = makeDraftLevel(id);
-  level.publish(new LevelSolvabilityPolicy());
+  level.publish(new LevelSolvabilityPolicy(), FIXED_LEVEL_NOW);
   level.pullDomainEvents();
   return level;
 }
 
 export function makeArchivedLevel(id = VALID_UUID): Level {
   const level = makePublishedLevel(id);
-  level.archive();
+  level.archive(FIXED_LEVEL_NOW);
+  return level;
+}
+
+export function makeTimedDraftLevel(id = VALID_UUID, seconds = 60): Level {
+  return Level.draft(
+    LevelId.create(id),
+    LevelName.create("Timed Level"),
+    LevelDescription.create("A timed level"),
+    makeSolvableDefinition(),
+    Difficulty.EASY,
+    LevelVersion.initial(),
+    FIXED_LEVEL_NOW,
+    TimeLimit.create(seconds)
+  );
+}
+
+/** A 2x2 CELL_MASK that contains the single 2-cell arrow used in shaped fixtures. */
+export function makeBoardShape(): BoardShape {
+  return BoardShape.cellMask([
+    Position.create(0, 0),
+    Position.create(0, 1),
+    Position.create(1, 0),
+    Position.create(1, 1),
+  ]);
+}
+
+export function makeShapedDraftLevel(id = VALID_UUID): Level {
+  const definition = LevelDefinition.create([
+    ArrowSpec.create(
+      "a",
+      "#5262FB",
+      [Position.create(0, 0), Position.create(0, 1)],
+      Direction.RIGHT
+    ),
+  ]);
+  return Level.draft(
+    LevelId.create(id),
+    LevelName.create("Shaped Level"),
+    LevelDescription.create("A shaped level"),
+    definition,
+    Difficulty.EASY,
+    LevelVersion.initial(),
+    FIXED_LEVEL_NOW,
+    undefined,
+    makeBoardShape()
+  );
+}
+
+export function makeShapedPublishedLevel(id = VALID_UUID): Level {
+  const level = makeShapedDraftLevel(id);
+  level.publish(new LevelSolvabilityPolicy(), FIXED_LEVEL_NOW);
+  level.pullDomainEvents();
   return level;
 }
 
@@ -69,5 +121,10 @@ export class FakeLevelRepository implements LevelRepository {
     return [...this.store.values()].filter(
       (l) => l.status === LevelStatus.PUBLISHED
     );
+  }
+
+  async findAll(status?: LevelStatus): Promise<Level[]> {
+    const all = [...this.store.values()];
+    return status === undefined ? all : all.filter((l) => l.status === status);
   }
 }

@@ -1,57 +1,38 @@
 import { InvalidArgumentError } from "../../errors/DomainError.js";
-import { CellType } from "../enums/CellType.js";
-import type { BoardSize } from "./BoardSize.js";
-import type { CellSpec } from "./CellSpec.js";
+import type { ArrowSpec } from "./ArrowSpec.js";
+
+export const DEFAULT_ATTEMPTS = 5;
 
 export class LevelDefinition {
   private constructor(
-    private readonly _boardSize: BoardSize,
-    private readonly _cells: readonly CellSpec[]
+    private readonly _arrows: readonly ArrowSpec[],
+    private readonly _attempts: number
   ) {}
 
-  static create(boardSize: BoardSize, cells: CellSpec[]): LevelDefinition {
-    const starts = cells.filter((c) => c.type === CellType.START);
-    if (starts.length !== 1) {
-      throw new InvalidArgumentError(
-        `Level definition must have exactly one START cell, got ${starts.length}`
-      );
+  static create(arrows: ArrowSpec[], attempts = DEFAULT_ATTEMPTS): LevelDefinition {
+    if (arrows.length === 0) {
+      throw new InvalidArgumentError("Level definition must contain at least one arrow");
+    }
+    if (!Number.isInteger(attempts) || attempts < 1) {
+      throw new InvalidArgumentError("Level attempts must be a positive integer");
     }
 
-    const exits = cells.filter((c) => c.type === CellType.EXIT);
-    if (exits.length !== 1) {
-      throw new InvalidArgumentError(
-        `Level definition must have exactly one EXIT cell, got ${exits.length}`
-      );
-    }
-
-    const seen = new Set<string>();
-    for (const cell of cells) {
-      if (
-        cell.position.row >= boardSize.rows ||
-        cell.position.col >= boardSize.cols
-      ) {
-        throw new InvalidArgumentError(
-          `Cell at (${cell.position.row}, ${cell.position.col}) is out of bounds ` +
-            `for board ${boardSize.rows}x${boardSize.cols}`
-        );
+    const ids = new Set<string>();
+    for (const arrow of arrows) {
+      if (ids.has(arrow.id)) {
+        throw new InvalidArgumentError(`Duplicate arrow id: ${arrow.id}`);
       }
-      const key = `${cell.position.row},${cell.position.col}`;
-      if (seen.has(key)) {
-        throw new InvalidArgumentError(
-          `Duplicate cell at position (${cell.position.row}, ${cell.position.col})`
-        );
-      }
-      seen.add(key);
+      ids.add(arrow.id);
     }
 
-    return new LevelDefinition(boardSize, [...cells]);
+    return new LevelDefinition([...arrows], attempts);
   }
 
-  get boardSize(): BoardSize {
-    return this._boardSize;
+  get arrows(): readonly ArrowSpec[] {
+    return this._arrows;
   }
 
-  get cells(): readonly CellSpec[] {
-    return this._cells;
+  get attempts(): number {
+    return this._attempts;
   }
 }

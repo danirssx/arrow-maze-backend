@@ -1,6 +1,11 @@
 import { GetLevelUseCase } from "../../../src/application/level-catalog/use-cases/GetLevelUseCase";
 import { NotFoundError } from "../../../src/shared/errors/ApplicationError";
-import { FakeLevelRepository, makePublishedLevel, VALID_UUID } from "./helpers/levelFixtures";
+import {
+  FakeLevelRepository,
+  makePublishedLevel,
+  makeShapedPublishedLevel,
+  VALID_UUID,
+} from "./helpers/levelFixtures";
 
 // Subject to human review — application use case test
 
@@ -21,8 +26,10 @@ describe("GetLevelUseCase", () => {
     expect(typeof result.level.difficulty).toBe("string");
     expect(typeof result.level.status).toBe("string");
     expect(result.level.version).toBe(1);
-    expect(result.level.createdAt).toBeInstanceOf(Date);
-    expect(result.level.updatedAt).toBeInstanceOf(Date);
+    expect(typeof result.level.createdAt).toBe('string');
+    expect(result.level.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(typeof result.level.updatedAt).toBe('string');
+    expect(result.level.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
   it("should_throw_not_found_when_level_does_not_exist", async () => {
@@ -45,5 +52,33 @@ describe("GetLevelUseCase", () => {
     await expect(
       useCase.execute({ levelId: "not-a-uuid" })
     ).rejects.toThrow();
+  });
+
+  it("should_include_board_shape_in_definition_when_level_has_a_shape", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makeShapedPublishedLevel(VALID_UUID));
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ levelId: VALID_UUID });
+
+    // Assert
+    expect(result.level.definition.boardShape).toBeDefined();
+    expect(result.level.definition.boardShape!.type).toBe("CELL_MASK");
+    expect(result.level.definition.boardShape!.cells).toHaveLength(4);
+  });
+
+  it("should_omit_board_shape_when_level_has_none", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makePublishedLevel(VALID_UUID));
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ levelId: VALID_UUID });
+
+    // Assert
+    expect(result.level.definition.boardShape).toBeUndefined();
   });
 });

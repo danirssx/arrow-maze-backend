@@ -4,7 +4,7 @@ import { ProgressUserMismatchError } from '../errors/ProgressErrors.js';
 import { UpdatedAt } from '../value-objects/UpdatedAt.js';
 
 export class ProgressMergePolicy {
-  merge(local: PlayerProgress, remote: PlayerProgress): PlayerProgress {
+  merge(local: PlayerProgress, remote: PlayerProgress, now: Date): PlayerProgress {
     if (!local.userId.equals(remote.userId)) {
       throw new ProgressUserMismatchError(local.userId.value, remote.userId.value);
     }
@@ -31,7 +31,7 @@ export class ProgressMergePolicy {
       userId: local.userId,
       completedLevels: [...merged.values()],
       version: newVersion,
-      updatedAt: UpdatedAt.now(),
+      updatedAt: new UpdatedAt(now),
     });
   }
 }

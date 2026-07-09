@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { InvalidArgumentError } from "../errors/DomainError.js";
 
 const UUID_REGEX =
@@ -16,10 +15,6 @@ export class UserId {
       throw new InvalidArgumentError("Invalid user ID format");
     }
     return new UserId(value);
-  }
-
-  static generate(): UserId {
-    return new UserId(randomUUID());
   }
 
   equals(other: UserId): boolean {

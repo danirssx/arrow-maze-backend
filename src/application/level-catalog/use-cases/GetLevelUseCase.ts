@@ -12,8 +12,26 @@ export type LevelDto = {
   difficulty: string;
   status: string;
   version: number;
-  createdAt: Date;
-  updatedAt: Date;
+  definition: LevelDefinitionDto;
+  timeLimitSeconds?: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BoardShapeDto = {
+  type: string;
+  cells: { row: number; col: number }[];
+};
+
+export type LevelDefinitionDto = {
+  attempts: number;
+  arrows: {
+    id: string;
+    color: string;
+    path: { row: number; col: number }[];
+    direction: string;
+  }[];
+  boardShape?: BoardShapeDto;
 };
 
 export type GetLevelOutput = { level: LevelDto };
@@ -34,8 +52,29 @@ export class GetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
         difficulty: level.difficulty,
         status: level.status,
         version: level.version.value,
-        createdAt: level.createdAt,
-        updatedAt: level.updatedAt,
+        definition: {
+          attempts: level.definition.attempts,
+          arrows: level.definition.arrows.map((arrow) => ({
+            id: arrow.id,
+            color: arrow.color,
+            path: arrow.path.map((position) => ({ row: position.row, col: position.col })),
+            direction: arrow.direction,
+          })),
+          ...(level.boardShape !== undefined
+            ? {
+                boardShape: {
+                  type: level.boardShape.type,
+                  cells: level.boardShape.cells.map((cell) => ({
+                    row: cell.row,
+                    col: cell.col,
+                  })),
+                },
+              }
+            : {}),
+        },
+        ...(level.timeLimit !== undefined ? { timeLimitSeconds: level.timeLimit.value } : {}),
+        createdAt: level.createdAt.toISOString(),
+        updatedAt: level.updatedAt.toISOString(),
       },
     };
   }

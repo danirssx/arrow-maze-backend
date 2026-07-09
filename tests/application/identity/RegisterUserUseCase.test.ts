@@ -1,6 +1,8 @@
 import { RegisterUserUseCase } from "../../../src/application/identity/use-cases/RegisterUserUseCase";
 import type { PasswordHasher } from "../../../src/application/identity/ports/PasswordHasher";
 import type { UserRepository } from "../../../src/application/identity/ports/UserRepository";
+import type { IdGenerator } from "../../../src/application/ports/IdGenerator";
+import type { Clock } from "../../../src/application/ports/Clock";
 import { PasswordHash } from "../../../src/domain/identity/value-objects/PasswordHash";
 import type { RawPassword } from "../../../src/domain/identity/value-objects/RawPassword";
 import type { User } from "../../../src/domain/identity/User";
@@ -8,6 +10,17 @@ import type { Email } from "../../../src/domain/identity/value-objects/Email";
 import type { UserId } from "../../../src/domain/shared/UserId.js";
 import type { Username } from "../../../src/domain/identity/value-objects/Username";
 import { ConflictError } from "../../../src/shared/errors/ApplicationError";
+
+const FAKE_ID = "550e8400-e29b-41d4-a716-446655440000";
+const FAKE_NOW = new Date("2024-01-15T10:00:00.000Z");
+
+class FakeIdGenerator implements IdGenerator {
+  generate(): string { return FAKE_ID; }
+}
+
+class FakeClock implements Clock {
+  now(): Date { return FAKE_NOW; }
+}
 
 // Subject to human review — application use case test
 
@@ -36,20 +49,19 @@ describe("RegisterUserUseCase", () => {
   it("should_return_userId_when_registration_succeeds", async () => {
     // Arrange
     const repo = new FakeUserRepository();
-    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher());
+    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher(), new FakeIdGenerator(), new FakeClock());
 
     // Act
     const result = await useCase.execute(VALID_INPUT);
 
     // Assert
-    expect(typeof result.userId).toBe("string");
-    expect(result.userId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    expect(result.userId).toBe(FAKE_ID);
   });
 
   it("should_persist_user_when_registration_succeeds", async () => {
     // Arrange
     const repo = new FakeUserRepository();
-    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher());
+    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher(), new FakeIdGenerator(), new FakeClock());
 
     // Act
     await useCase.execute(VALID_INPUT);
@@ -63,7 +75,7 @@ describe("RegisterUserUseCase", () => {
   it("should_store_hashed_password_not_raw_when_registration_succeeds", async () => {
     // Arrange
     const repo = new FakeUserRepository();
-    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher());
+    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher(), new FakeIdGenerator(), new FakeClock());
 
     // Act
     await useCase.execute(VALID_INPUT);
@@ -77,7 +89,7 @@ describe("RegisterUserUseCase", () => {
     // Arrange
     const repo = new FakeUserRepository();
     repo.emailExists = true;
-    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher());
+    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher(), new FakeIdGenerator(), new FakeClock());
 
     // Act / Assert
     await expect(useCase.execute(VALID_INPUT)).rejects.toBeInstanceOf(ConflictError);
@@ -87,7 +99,7 @@ describe("RegisterUserUseCase", () => {
     // Arrange
     const repo = new FakeUserRepository();
     repo.usernameExists = true;
-    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher());
+    const useCase = new RegisterUserUseCase(repo, new FakePasswordHasher(), new FakeIdGenerator(), new FakeClock());
 
     // Act / Assert
     await expect(useCase.execute(VALID_INPUT)).rejects.toBeInstanceOf(ConflictError);
@@ -95,7 +107,7 @@ describe("RegisterUserUseCase", () => {
 
   it("should_throw_domain_error_when_email_format_is_invalid", async () => {
     // Arrange
-    const useCase = new RegisterUserUseCase(new FakeUserRepository(), new FakePasswordHasher());
+    const useCase = new RegisterUserUseCase(new FakeUserRepository(), new FakePasswordHasher(), new FakeIdGenerator(), new FakeClock());
 
     // Act / Assert
     await expect(useCase.execute({ ...VALID_INPUT, email: "not-an-email" })).rejects.toThrow();
@@ -103,7 +115,7 @@ describe("RegisterUserUseCase", () => {
 
   it("should_throw_domain_error_when_password_is_too_short", async () => {
     // Arrange
-    const useCase = new RegisterUserUseCase(new FakeUserRepository(), new FakePasswordHasher());
+    const useCase = new RegisterUserUseCase(new FakeUserRepository(), new FakePasswordHasher(), new FakeIdGenerator(), new FakeClock());
 
     // Act / Assert
     await expect(useCase.execute({ ...VALID_INPUT, rawPassword: "short" })).rejects.toThrow();

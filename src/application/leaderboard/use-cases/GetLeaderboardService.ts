@@ -1,5 +1,6 @@
 import type { UseCase } from '../../aspects/UseCase.js';
-import type { LeaderboardRepository } from '../ports/ILeaderboardRepository.js';
+import type { LeaderboardRepository } from '../ports/LeaderboardRepository.js';
+import type { LevelRepository } from '../../level-catalog/ports/LevelRepository.js';
 import { LevelId } from '../../../domain/shared/LevelId.js';
 import { NotFoundError } from '../../../shared/errors/ApplicationError.js';
 
@@ -15,31 +16,42 @@ export interface ScoreEntryDto {
   timeSeconds: number;
   movesCount: number;
   rank: number;
-  submittedAt: Date;
+  submittedAt: string;
 }
 
 export interface GetLeaderboardOutput {
-  leaderboardId: string;
   levelId: string;
   entries: ScoreEntryDto[];
-  updatedAt: Date;
+  leaderboardId?: string;
+  updatedAt?: string;
 }
 
 export class GetLeaderboardService implements UseCase<GetLeaderboardInput, GetLeaderboardOutput> {
-  constructor(private readonly repo: LeaderboardRepository) {}
+  constructor(
+    private readonly repo: LeaderboardRepository,
+    private readonly levelRepository: LevelRepository,
+  ) {}
 
   async execute(input: GetLeaderboardInput): Promise<GetLeaderboardOutput> {
     const levelId = LevelId.create(input.levelId);
     const leaderboard = await this.repo.findByLevelId(levelId);
 
     if (leaderboard === null) {
-      throw new NotFoundError(`Leaderboard not found for level ${input.levelId}`);
+      const level = await this.levelRepository.findById(levelId);
+      if (level === null) {
+        throw new NotFoundError(`Level not found: ${input.levelId}`);
+      }
+
+      return {
+        levelId: level.id.value,
+        entries: [],
+      };
     }
 
     return {
       leaderboardId: leaderboard.id.value,
       levelId: leaderboard.levelId.value,
-      updatedAt: leaderboard.updatedAt.value,
+      updatedAt: leaderboard.updatedAt.value.toISOString(),
       entries: leaderboard.entries.map((e) => ({
         entryId: e.id.value,
         userId: e.userId.value,
@@ -48,7 +60,7 @@ export class GetLeaderboardService implements UseCase<GetLeaderboardInput, GetLe
         timeSeconds: e.timeSeconds.value,
         movesCount: e.movesCount.value,
         rank: e.rank?.value ?? 0,
-        submittedAt: e.submittedAt.value,
+        submittedAt: e.submittedAt.value.toISOString(),
       })),
     };
   }

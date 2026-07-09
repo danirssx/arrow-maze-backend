@@ -19,6 +19,41 @@ Para cumplir la Sección 7, todo uso significativo de agentes o herramientas de 
 
 Ningún agente podrá generar, modificar o cerrar una tarea sin dejar trazabilidad de su intervención, y todo código asistido por IA deberá ser revisado, probado y comprendido por el equipo antes de integrarse al proyecto.
 
+## 0.2 Craftsmanship Pipeline (Uncle Bob)
+
+El flujo de agentes sigue un pipeline al estilo Robert C. Martin: la solución se
+conversa, se destila en un contrato ejecutable y se talla con disciplina (TDD +
+juicio + mutación). El detalle completo vive en [`docs/workflow.md`](docs/workflow.md);
+cada rol vive en `.agents/<rol>.md`.
+
+```
+idea
+  → [spec-partner]    conversación / debate  → specs/<feature>.spec.md
+  → [planner]         spec → contrato Gherkin (.feature) + tickets Linear
+  → ⏸ HUMANO APRUEBA el contrato ejecutable (@s1..@sn)   ← ÚNICA puerta humana
+  → [tdd-implementer] ciclo Rojo → Verde → Refactor (un test a la vez)
+  → [judge]           el review es el juego entero
+  → [mutation]        valida que los tests muerden
+  → done
+```
+
+Reglas del pipeline (obligatorias):
+
+- **Puerta humana única**: ningún agente salta a TDD si el contrato `.feature`
+  no fue aprobado por el humano. Apruebas escenarios, no implementación.
+- **Las Tres Leyes del TDD** rigen la fase de implementación: (1) no hay
+  producción sin un test rojo que la pida; (2) no más test del necesario para
+  fallar; (3) no más producción de la necesaria para pasar. Detalle en
+  [`docs/tdd.md`](docs/tdd.md).
+- **Dos puertas de cierre**: una feature solo llega a `done` con el `judge` en
+  `APPROVED` **y** el `mutation` por encima del umbral de
+  [`docs/mutation-testing.md`](docs/mutation-testing.md). El `tdd-implementer`
+  no se autodeclara `done`.
+- **Anti-teléfono-descompuesto**: cada agente escribe su resultado en disco
+  (`specs/`, `.feature`, `plan/`, `ai-log/`) y devuelve una sola línea de
+  referencia. El trabajo no se pasa por chat.
+- **Puerta verde**: `npm run verify` debe estar verde antes de aprobar o cerrar.
+
 ## 1. Architecture
 
 - Layers: `framework -> infrastructure -> application -> domain`.
@@ -27,6 +62,7 @@ Ningún agente podrá generar, modificar o cerrar una tarea sin dejar trazabilid
 - `src/application` depends on domain and ports/interfaces, never concrete infrastructure or framework code.
 - `src/infrastructure` implements application ports and adapts external tools.
 - `src/framework` contains Express, routes, controllers, middleware, Swagger, environment configuration, and dependency wiring.
+- Database access uses Prisma ORM. The Prisma schema lives in `prisma/` (tracked by Prisma Migrate) and the generated client + `@prisma/adapter-pg` are used ONLY inside `src/infrastructure`. Never import `@prisma/client` from `src/domain` or `src/application`; those layers depend only on the repository/`UnitOfWork` ports. Transactions go through `PrismaUnitOfWork` + `prismaContext`.
 
 ## 2. Design Patterns
 
@@ -49,6 +85,8 @@ Ningún agente podrá generar, modificar o cerrar una tarea sin dejar trazabilid
 
 ## 5. Tests
 
+- Production code is written test-first under the Three Laws of TDD (see `docs/tdd.md`): no production without a failing test, the minimum test to fail, the minimum production to pass.
+- Each Gherkin scenario `@s` from the approved `.feature` must be covered by at least one concrete test; the `@s → test` map is recorded in the `ai-log/` entry.
 - Tests are required for new behavior.
 - Use AAA.
 - Use `should_<expected>_when_<condition>` names.
@@ -84,13 +122,13 @@ Use this table format:
 
 | Agent | Status | How it was used | Evidence |
 | --- | --- | --- | --- |
-| Spec Partner | Used / Referenced / Not used | ... | spec, Linear issue, question, or N/A |
-| Planner/Slicer | Used / Referenced / Not used | ... | plan, Linear issue, or N/A |
-| TDD Implementer | Used / Referenced / Not used | ... | tests, code, commit |
-| Judge | Used / Referenced / Not used | ... | review checklist, PR comment, or N/A |
-| Mutation Tester | Used / Referenced / Not used | ... | mutation log or N/A |
+| Spec Partner (`.agents/spec-partner.md`) | Used / Referenced / Not used | ... | `specs/<feature>.spec.md`, Linear issue, question, or N/A |
+| Planner / Gherkin Author (`.agents/planner.md`) | Used / Referenced / Not used | ... | `specs/<feature>.feature`, `plan/...`, Linear issue, or N/A |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used / Referenced / Not used | ... | tests, code, commit, `@s → test` map |
+| Judge (`.agents/judge.md`) | Used / Referenced / Not used | ... | `ai-log/<...>-judge.md`, PR comment, or N/A |
+| Mutation Tester (`.agents/mutation.md`) | Used / Referenced / Not used | ... | `ai-log/<...>-mutation.md` + score, or N/A |
 
-Do not claim an agent was `Used` if it was only followed conceptually in the same Codex session. In that case, write `Referenced` and describe the exact rule applied.
+Do not claim an agent was `Used` if it was only followed conceptually in the same session. In that case, write `Referenced` and describe the exact rule applied. The names above match the five prompts in `.agents/`; keep them in sync if a prompt is renamed.
 
 ## 7. Worktrees
 

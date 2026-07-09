@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import { InvalidArgumentError } from '../../errors/DomainError.js';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -15,10 +14,6 @@ export class EntryId {
       throw new InvalidArgumentError('Invalid entry ID format');
     }
     return new EntryId(value);
-  }
-
-  static generate(): EntryId {
-    return new EntryId(randomUUID());
   }
 
   equals(other: EntryId): boolean {

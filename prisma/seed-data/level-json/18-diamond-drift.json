@@ -1,0 +1,493 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440041",
+  "name": "Diamond Drift",
+  "description": "A faceted diamond where every ray hides behind another.",
+  "difficulty": "EASY",
+  "order": 18,
+  "attempts": 6,
+  "arrows": [
+    {
+      "id": "a",
+      "color": "blue",
+      "path": [
+        {
+          "row": 0,
+          "col": 7
+        },
+        {
+          "row": 1,
+          "col": 7
+        },
+        {
+          "row": 2,
+          "col": 7
+        },
+        {
+          "row": 3,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 7
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "b",
+      "color": "green",
+      "path": [
+        {
+          "row": 4,
+          "col": 8
+        },
+        {
+          "row": 5,
+          "col": 8
+        },
+        {
+          "row": 6,
+          "col": 8
+        },
+        {
+          "row": 7,
+          "col": 8
+        },
+        {
+          "row": 8,
+          "col": 8
+        }
+      ],
+      "direction": "DOWN"
+    },
+    {
+      "id": "c",
+      "color": "yellow",
+      "path": [
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 6
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "d",
+      "color": "pink",
+      "path": [
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 5
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "e",
+      "color": "cyan",
+      "path": [
+        {
+          "row": 3,
+          "col": 8
+        },
+        {
+          "row": 3,
+          "col": 9
+        },
+        {
+          "row": 3,
+          "col": 10
+        },
+        {
+          "row": 4,
+          "col": 10
+        },
+        {
+          "row": 5,
+          "col": 10
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "f",
+      "color": "purple",
+      "path": [
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 6
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "g",
+      "color": "crimson",
+      "path": [
+        {
+          "row": 4,
+          "col": 9
+        },
+        {
+          "row": 5,
+          "col": 9
+        },
+        {
+          "row": 6,
+          "col": 9
+        },
+        {
+          "row": 6,
+          "col": 10
+        },
+        {
+          "row": 6,
+          "col": 11
+        }
+      ],
+      "direction": "DOWN"
+    },
+    {
+      "id": "h",
+      "color": "white",
+      "path": [
+        {
+          "row": 4,
+          "col": 11
+        },
+        {
+          "row": 5,
+          "col": 11
+        }
+      ],
+      "direction": "DOWN"
+    },
+    {
+      "id": "i",
+      "color": "orange",
+      "path": [
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 7
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "j",
+      "color": "teal",
+      "path": [
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        }
+      ],
+      "direction": "DOWN"
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 0,
+        "col": 7
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 1,
+        "col": 7
+      },
+      {
+        "row": 1,
+        "col": 8
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 2,
+        "col": 6
+      },
+      {
+        "row": 2,
+        "col": 7
+      },
+      {
+        "row": 2,
+        "col": 8
+      },
+      {
+        "row": 2,
+        "col": 9
+      },
+      {
+        "row": 3,
+        "col": 4
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 7
+      },
+      {
+        "row": 3,
+        "col": 8
+      },
+      {
+        "row": 3,
+        "col": 9
+      },
+      {
+        "row": 3,
+        "col": 10
+      },
+      {
+        "row": 4,
+        "col": 3
+      },
+      {
+        "row": 4,
+        "col": 4
+      },
+      {
+        "row": 4,
+        "col": 5
+      },
+      {
+        "row": 4,
+        "col": 6
+      },
+      {
+        "row": 4,
+        "col": 7
+      },
+      {
+        "row": 4,
+        "col": 8
+      },
+      {
+        "row": 4,
+        "col": 9
+      },
+      {
+        "row": 4,
+        "col": 10
+      },
+      {
+        "row": 4,
+        "col": 11
+      },
+      {
+        "row": 5,
+        "col": 2
+      },
+      {
+        "row": 5,
+        "col": 3
+      },
+      {
+        "row": 5,
+        "col": 4
+      },
+      {
+        "row": 5,
+        "col": 5
+      },
+      {
+        "row": 5,
+        "col": 6
+      },
+      {
+        "row": 5,
+        "col": 7
+      },
+      {
+        "row": 5,
+        "col": 8
+      },
+      {
+        "row": 5,
+        "col": 9
+      },
+      {
+        "row": 5,
+        "col": 10
+      },
+      {
+        "row": 5,
+        "col": 11
+      },
+      {
+        "row": 5,
+        "col": 12
+      },
+      {
+        "row": 6,
+        "col": 3
+      },
+      {
+        "row": 6,
+        "col": 4
+      },
+      {
+        "row": 6,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 7
+      },
+      {
+        "row": 6,
+        "col": 8
+      },
+      {
+        "row": 6,
+        "col": 9
+      },
+      {
+        "row": 6,
+        "col": 10
+      },
+      {
+        "row": 6,
+        "col": 11
+      },
+      {
+        "row": 7,
+        "col": 4
+      },
+      {
+        "row": 7,
+        "col": 5
+      },
+      {
+        "row": 7,
+        "col": 6
+      },
+      {
+        "row": 7,
+        "col": 7
+      },
+      {
+        "row": 7,
+        "col": 8
+      },
+      {
+        "row": 7,
+        "col": 9
+      },
+      {
+        "row": 7,
+        "col": 10
+      },
+      {
+        "row": 8,
+        "col": 5
+      },
+      {
+        "row": 8,
+        "col": 6
+      },
+      {
+        "row": 8,
+        "col": 7
+      },
+      {
+        "row": 8,
+        "col": 8
+      },
+      {
+        "row": 8,
+        "col": 9
+      },
+      {
+        "row": 9,
+        "col": 6
+      },
+      {
+        "row": 9,
+        "col": 7
+      },
+      {
+        "row": 9,
+        "col": 8
+      },
+      {
+        "row": 10,
+        "col": 7
+      }
+    ]
+  }
+}

@@ -1,0 +1,522 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440014",
+  "name": "Full Weave",
+  "description": "Twenty arrows packed tightly enough to punish random tapping.",
+  "difficulty": "EASY",
+  "order": 5,
+  "attempts": 6,
+  "arrows": [
+    {
+      "id": "a",
+      "color": "blue",
+      "path": [
+        {
+          "row": 7,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 4
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "b",
+      "color": "green",
+      "path": [
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "c",
+      "color": "yellow",
+      "path": [
+        {
+          "row": 9,
+          "col": 1
+        },
+        {
+          "row": 8,
+          "col": 1
+        },
+        {
+          "row": 7,
+          "col": 1
+        },
+        {
+          "row": 7,
+          "col": 2
+        },
+        {
+          "row": 7,
+          "col": 3
+        },
+        {
+          "row": 7,
+          "col": 4
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "d",
+      "color": "pink",
+      "path": [
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 7
+        },
+        {
+          "row": 1,
+          "col": 8
+        },
+        {
+          "row": 0,
+          "col": 8
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "e",
+      "color": "cyan",
+      "path": [
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 4
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "f",
+      "color": "purple",
+      "path": [
+        {
+          "row": 8,
+          "col": 2
+        },
+        {
+          "row": 8,
+          "col": 3
+        },
+        {
+          "row": 8,
+          "col": 4
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "g",
+      "color": "crimson",
+      "path": [
+        {
+          "row": 9,
+          "col": 2
+        },
+        {
+          "row": 9,
+          "col": 3
+        },
+        {
+          "row": 9,
+          "col": 4
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "h",
+      "color": "white",
+      "path": [
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 4
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "i",
+      "color": "orange",
+      "path": [
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "j",
+      "color": "teal",
+      "path": [
+        {
+          "row": 5,
+          "col": 9
+        },
+        {
+          "row": 4,
+          "col": 9
+        },
+        {
+          "row": 3,
+          "col": 9
+        },
+        {
+          "row": 2,
+          "col": 9
+        },
+        {
+          "row": 1,
+          "col": 9
+        },
+        {
+          "row": 0,
+          "col": 9
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "k",
+      "color": "blue",
+      "path": [
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 0
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "l",
+      "color": "green",
+      "path": [
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 0,
+          "col": 7
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "m",
+      "color": "yellow",
+      "path": [
+        {
+          "row": 9,
+          "col": 7
+        },
+        {
+          "row": 8,
+          "col": 7
+        },
+        {
+          "row": 7,
+          "col": 7
+        },
+        {
+          "row": 6,
+          "col": 7
+        },
+        {
+          "row": 5,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 7
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "n",
+      "color": "pink",
+      "path": [
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 7
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "o",
+      "color": "cyan",
+      "path": [
+        {
+          "row": 9,
+          "col": 5
+        },
+        {
+          "row": 8,
+          "col": 5
+        },
+        {
+          "row": 7,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 5
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "p",
+      "color": "purple",
+      "path": [
+        {
+          "row": 9,
+          "col": 8
+        },
+        {
+          "row": 8,
+          "col": 8
+        },
+        {
+          "row": 7,
+          "col": 8
+        },
+        {
+          "row": 6,
+          "col": 8
+        },
+        {
+          "row": 5,
+          "col": 8
+        },
+        {
+          "row": 4,
+          "col": 8
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "q",
+      "color": "crimson",
+      "path": [
+        {
+          "row": 9,
+          "col": 6
+        },
+        {
+          "row": 8,
+          "col": 6
+        },
+        {
+          "row": 7,
+          "col": 6
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "r",
+      "color": "white",
+      "path": [
+        {
+          "row": 9,
+          "col": 9
+        },
+        {
+          "row": 8,
+          "col": 9
+        },
+        {
+          "row": 7,
+          "col": 9
+        },
+        {
+          "row": 6,
+          "col": 9
+        }
+      ],
+      "direction": "UP"
+    },
+    {
+      "id": "s",
+      "color": "orange",
+      "path": [
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 5
+        }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "t",
+      "color": "teal",
+      "path": [
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 3
+        }
+      ],
+      "direction": "RIGHT"
+    }
+  ]
+}

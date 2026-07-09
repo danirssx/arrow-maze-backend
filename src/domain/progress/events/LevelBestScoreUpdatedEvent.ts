@@ -5,7 +5,8 @@ export class LevelBestScoreUpdatedEvent extends DomainEvent {
     progressId: string,
     readonly levelId: string,
     readonly userId: string,
+    occurredOn: Date,
   ) {
-    super(progressId);
+    super(progressId, occurredOn);
   }
 }
