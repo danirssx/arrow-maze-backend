@@ -1240,11 +1240,21 @@ export const openApiSpec = {
           },
         },
       },
+      BoardSizeInput: {
+        type: 'object',
+        description:
+          'Optional rectangular authoring frame for admin-created M12 levels. Cannot be combined with boardShape.',
+        required: ['rows', 'cols'],
+        properties: {
+          rows: { type: 'integer', minimum: 1, maximum: 12 },
+          cols: { type: 'integer', minimum: 1, maximum: 12 },
+        },
+      },
       LevelDefinitionDto: {
         type: 'object',
         required: ['arrows', 'attempts'],
         properties: {
-          arrows: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ArrowSpec' } },
+          arrows: { type: 'array', minItems: 1, maxItems: 60, items: { $ref: '#/components/schemas/ArrowSpec' } },
           attempts: { type: 'integer', minimum: 1 },
           boardShape: { $ref: '#/components/schemas/BoardShapeInput' },
         },
@@ -1256,9 +1266,10 @@ export const openApiSpec = {
           name: { type: 'string', minLength: 1, maxLength: 100 },
           description: { type: 'string', maxLength: 500 },
           difficulty: { type: 'string', enum: ['EASY', 'MEDIUM', 'HARD'] },
-          arrows: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ArrowSpec' } },
+          arrows: { type: 'array', minItems: 1, maxItems: 60, items: { $ref: '#/components/schemas/ArrowSpec' } },
           attempts: { type: 'integer', minimum: 1, nullable: true },
           timeLimit: { type: 'integer', minimum: 1, nullable: true },
+          boardSize: { $ref: '#/components/schemas/BoardSizeInput' },
           boardShape: { $ref: '#/components/schemas/BoardShapeInput' },
         },
       },
@@ -1266,7 +1277,7 @@ export const openApiSpec = {
         type: 'object',
         required: ['arrows'],
         properties: {
-          arrows: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ArrowSpec' } },
+          arrows: { type: 'array', minItems: 1, maxItems: 60, items: { $ref: '#/components/schemas/ArrowSpec' } },
           attempts: { type: 'integer', minimum: 1, nullable: true },
         },
       },

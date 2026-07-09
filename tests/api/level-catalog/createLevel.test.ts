@@ -204,6 +204,26 @@ describe('POST /levels', () => {
     });
   });
 
+  it('should_forward_board_size_to_the_use_case_when_present', async () => {
+    // Arrange
+    const createLevelUseCase = new FakeCreateLevelUseCase();
+    const app = buildApp({ createLevelUseCase });
+    const body = {
+      ...VALID_BODY,
+      boardSize: { rows: 8, cols: 10 },
+    };
+
+    // Act
+    const res = await request(app)
+      .post('/levels')
+      .set('Authorization', 'Bearer admin-token')
+      .send(body);
+
+    // Assert
+    expect(res.status).toBe(201);
+    expect(createLevelUseCase.lastInput?.boardSize).toEqual({ rows: 8, cols: 10 });
+  });
+
   it('should_return_422_when_level_definition_is_not_solvable', async () => {
     // Arrange
     const createLevelUseCase = new FakeCreateLevelUseCase();

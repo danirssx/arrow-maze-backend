@@ -28,6 +28,18 @@ describe('openApiSpec board shape', () => {
   it('should_include_optional_board_shape_in_level_definition_dto', () => {
     expect(schemas['LevelDefinitionDto']?.properties?.['boardShape']).toBeDefined();
   });
+
+  it('should_document_flexible_rectangular_board_size_in_create_level_request', () => {
+    const boardSize = schemas['BoardSizeInput'] as SchemaShape;
+
+    expect(boardSize).toBeDefined();
+    expect(boardSize.properties?.['rows']).toEqual(expect.objectContaining({ maximum: 12 }));
+    expect(boardSize.properties?.['cols']).toEqual(expect.objectContaining({ maximum: 12 }));
+    expect(schemas['CreateLevelRequest']?.properties?.['boardSize']).toBeDefined();
+    expect(schemas['CreateLevelRequest']?.properties?.['arrows']).toEqual(
+      expect.objectContaining({ maxItems: 60 })
+    );
+  });
 });
 
 describe('openApiSpec leaderboard submit contract', () => {

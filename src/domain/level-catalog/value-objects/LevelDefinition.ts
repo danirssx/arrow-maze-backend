@@ -2,6 +2,7 @@ import { InvalidArgumentError } from "../../errors/DomainError.js";
 import type { ArrowSpec } from "./ArrowSpec.js";
 
 export const DEFAULT_ATTEMPTS = 5;
+export const LEVEL_DEFINITION_MAX_ARROWS = 60;
 
 export class LevelDefinition {
   private constructor(
@@ -12,6 +13,11 @@ export class LevelDefinition {
   static create(arrows: ArrowSpec[], attempts = DEFAULT_ATTEMPTS): LevelDefinition {
     if (arrows.length === 0) {
       throw new InvalidArgumentError("Level definition must contain at least one arrow");
+    }
+    if (arrows.length > LEVEL_DEFINITION_MAX_ARROWS) {
+      throw new InvalidArgumentError(
+        `Level definition must not exceed ${LEVEL_DEFINITION_MAX_ARROWS} arrows`
+      );
     }
     if (!Number.isInteger(attempts) || attempts < 1) {
       throw new InvalidArgumentError("Level attempts must be a positive integer");
