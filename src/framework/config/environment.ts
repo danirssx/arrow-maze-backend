@@ -7,6 +7,8 @@ export type Environment = {
   jwtSecret: string;
   jwtAccessExpiresIn: string;
   refreshTokenTtlDays: number;
+  geminiApiKey: string | undefined;
+  geminiModel: string;
 };
 
 function parseCorsOrigins(value: string): string[] {
@@ -38,6 +40,8 @@ export function loadEnvironment(): Environment {
     databaseSsl,
     jwtSecret,
     jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? "15m",
-    refreshTokenTtlDays: Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? 30)
+    refreshTokenTtlDays: Number(process.env.REFRESH_TOKEN_TTL_DAYS ?? 30),
+    geminiApiKey: process.env.GEMINI_API_KEY,
+    geminiModel: process.env.GEMINI_MODEL ?? "gemini-1.5-flash",
   };
 }

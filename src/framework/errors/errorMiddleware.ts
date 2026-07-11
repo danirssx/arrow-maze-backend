@@ -1,4 +1,4 @@
-﻿import type { ErrorRequestHandler } from "express";
+import type { ErrorRequestHandler } from "express";
 
 import { sanitizeLogContext } from "../../application/aspects/sanitizeLogContext.js";
 import type { Logger } from "../../application/ports/Logger.js";
@@ -30,6 +30,10 @@ export function createErrorMiddleware(logger: Logger): ErrorRequestHandler {
     if (error instanceof AppError) {
       if (error.httpStatus >= 500) {
         logger.error(error.code, sanitizeLogContext({ message: error.message, path: request.path }));
+        response
+          .status(error.httpStatus)
+          .json(ApiResponsePresenter.error(error.code, error.message));
+        return;
       }
       response
         .status(error.httpStatus)

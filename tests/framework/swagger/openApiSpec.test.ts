@@ -81,3 +81,18 @@ describe('openApiSpec admin read endpoints', () => {
     expect(JSON.stringify(schemas['AdminUserListResponse'])).not.toContain('passwordHash');
   });
 });
+
+describe('openApiSpec daily challenge endpoint', () => {
+  it('should_document_public_daily_challenge_read_contract', () => {
+    const operation = paths['/daily-challenge']?.get;
+
+    expect(operation).toBeDefined();
+    expect(operation?.security).toBeUndefined();
+    expect(operation?.responses?.['200']).toBeDefined();
+    expect(operation?.responses?.['503']).toBeDefined();
+    expect(schemas['DailyChallengeResponse']).toBeDefined();
+    expect(schemas['DailyChallenge']?.properties?.['date']).toBeDefined();
+    expect(schemas['DailyChallenge']?.properties?.['source']).toBeDefined();
+    expect(schemas['DailyChallengeLevel']?.properties?.['definition']).toBeDefined();
+  });
+});

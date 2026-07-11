@@ -28,6 +28,70 @@ export const openApiSpec = {
         },
       },
     },
+    '/daily-challenge': {
+      get: {
+        summary: 'Get the UTC daily challenge',
+        tags: ['Daily Challenge'],
+        responses: {
+          '200': {
+            description: 'Daily challenge for the current UTC date',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/DailyChallengeResponse' },
+                example: {
+                  status: 'success',
+                  data: {
+                    challenge: {
+                      date: '2026-07-10',
+                      seed: 'daily-2026-07-10',
+                      targetDifficulty: 'MEDIUM',
+                      source: 'gemini',
+                      generatedAt: '2026-07-10T04:00:00.000Z',
+                      expiresAt: '2026-07-11T00:00:00.000Z',
+                      validation: {
+                        solvable: true,
+                        difficultyMatched: true,
+                        fallbackUsed: false,
+                      },
+                      level: {
+                        name: 'Daily Challenge 2026-07-10',
+                        description: 'A validated daily Arrow Untangle puzzle.',
+                        difficulty: 'MEDIUM',
+                        definition: {
+                          attempts: 5,
+                          arrows: [
+                            {
+                              id: 'arrow-0',
+                              color: '#4B6BFB',
+                              path: [{ row: 0, col: 0 }],
+                              direction: 'RIGHT',
+                            },
+                          ],
+                          boardShape: { type: 'CELL_MASK', cells: [{ row: 0, col: 0 }] },
+                        },
+                        timeLimitSeconds: 120,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '503': {
+            description: 'Daily challenge generation unavailable',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: {
+                  status: 'error',
+                  error: { code: 'DAILY_CHALLENGE_UNAVAILABLE', message: 'Daily challenge unavailable' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     '/auth/register': {
       post: {
         summary: 'Register a new user',
@@ -1257,6 +1321,51 @@ export const openApiSpec = {
           arrows: { type: 'array', minItems: 1, maxItems: 60, items: { $ref: '#/components/schemas/ArrowSpec' } },
           attempts: { type: 'integer', minimum: 1 },
           boardShape: { $ref: '#/components/schemas/BoardShapeInput' },
+        },
+      },
+      DailyChallengeLevel: {
+        type: 'object',
+        required: ['name', 'description', 'difficulty', 'definition'],
+        properties: {
+          name: { type: 'string' },
+          description: { type: 'string' },
+          difficulty: { type: 'string', enum: ['EASY', 'MEDIUM', 'HARD'] },
+          definition: { $ref: '#/components/schemas/LevelDefinitionDto' },
+          timeLimitSeconds: { type: 'integer', minimum: 1, nullable: true },
+        },
+      },
+      DailyChallenge: {
+        type: 'object',
+        required: ['date', 'seed', 'targetDifficulty', 'source', 'generatedAt', 'expiresAt', 'validation', 'level'],
+        properties: {
+          date: { type: 'string', pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' },
+          seed: { type: 'string' },
+          targetDifficulty: { type: 'string', enum: ['EASY', 'MEDIUM', 'HARD'] },
+          source: { type: 'string', enum: ['gemini', 'fallback'] },
+          generatedAt: { type: 'string', format: 'date-time' },
+          expiresAt: { type: 'string', format: 'date-time' },
+          validation: {
+            type: 'object',
+            required: ['solvable', 'difficultyMatched', 'fallbackUsed'],
+            properties: {
+              solvable: { type: 'boolean' },
+              difficultyMatched: { type: 'boolean' },
+              fallbackUsed: { type: 'boolean' },
+            },
+          },
+          level: { $ref: '#/components/schemas/DailyChallengeLevel' },
+        },
+      },
+      DailyChallengeResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: {
+            type: 'object',
+            required: ['challenge'],
+            properties: { challenge: { $ref: '#/components/schemas/DailyChallenge' } },
+          },
         },
       },
       CreateLevelRequest: {

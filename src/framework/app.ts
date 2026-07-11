@@ -21,6 +21,7 @@ import { UpdateLevelDefinitionUseCase } from "../application/level-catalog/use-c
 import { PublishLevelUseCase } from "../application/level-catalog/use-cases/PublishLevelUseCase.js";
 import { ArchiveLevelUseCase } from "../application/level-catalog/use-cases/ArchiveLevelUseCase.js";
 import { ListAdminLevelsUseCase } from "../application/level-catalog/use-cases/ListAdminLevelsUseCase.js";
+import { GetDailyChallengeUseCase } from "../application/daily-challenge/use-cases/GetDailyChallengeUseCase.js";
 import { TransactionDecorator } from "../application/aspects/TransactionDecorator.js";
 import { UseCaseLoggingDecorator } from "../application/aspects/UseCaseLoggingDecorator.js";
 import { BcryptPasswordHasher } from "../infrastructure/identity/BcryptPasswordHasher.js";
@@ -32,6 +33,9 @@ import { PrismaRefreshTokenRepository } from "../infrastructure/identity/PrismaR
 import { PrismaProgressRepository } from "../infrastructure/progress/PrismaProgressRepository.js";
 import { PrismaLeaderboardRepository } from "../infrastructure/leaderboard/PrismaLeaderboardRepository.js";
 import { PrismaLevelRepository } from "../infrastructure/level-catalog/PrismaLevelRepository.js";
+import { PrismaDailyChallengeCacheRepository } from "../infrastructure/daily-challenge/PrismaDailyChallengeCacheRepository.js";
+import { GeminiDailyChallengeGenerator } from "../infrastructure/daily-challenge/GeminiDailyChallengeGenerator.js";
+import { DeterministicDailyChallengeGenerator } from "../infrastructure/daily-challenge/DeterministicDailyChallengeGenerator.js";
 import { LevelSolvabilityPolicy } from "../domain/level-catalog/LevelSolvabilityPolicy.js";
 import { InMemoryEventBus } from "../infrastructure/events/InMemoryEventBus.js";
 import { UuidIdGenerator } from "../infrastructure/shared/UuidIdGenerator.js";
@@ -49,6 +53,7 @@ import { ProgressController } from "./progress/ProgressController.js";
 import { LeaderboardController } from "./leaderboard/LeaderboardController.js";
 import { LevelCatalogController } from "./level-catalog/LevelCatalogController.js";
 import { AdminLevelController } from "./level-catalog/AdminLevelController.js";
+import { DailyChallengeController } from "./daily-challenge/DailyChallengeController.js";
 import { createIdentityRouter } from "./identity/identityRoutes.js";
 import { createUserRouter } from "./identity/userRoutes.js";
 import { createAdminUserRouter } from "./identity/adminUserRoutes.js";
@@ -56,6 +61,7 @@ import { createProgressRouter } from "./progress/progressRoutes.js";
 import { createLeaderboardRouter } from "./leaderboard/leaderboardRoutes.js";
 import { createLevelCatalogRouter } from "./level-catalog/levelCatalogRoutes.js";
 import { createAdminLevelRouter } from "./level-catalog/adminLevelRoutes.js";
+import { createDailyChallengeRouter } from "./daily-challenge/dailyChallengeRoutes.js";
 import { createHealthRouter } from "./routes/healthRoutes.js";
 import { openApiSpec } from "./swagger/openApiSpec.js";
 
@@ -79,6 +85,7 @@ export function createApp() {
   const progressRepository = new PrismaProgressRepository(prisma);
   const leaderboardRepository = new PrismaLeaderboardRepository(prisma);
   const levelRepository = new PrismaLevelRepository(prisma);
+  const dailyChallengeCacheRepository = new PrismaDailyChallengeCacheRepository(prisma);
   const solvabilityPolicy = new LevelSolvabilityPolicy();
 
   const registerUseCase = new TransactionDecorator(
@@ -195,6 +202,16 @@ export function createApp() {
     new ListAdminLevelsUseCase(levelRepository),
     logger
   );
+  const getDailyChallengeUseCase = new UseCaseLoggingDecorator(
+    "GetDailyChallengeUseCase",
+    new GetDailyChallengeUseCase(
+      dailyChallengeCacheRepository,
+      new GeminiDailyChallengeGenerator(environment.geminiApiKey, environment.geminiModel),
+      new DeterministicDailyChallengeGenerator(),
+      clock
+    ),
+    logger
+  );
 
   const identityController = new IdentityController(registerUseCase, loginUseCase, refreshUseCase, logoutUseCase);
   const userController = new UserController(getCurrentUserUseCase);
@@ -210,6 +227,7 @@ export function createApp() {
     archiveLevelUseCase,
   );
   const adminLevelController = new AdminLevelController(listAdminLevelsUseCase);
+  const dailyChallengeController = new DailyChallengeController(getDailyChallengeUseCase);
 
   const authMiddleware = createAuthMiddleware(tokenService);
 
@@ -224,6 +242,7 @@ export function createApp() {
   app.use(createAdminUserRouter(adminUserController, authMiddleware));
   app.use(createProgressRouter(progressController, authMiddleware));
   app.use(createLeaderboardRouter(leaderboardController, authMiddleware));
+  app.use(createDailyChallengeRouter(dailyChallengeController));
   app.use(createLevelCatalogRouter(levelCatalogController, authMiddleware));
   app.use(createAdminLevelRouter(adminLevelController, authMiddleware));
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
