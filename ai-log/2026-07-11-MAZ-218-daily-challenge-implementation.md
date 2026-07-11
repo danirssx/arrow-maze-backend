@@ -35,6 +35,7 @@ User requested implementation of ticket MAZ-218 after accepting the contract in 
 - Added public `GET /daily-challenge` route, controller wiring, OpenAPI docs, README/env documentation, and optional Gemini environment variables.
 - Updated error middleware so 5xx `AppError` details are not returned to clients.
 - Replaced the architecture boundary test's shell `rg` dependency with a pure filesystem scan after GitHub Actions exposed a Jest worker serialization failure around child process errors.
+- Operational follow-up: tested configured Gemini models against the live API, found `gemini-1.5-flash` and `gemini-2.5-flash` unavailable for this key, selected `gemini-3.5-flash`, and tightened the adapter prompt so model output matches the backend domain contract (`boardSize`, `{ row, col }` paths, cardinal directions, hex colors, no extra keys).
 
 ## @s -> Test Map
 
@@ -56,6 +57,11 @@ User requested implementation of ticket MAZ-218 after accepting the contract in 
 - `npm run mutation -- --mutate "src/application/daily-challenge/use-cases/GetDailyChallengeUseCase.ts"` - passed, mutation score 87.43%.
 - `npm run verify` - passed: lint, typecheck, coverage, build; 101 test suites and 647 tests passed.
 - After PR #81 initially failed GitHub Actions on `tests/architecture/dailyChallengeGeminiBoundary.test.ts`, `npm test -- --runInBand tests/architecture/dailyChallengeGeminiBoundary.test.ts` and `npm run verify` passed locally with the pure filesystem scan.
+- Operational verification after Gemini prompt/model update:
+  - Docker backend rebuilt with `GEMINI_MODEL=gemini-3.5-flash`.
+  - `GET /daily-challenge` returned `source: "gemini"` for `2026-07-11`, `targetDifficulty: "HARD"`, 10 arrows, `validation.solvable: true`, `fallbackUsed: false`.
+  - DB cache row exists in `daily_challenges` for `2026-07-11` with `source = gemini`.
+  - `npm run verify` passed after regenerating Prisma Client locally.
 
 ## Team Modifications Pending Human Review
 
