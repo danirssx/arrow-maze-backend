@@ -5402,6 +5402,7 @@ User requested implementation of ticket MAZ-218 after accepting the contract in 
 - Added deterministic fallback generator using existing domain `RandomLevelStrategy`.
 - Added public `GET /daily-challenge` route, controller wiring, OpenAPI docs, README/env documentation, and optional Gemini environment variables.
 - Updated error middleware so 5xx `AppError` details are not returned to clients.
+- Replaced the architecture boundary test's shell `rg` dependency with a pure filesystem scan after GitHub Actions exposed a Jest worker serialization failure around child process errors.
 
 ## @s -> Test Map
 
@@ -5422,6 +5423,7 @@ User requested implementation of ticket MAZ-218 after accepting the contract in 
 - `npm test -- --runInBand tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts` - passed, 23 tests.
 - `npm run mutation -- --mutate "src/application/daily-challenge/use-cases/GetDailyChallengeUseCase.ts"` - passed, mutation score 87.43%.
 - `npm run verify` - passed: lint, typecheck, coverage, build; 101 test suites and 647 tests passed.
+- After PR #81 initially failed GitHub Actions on `tests/architecture/dailyChallengeGeminiBoundary.test.ts`, `npm test -- --runInBand tests/architecture/dailyChallengeGeminiBoundary.test.ts` and `npm run verify` passed locally with the pure filesystem scan.
 
 ## Team Modifications Pending Human Review
 
