@@ -30,7 +30,7 @@ describe("loadEnvironment - CORS origins", () => {
     const env = loadEnvironment();
 
     expect(env.geminiApiKey).toBeUndefined();
-    expect(env.geminiModel).toBe("gemini-1.5-flash");
+    expect(env.geminiModel).toBe("gemini-3.5-flash");
   });
 
   it("should_read_gemini_key_and_model_from_backend_environment", () => {
