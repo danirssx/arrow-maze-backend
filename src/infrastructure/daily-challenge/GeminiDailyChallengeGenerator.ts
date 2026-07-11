@@ -31,7 +31,7 @@ export class GeminiDailyChallengeGenerator implements DailyChallengeGenerator {
               parts: [{ text: buildPrompt(input) }],
             },
           ],
-          generationConfig: { responseMimeType: "application/json" },
+          generationConfig: { responseMimeType: "application/json", temperature: 0 },
         }),
       });
       if (!response.ok) {
@@ -47,16 +47,52 @@ export class GeminiDailyChallengeGenerator implements DailyChallengeGenerator {
 }
 
 function buildPrompt(input: DailyChallengeGeneratorInput): string {
+  const boardSize = boardSizeFor(input.targetDifficulty);
+  const timeLimitSeconds = input.targetDifficulty === "HARD" ? 150 : 180;
+
   return [
-    "Generate exactly one Arrow Untangle daily challenge as JSON.",
-    `date: ${input.date}`,
-    `seed: ${input.seed}`,
-    `targetDifficulty: ${input.targetDifficulty}`,
-    `expiresAt: ${input.expiresAt}`,
-    "Return only JSON with keys date, seed, targetDifficulty, level.",
-    "level.definition.arrows must contain ArrowSpec records with id, color, path, direction.",
-    "Do not include markdown, commentary, secrets, or provider metadata.",
+    "Generate exactly one Arrow Maze daily challenge as valid JSON only.",
+    "Do not include markdown, commentary, explanations, provider metadata, or extra keys.",
+    "Use this exact JSON shape:",
+    "{",
+    `  "date": "${input.date}",`,
+    `  "seed": "${input.seed}",`,
+    `  "targetDifficulty": "${input.targetDifficulty}",`,
+    '  "level": {',
+    `    "name": "Daily Challenge ${input.date}",`,
+    '    "description": "A generated Arrow Maze puzzle.",',
+    `    "difficulty": "${input.targetDifficulty}",`,
+    '    "definition": {',
+    '      "attempts": 5,',
+    '      "arrows": [',
+    '        { "id": "arrow-0", "color": "#4B6BFB", "path": [{ "row": 0, "col": 0 }], "direction": "UP" }',
+    "      ],",
+    `      "boardSize": { "rows": ${boardSize.rows}, "cols": ${boardSize.cols} }`,
+    "    },",
+    `    "timeLimitSeconds": ${timeLimitSeconds}`,
+    "  }",
+    "}",
+    "Rules:",
+    `- Generate ${arrowCountFor(input.targetDifficulty)} arrows.`,
+    "- Direction must be exactly one of UP, DOWN, LEFT, RIGHT.",
+    "- Colors must be hex strings.",
+    "- Every path item must be an object with numeric row and col properties; never use arrays.",
+    `- Keep all row values from 0 to ${boardSize.rows - 1} and col values from 0 to ${boardSize.cols - 1}.`,
+    "- Use only boardSize; do not use boardShape, gridSize, width, height, diagonal directions, or expiresAt.",
+    "- Make the puzzle solvable by keeping every arrow on an edge or clear lane pointing out of the board.",
   ].join("\n");
+}
+
+function boardSizeFor(difficulty: string): { rows: number; cols: number } {
+  if (difficulty === "HARD") return { rows: 7, cols: 7 };
+  if (difficulty === "MEDIUM") return { rows: 6, cols: 6 };
+  return { rows: 5, cols: 5 };
+}
+
+function arrowCountFor(difficulty: string): number {
+  if (difficulty === "HARD") return 10;
+  if (difficulty === "MEDIUM") return 7;
+  return 4;
 }
 
 function extractText(value: unknown): string | null {

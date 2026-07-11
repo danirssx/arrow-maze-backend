@@ -53,9 +53,17 @@ describe("GeminiDailyChallengeGenerator", () => {
 
     // Assert
     expect(result).toEqual(candidate);
-    const [url] = (global.fetch as jest.Mock).mock.calls[0]!;
+    const [url, request] = (global.fetch as jest.Mock).mock.calls[0]!;
+    const body = JSON.parse(String((request as RequestInit).body)) as {
+      contents: Array<{ parts: Array<{ text: string }> }>;
+      generationConfig: { responseMimeType: string; temperature: number };
+    };
     expect(String(url)).toContain("gemini-test");
     expect(String(url)).not.toContain("local-secret");
+    expect(body.generationConfig).toEqual({ responseMimeType: "application/json", temperature: 0 });
+    expect(body.contents[0]?.parts[0]?.text).toContain('"boardSize"');
+    expect(body.contents[0]?.parts[0]?.text).toContain('"path": [{ "row": 0, "col": 0 }]');
+    expect(body.contents[0]?.parts[0]?.text).toContain("Direction must be exactly one of UP, DOWN, LEFT, RIGHT");
   });
 
   it("should_return_null_when_provider_returns_non_json_text", async () => {

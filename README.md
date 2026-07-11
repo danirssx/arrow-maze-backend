@@ -103,7 +103,7 @@ REFRESH_TOKEN_TTL_DAYS=30
 
 # Optional backend-only daily challenge generation:
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-3.5-flash
 ```
 
 `CORS_ORIGIN` accepts a comma-separated list of exact browser origins. Keep the
