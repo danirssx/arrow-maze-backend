@@ -100,6 +100,10 @@ CORS_ORIGIN=http://localhost:8081,http://localhost:5173
 # Optional auth token lifetimes:
 JWT_ACCESS_EXPIRES_IN=15m
 REFRESH_TOKEN_TTL_DAYS=30
+
+# Optional backend-only daily challenge generation:
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-1.5-flash
 ```
 
 `CORS_ORIGIN` accepts a comma-separated list of exact browser origins. Keep the
@@ -111,6 +115,11 @@ Auth issues a short-lived **access token** plus a long-lived, rotating, revocabl
 **refresh token** stored only as a hash. `POST /auth/refresh` exchanges a refresh
 token for a new access token and rotates the refresh token. `POST /auth/logout`
 revokes a refresh token.
+
+`GEMINI_API_KEY` is optional and must stay server-side in this backend only. If
+it is omitted, `GET /daily-challenge` still returns a deterministic validated
+fallback challenge for the current UTC date. Mobile and admin clients consume the
+backend endpoint and never call Gemini directly.
 
 ### Run locally
 
@@ -237,6 +246,7 @@ The API exposes:
 ```
 GET  /health
 GET  /docs
+GET  /daily-challenge
 POST /auth/register
 POST /auth/login
 POST /auth/refresh
