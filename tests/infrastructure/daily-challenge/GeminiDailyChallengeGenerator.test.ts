@@ -66,6 +66,8 @@ describe("GeminiDailyChallengeGenerator", () => {
     expect(body.contents[0]?.parts[0]?.text).toContain("rocket, anchor, butterfly");
     expect(body.contents[0]?.parts[0]?.text).toContain("cover at least 80% of the mask");
     expect(body.contents[0]?.parts[0]?.text).toContain("At least 75% of arrows must have path length 2 or more");
+    expect(body.contents[0]?.parts[0]?.text).toContain("direction must never point back into the previous path cell");
+    expect(body.contents[0]?.parts[0]?.text).toContain("Guarantee solvability with clear exit rays");
     expect(body.contents[0]?.parts[0]?.text).toContain("Use only boardShape; do not use boardSize");
     expect(body.contents[0]?.parts[0]?.text).toContain('"path": [{ "row": 0, "col": 0 }, { "row": 0, "col": 1 }]');
     expect(body.contents[0]?.parts[0]?.text).toContain("Direction must be exactly one of UP, DOWN, LEFT, RIGHT");
