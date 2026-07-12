@@ -3,7 +3,7 @@
   "name": "Hard Snarl",
   "description": "Thirty-eight arrows snarl together in a tight solvable order.",
   "difficulty": "HARD",
-  "order": 14,
+  "order": 15,
   "attempts": 4,
   "timeLimitSeconds": 95,
   "arrows": [

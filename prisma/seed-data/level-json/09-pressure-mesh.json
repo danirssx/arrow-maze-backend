@@ -3,7 +3,7 @@
   "name": "Pressure Mesh",
   "description": "A timed mesh where most visible heads are not ready yet.",
   "difficulty": "MEDIUM",
-  "order": 9,
+  "order": 16,
   "attempts": 5,
   "timeLimitSeconds": 105,
   "arrows": [

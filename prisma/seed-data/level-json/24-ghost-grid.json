@@ -3,7 +3,7 @@
   "name": "Ghost Grid",
   "description": "A wavy-footed ghost stuffed with arrows.",
   "difficulty": "HARD",
-  "order": 24,
+  "order": 42,
   "attempts": 5,
   "arrows": [
     {

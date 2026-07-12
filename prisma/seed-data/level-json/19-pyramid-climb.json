@@ -3,7 +3,7 @@
   "name": "Pyramid Climb",
   "description": "A solid pyramid — work the base before the peak frees up.",
   "difficulty": "EASY",
-  "order": 19,
+  "order": 7,
   "attempts": 6,
   "arrows": [
     {

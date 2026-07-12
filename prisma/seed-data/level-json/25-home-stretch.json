@@ -3,7 +3,7 @@
   "name": "Home Stretch",
   "description": "A little house — roof, walls and a door, all knotted.",
   "difficulty": "MEDIUM",
-  "order": 25,
+  "order": 3,
   "attempts": 6,
   "arrows": [
     {

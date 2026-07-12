@@ -3,7 +3,7 @@
   "name": "Hex Lockdown",
   "description": "A full hexagon — a dense honeycomb of blockers.",
   "difficulty": "MEDIUM",
-  "order": 22,
+  "order": 21,
   "attempts": 6,
   "arrows": [
     {

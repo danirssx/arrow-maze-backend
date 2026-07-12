@@ -3,7 +3,7 @@
   "name": "Dense Crossings",
   "description": "A fuller grid where most arrows start behind another body.",
   "difficulty": "EASY",
-  "order": 3,
+  "order": 43,
   "attempts": 6,
   "arrows": [
     {

@@ -1,0 +1,210 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440053",
+  "name": "Barco",
+  "description": "Un velero navegando en el tablero.",
+  "difficulty": "MEDIUM",
+  "attempts": 10,
+  "arrows": [
+    {
+      "id": "mastil",
+      "color": "purple",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 5
+        }
+      ]
+    },
+    {
+      "id": "vela-sup",
+      "color": "blue",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "vela-inf",
+      "color": "green",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 8
+        }
+      ]
+    },
+    {
+      "id": "casco-izq",
+      "color": "orange",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 7,
+          "col": 4
+        }
+      ]
+    },
+    {
+      "id": "casco-der",
+      "color": "orange",
+      "direction": "LEFT",
+      "path": [
+        {
+          "row": 6,
+          "col": 7
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 7,
+          "col": 6
+        }
+      ]
+    },
+    {
+      "id": "casco-centro",
+      "color": "yellow",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 7,
+          "col": 5
+        }
+      ]
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 1,
+        "col": 5
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 2,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 7
+      },
+      {
+        "row": 4,
+        "col": 5
+      },
+      {
+        "row": 4,
+        "col": 6
+      },
+      {
+        "row": 4,
+        "col": 7
+      },
+      {
+        "row": 4,
+        "col": 8
+      },
+      {
+        "row": 5,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 3
+      },
+      {
+        "row": 6,
+        "col": 4
+      },
+      {
+        "row": 6,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 7
+      },
+      {
+        "row": 7,
+        "col": 4
+      },
+      {
+        "row": 7,
+        "col": 5
+      },
+      {
+        "row": 7,
+        "col": 6
+      }
+    ]
+  },
+  "timeLimitSeconds": 300,
+  "order": 18
+}

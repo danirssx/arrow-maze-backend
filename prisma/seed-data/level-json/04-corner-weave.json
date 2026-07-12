@@ -3,7 +3,7 @@
   "name": "Corner Weave",
   "description": "Bends collect in the corners and open only after careful clears.",
   "difficulty": "EASY",
-  "order": 4,
+  "order": 2,
   "attempts": 6,
   "arrows": [
     {

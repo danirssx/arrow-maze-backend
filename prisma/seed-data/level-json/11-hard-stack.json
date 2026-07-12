@@ -3,7 +3,7 @@
   "name": "Hard Stack",
   "description": "Hard boards begin with high density and fewer safe guesses.",
   "difficulty": "HARD",
-  "order": 11,
+  "order": 32,
   "attempts": 4,
   "arrows": [
     {

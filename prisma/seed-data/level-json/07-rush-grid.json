@@ -3,7 +3,7 @@
   "name": "Rush Grid",
   "description": "A dense timed board with only a few immediately open exits.",
   "difficulty": "MEDIUM",
-  "order": 7,
+  "order": 13,
   "attempts": 5,
   "timeLimitSeconds": 110,
   "arrows": [
