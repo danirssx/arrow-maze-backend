@@ -139,3 +139,22 @@ model DailyChallenge {
 
   @@map("daily_challenges")
 }
+
+model DailyChallengeIteration {
+  operationId String    @id @map("operation_id") @db.Uuid
+  date        String    @db.VarChar(10)
+  status      String    @db.VarChar(12)
+  requestedAt DateTime  @map("requested_at") @db.Timestamptz(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  events      Json
+  challenge   Json?
+  createdAt   DateTime  @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @map("updated_at") @db.Timestamptz(6)
+
+  // A partial UNIQUE index on (date) WHERE status = 'RUNNING' also exists as a
+  // DB-level backstop for "one running iteration per date". Prisma cannot express
+  // partial indexes in the schema, so it lives only in the migration SQL
+  // (uniq_daily_challenge_iterations_running_date).
+  @@index([date, status], map: "idx_daily_challenge_iterations_date_status")
+  @@map("daily_challenge_iterations")
+}

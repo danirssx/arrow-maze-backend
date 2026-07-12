@@ -92,6 +92,163 @@ export const openApiSpec = {
         },
       },
     },
+    '/admin/daily-challenge/iterations': {
+      post: {
+        summary: 'Start an admin manual daily challenge iteration',
+        tags: ['Daily Challenge', 'Admin'],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: false,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/DailyChallengeIterationRequest' },
+              example: { date: '2026-07-11' },
+            },
+          },
+        },
+        responses: {
+          '202': {
+            description: 'Iteration accepted; poll the operation for progress',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/DailyChallengeIterationResponse' },
+                example: {
+                  status: 'success',
+                  data: {
+                    operation: {
+                      operationId: 'f39dd177-bde0-4fd8-84cb-8cd353ffc224',
+                      date: '2026-07-11',
+                      status: 'RUNNING',
+                      requestedAt: '2026-07-11T14:00:00.000Z',
+                      completedAt: null,
+                      events: [
+                        {
+                          sequence: 1,
+                          type: 'REQUESTED',
+                          message: 'Daily challenge iteration requested',
+                          createdAt: '2026-07-11T14:00:00.000Z',
+                        },
+                      ],
+                      challenge: null,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid or future UTC date',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: {
+                  status: 'error',
+                  error: { code: 'INVALID_DAILY_CHALLENGE_DATE', message: 'Invalid daily challenge date' },
+                },
+              },
+            },
+          },
+          '401': {
+            description: 'Unauthorized',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } },
+              },
+            },
+          },
+          '403': {
+            description: 'Admin access required',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+              },
+            },
+          },
+          '409': {
+            description: 'An iteration is already running for the date',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/DailyChallengeIterationConflictResponse' },
+                example: {
+                  status: 'error',
+                  error: {
+                    code: 'DAILY_CHALLENGE_ITERATION_IN_PROGRESS',
+                    message: 'Daily challenge iteration already in progress',
+                  },
+                  data: {
+                    operation: {
+                      operationId: 'f39dd177-bde0-4fd8-84cb-8cd353ffc224',
+                      date: '2026-07-11',
+                      status: 'RUNNING',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/admin/daily-challenge/iterations/{operationId}': {
+      get: {
+        summary: 'Poll an admin manual daily challenge iteration',
+        tags: ['Daily Challenge', 'Admin'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'operationId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Iteration operation with ordered, sanitized events',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/DailyChallengeIterationResponse' },
+              },
+            },
+          },
+          '401': {
+            description: 'Unauthorized',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' } },
+              },
+            },
+          },
+          '403': {
+            description: 'Admin access required',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: { status: 'error', error: { code: 'FORBIDDEN', message: 'Admin access required' } },
+              },
+            },
+          },
+          '404': {
+            description: 'Unknown iteration operation',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                example: {
+                  status: 'error',
+                  error: {
+                    code: 'DAILY_CHALLENGE_ITERATION_NOT_FOUND',
+                    message: 'Daily challenge iteration not found',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     '/auth/register': {
       post: {
         summary: 'Register a new user',
@@ -1365,6 +1522,100 @@ export const openApiSpec = {
             type: 'object',
             required: ['challenge'],
             properties: { challenge: { $ref: '#/components/schemas/DailyChallenge' } },
+          },
+        },
+      },
+      DailyChallengeIterationRequest: {
+        type: 'object',
+        properties: {
+          date: {
+            type: 'string',
+            pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$',
+            description: 'Optional UTC date; defaults to the backend current UTC date. Future dates are rejected.',
+          },
+        },
+      },
+      DailyChallengeIterationEvent: {
+        type: 'object',
+        required: ['sequence', 'type', 'message', 'createdAt'],
+        properties: {
+          sequence: { type: 'integer', minimum: 1 },
+          type: {
+            type: 'string',
+            enum: [
+              'REQUESTED',
+              'GENERATION_STARTED',
+              'GENERATOR_SELECTED',
+              'CANDIDATE_REJECTED',
+              'FALLBACK_USED',
+              'VALIDATION_PASSED',
+              'CACHE_REPLACED',
+              'FAILED',
+            ],
+          },
+          message: { type: 'string' },
+          source: { type: 'string', enum: ['gemini', 'fallback'], nullable: true },
+          fallbackUsed: { type: 'boolean', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      DailyChallengeIteration: {
+        type: 'object',
+        required: ['operationId', 'date', 'status', 'requestedAt', 'completedAt', 'events', 'challenge'],
+        properties: {
+          operationId: { type: 'string' },
+          date: { type: 'string', pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' },
+          status: { type: 'string', enum: ['RUNNING', 'SUCCEEDED', 'FAILED'] },
+          requestedAt: { type: 'string', format: 'date-time' },
+          completedAt: { type: 'string', format: 'date-time', nullable: true },
+          events: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/DailyChallengeIterationEvent' },
+          },
+          challenge: {
+            oneOf: [{ $ref: '#/components/schemas/DailyChallenge' }, { type: 'null' }],
+          },
+        },
+      },
+      DailyChallengeIterationResponse: {
+        type: 'object',
+        required: ['status', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['success'] },
+          data: {
+            type: 'object',
+            required: ['operation'],
+            properties: { operation: { $ref: '#/components/schemas/DailyChallengeIteration' } },
+          },
+        },
+      },
+      DailyChallengeIterationConflictResponse: {
+        type: 'object',
+        required: ['status', 'error', 'data'],
+        properties: {
+          status: { type: 'string', enum: ['error'] },
+          error: {
+            type: 'object',
+            required: ['code', 'message'],
+            properties: {
+              code: { type: 'string', enum: ['DAILY_CHALLENGE_ITERATION_IN_PROGRESS'] },
+              message: { type: 'string' },
+            },
+          },
+          data: {
+            type: 'object',
+            required: ['operation'],
+            properties: {
+              operation: {
+                type: 'object',
+                required: ['operationId', 'date', 'status'],
+                properties: {
+                  operationId: { type: 'string' },
+                  date: { type: 'string' },
+                  status: { type: 'string', enum: ['RUNNING'] },
+                },
+              },
+            },
           },
         },
       },

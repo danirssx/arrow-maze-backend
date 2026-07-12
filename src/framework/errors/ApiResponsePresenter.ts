@@ -36,4 +36,17 @@ export class ApiResponsePresenter {
     }
     return { status: "error", error };
   }
+
+  /**
+   * Error envelope that also carries a `data` payload. Used by endpoints that must
+   * return a resource summary alongside the error (e.g. the running operation on a
+   * 409 conflict) without controllers hand-rolling the response shape.
+   */
+  static errorWithData<T>(
+    code: string,
+    message: string,
+    data: T
+  ): ApiErrorResponse & { data: T } {
+    return { status: "error", error: { code, message }, data };
+  }
 }

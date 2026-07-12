@@ -121,6 +121,15 @@ it is omitted, `GET /daily-challenge` still returns a deterministic validated
 fallback challenge for the current UTC date. Mobile and admin clients consume the
 backend endpoint and never call Gemini directly.
 
+Admins can manually re-generate the daily challenge for a UTC date through
+`POST /admin/daily-challenge/iterations` (guarded by `authMiddleware` +
+`requireAdmin`). The command returns a `202` with a `RUNNING` operation; the
+admin dashboard polls `GET /admin/daily-challenge/iterations/:operationId` for the
+ordered, sanitized operation log until the operation reaches `SUCCEEDED` or
+`FAILED`. The previously cached challenge stays live until a new candidate fully
+validates, and operation events never expose Gemini keys, prompts, raw provider
+payloads, or stack traces.
+
 ### Run locally
 
 ```bash
@@ -247,6 +256,8 @@ The API exposes:
 GET  /health
 GET  /docs
 GET  /daily-challenge
+POST /admin/daily-challenge/iterations
+GET  /admin/daily-challenge/iterations/:operationId
 POST /auth/register
 POST /auth/login
 POST /auth/refresh
