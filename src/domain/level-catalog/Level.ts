@@ -127,6 +127,7 @@ export class Level extends Entity<LevelId> {
         "Only draft levels can have their definition updated"
       );
     }
+    Level.assertArrowsWithinShape(definition, this._boardShape);
     this._definition = definition;
     this._updatedAt = now;
   }

@@ -43,7 +43,7 @@ export class LevelCatalogController {
   async createLevel(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const actorRole = (req as AuthenticatedRequest).user.role;
-      const { name, description, difficulty, arrows, attempts, timeLimit, boardShape } =
+      const { name, description, difficulty, arrows, attempts, timeLimit, boardShape, boardSize } =
         req.body as Record<string, unknown>;
 
       if (!name || !description || !difficulty || !arrows) {
@@ -60,6 +60,9 @@ export class LevelCatalogController {
         ...(timeLimit !== undefined && { timeLimit: Number(timeLimit) }),
         ...(boardShape !== undefined && {
           boardShape: boardShape as NonNullable<CreateLevelInput['boardShape']>,
+        }),
+        ...(boardSize !== undefined && {
+          boardSize: boardSize as NonNullable<CreateLevelInput['boardSize']>,
         }),
       });
 

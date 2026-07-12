@@ -5114,7 +5114,9 @@ analyze PR #68, resolve it, push a new PR, and close the old PR.
 
 - Red check: focused seed tests failed because `QA_FULL_CATALOG_USER_ID` and
   `demoProgress.ts` did not exist yet.
-- Focused tests GREEN: 2 suites / 11 tests.
+- Focused tests GREEN:
+  `npm test -- --runInBand tests/seed/demoCredentials.test.ts tests/seed/demoProgress.test.ts`
+  -> 2 suites / 11 tests.
 - Full gate GREEN: `npm run verify` -> lint + typecheck + coverage + build, 94 suites /
   595 tests.
 
@@ -5132,6 +5134,585 @@ analyze PR #68, resolve it, push a new PR, and close the old PR.
   account itself.
 - Current `develop` already has an admin account for exploratory all-level access, so
   MAZ-194 is cleaner as a normal-user QA path that exercises progression end to end.
+
+
+---
+
+# AI Usage Log: MAZ-216 flexible rectangular board definitions (backend implementation)
+
+## Task / Problem
+
+Implement the approved MAZ-216 backend contract after human approval of the planning PR:
+admin create-level requests may include `boardSize`, the backend enforces M12 limits
+(`12 x 12`, max `60` arrows), rejects mixed `boardSize` + `boardShape`, normalizes valid
+rectangles to a full `CELL_MASK` `boardShape`, and keeps existing non-`boardSize` create
+requests compatible.
+
+## Tool and Model
+
+Codex CLI / GPT-5.
+
+## Prompt Used
+
+The user confirmed the MAZ-216 planning PRs were approved and asked to continue with
+the ticket implementation, still following `AGENTS.md`, the TDD gate, AI logging,
+checks, commit/push/PR, Linear, and MEMORY updates.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Used the approved MAZ-216 spec decision (`boardSize` -> full `CELL_MASK`) as the implementation boundary. | `specs/flexible-rectangular-boards-MAZ-216.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Implemented against the approved `@s1..@s7` Gherkin scenarios. | `specs/flexible-rectangular-boards-MAZ-216.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Added failing tests first for `BoardSize`, `LevelDefinition`, create use case, controller forwarding, OpenAPI, and `Level.updateDefinition` shape containment; then implemented the minimum production changes. | tests listed below |
+| Judge (`.agents/judge.md`) | Referenced | Checked layer placement: domain value objects/aggregate invariants, application DTO mapping, framework forwarding/OpenAPI; Prisma unchanged. | `npm run verify` |
+| Mutation Tester (`.agents/mutation.md`) | Referenced | Ran focused Stryker mutation on touched domain/application files; no separate mutation-agent session was run. | mutation score below |
+
+## Scenario Coverage (@s -> test/evidence)
+
+| Scenario | Evidence |
+| --- | --- |
+| `@s1` valid rectangle created and stored as full mask | `BoardSize.test`, `CreateLevelUseCase.test should_persist_full_rectangle_board_shape_when_board_size_is_present`, `createLevel.test should_forward_board_size_to_the_use_case_when_present` |
+| `@s2` existing requests without `boardSize` keep working | existing `CreateLevelUseCase` create-success tests and `createLevel.test should_return_201_with_levelId_when_admin_creates_a_valid_level` |
+| `@s3` oversize dimensions rejected | `BoardSize.test should_throw_when_dimensions_exceed_m12_limits`, `CreateLevelUseCase.test should_throw_when_board_size_exceeds_m12_limits` |
+| `@s4` more than 60 arrows rejected | `LevelDefinition.test should_throw_when_arrow_count_exceeds_m12_limit` |
+| `@s5` arrow cells outside rectangle rejected | `CreateLevelUseCase.test should_throw_when_arrow_cell_lies_outside_board_size` |
+| `@s6` `boardSize` and `boardShape` are not mixed | `CreateLevelUseCase.test should_throw_when_board_size_and_board_shape_are_combined` |
+| `@s7` OpenAPI documents rectangular input | `openApiSpec.test should_document_flexible_rectangular_board_size_in_create_level_request` |
+
+## Result Obtained
+
+- Added `BoardSize` value object (`12 x 12` positive-integer limit + row-major rectangle cells).
+- Added `LEVEL_DEFINITION_MAX_ARROWS = 60` to `LevelDefinition`.
+- Extended `CreateLevelInput` with optional `boardSize` and mapped it to a full
+  `BoardShape.cellMask`; mixed `boardSize` + `boardShape` throws `ValidationError`.
+- Forwarded `boardSize` through `LevelCatalogController`.
+- Updated OpenAPI with `BoardSizeInput`, `boardSize` on `CreateLevelRequest`, and `maxItems: 60`
+  for arrows.
+- Tightened `Level.updateDefinition` so existing shaped/framed draft levels cannot later be
+  updated with arrows outside their stored shape.
+
+## Verification
+
+- Focused red/green tests: `npm test -- --runInBand tests/domain/level-catalog/Level.test.ts tests/domain/level-catalog/value-objects/BoardSize.test.ts tests/domain/level-catalog/value-objects/LevelDefinition.test.ts tests/application/level-catalog/CreateLevelUseCase.test.ts tests/api/level-catalog/createLevel.test.ts tests/framework/swagger/openApiSpec.test.ts` -> `6` suites / `66` tests green.
+- Full gate: `npm run verify` -> GREEN (`95` suites / `607` tests, lint, typecheck, coverage, build).
+- Mutation: `npm run mutation -- --mutate src/domain/level-catalog/value-objects/BoardSize.ts,src/domain/level-catalog/value-objects/LevelDefinition.ts,src/domain/level-catalog/Level.ts,src/application/level-catalog/use-cases/CreateLevelUseCase.ts` -> `90.00%` (break threshold `80%`).
+
+## Team Modifications Pending Human Review
+
+- Verify that representing rectangles as full `boardShape` masks is acceptable for production
+  payload size. With the approved M12 limit, the largest normalized rectangle is `144` cells,
+  well below the existing `BoardShape` cap of `600`.
+
+## Lessons / Limitations
+
+- Existing shaped-board persistence was enough; no Prisma schema migration was needed.
+- The existing `Level.updateDefinition` path did not re-check shape containment. MAZ-216 made
+  that hole visible because rectangular `boardSize` is persisted as shape framing.
+
+
+---
+
+# AI Usage Log: MAZ-216 flexible rectangular board definitions (backend planning)
+
+## Task / Problem
+
+Prepare the backend-side executable contract for `MAZ-216` / M12-04: make backend
+admin create-level validation authoritative for explicit rectangular `boardSize`
+definitions, enforce `12 x 12` and `60` arrow limits, and keep mobile compatibility
+through the existing `definition.boardShape` read contract.
+
+This is a planning/human-gate change only. No production code was written because no
+approved MAZ-216 `.feature` contract existed before this session.
+
+## Tool and Model
+
+Codex CLI / GPT-5.
+
+## Prompt Used
+
+The user asked to start `MAZ-216`, following both repo `AGENTS.md` files, root
+`MEMORY.md`, `Linear_MCP_Guideline.md`, new worktrees, AI usage logging,
+`compile-ai-usage.sh`, checks, commit/push/PR/Linear, and to review affected tickets
+because this is a refactor/factorization.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Distilled the Linear ticket and existing MAZ-148/207/OpenAPI contracts into a draft backend spec; no separate agent session was run. | `specs/flexible-rectangular-boards-MAZ-216.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Wrote the executable backend Gherkin scenarios `@s1..@s7` for the human gate. | `specs/flexible-rectangular-boards-MAZ-216.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Not used | No TDD implementation was started because the MAZ-216 contract still needs human approval. | N/A |
+| Judge (`.agents/judge.md`) | Referenced | Applied the Clean Architecture checklist to the proposed layer impact and forbidden moves. | this log + spec |
+| Mutation Tester (`.agents/mutation.md`) | Not used | Mutation testing is not applicable to a contract-only planning change. | N/A |
+
+## Scenario Coverage (@s -> evidence)
+
+| Scenario | Evidence |
+| --- | --- |
+| `@s1` valid rectangle created and stored as full mask | `specs/flexible-rectangular-boards-MAZ-216.feature` |
+| `@s2` existing requests without `boardSize` keep working | `specs/flexible-rectangular-boards-MAZ-216.feature` |
+| `@s3` oversize dimensions rejected | `specs/flexible-rectangular-boards-MAZ-216.feature` |
+| `@s4` more than 60 arrows rejected | `specs/flexible-rectangular-boards-MAZ-216.feature` |
+| `@s5` arrow cells outside rectangle rejected | `specs/flexible-rectangular-boards-MAZ-216.feature` |
+| `@s6` `boardSize` and `boardShape` are not mixed | `specs/flexible-rectangular-boards-MAZ-216.feature` |
+| `@s7` OpenAPI documents rectangular input | `specs/flexible-rectangular-boards-MAZ-216.feature` |
+
+## Result Obtained
+
+- Added `specs/flexible-rectangular-boards-MAZ-216.spec.md` with backend behavior,
+  HTTP contract, Clean Architecture placement, edge cases, and decisions.
+- Added `specs/flexible-rectangular-boards-MAZ-216.feature` with `@s1..@s7`.
+- Proposed accepting `boardSize` on admin create requests, validating M12 constraints,
+  and normalizing valid rectangles to full `CELL_MASK` `boardShape` for persistence/read.
+- `npm run verify` green on rerun: lint, typecheck, coverage (`94` suites / `595` tests),
+  and build. The first run hit a timeout in `tests/seed/demoCredentials.test.ts`; rerun passed
+  without code changes.
+
+## Team Modifications Pending Human Review
+
+- Human approval is required for the `@s1..@s7` contract before any TDD implementation.
+- The team must confirm the `boardSize` request field name and the decision to reject
+  `boardSize` + `boardShape` in one request.
+- If draft board dimensions must be mutable after creation, the update-definition contract
+  needs an additional approved scenario before implementation.
+
+## Lessons / Limitations
+
+- Existing backend `BoardShape` support stores arbitrary masks with a 600-cell cap; MAZ-216
+  needs a narrower rectangular authoring contract without breaking existing shaped levels.
+- OpenAPI already contains some stale `boardSize` examples/messages; implementation should
+  update those alongside the new schema if this contract is approved.
+
+
+---
+
+# AI Usage Log: MAZ-218 Backend daily challenge planning
+
+## Task / Problem
+
+Prepare the executable backend contract for `MAZ-218` / M12-06A: implement daily
+challenge generation and cache behavior in the backend, with Gemini kept server-side,
+UTC-date cache semantics, validation, fallback, and a first-party endpoint for mobile.
+
+Linear state was `Backlog`, so the implementation phase is intentionally blocked until
+the human approves the Gherkin contract and moves the ticket out of Backlog.
+
+## Tool and Model
+
+Codex / GPT-5.
+
+## Prompt Used
+
+The user asked to work on MAZ-218 in a new worktree, following both backend and client
+`AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, AI usage logging, validation checks,
+commit/push/PR, Linear updates, and a review of affected tickets. The local rules required
+reading the agent workflow and stopping before implementation because MAZ-218 has no
+approved executable contract yet.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Used its required spec sections and Clean Architecture contract checklist while drafting the MAZ-218 spec in this session. | `specs/backend-daily-challenge-MAZ-218.spec.md`, Linear issue `MAZ-218` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Converted the spec acceptance criteria into stable `@s1..@s9` Gherkin scenarios, but did not create new Linear tickets because MAZ-218 already exists. | `specs/backend-daily-challenge-MAZ-218.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Applied the precondition that TDD cannot start until the Gherkin contract is human-approved and the ticket leaves Backlog. | Linear `MAZ-218` state `Backlog`; no `src/` or `tests/` changes |
+| Judge (`.agents/judge.md`) | Referenced | Included the mandatory Clean Architecture contract and layer-impact detail that the future judge will enforce. | `specs/backend-daily-challenge-MAZ-218.spec.md` |
+| Mutation Tester (`.agents/mutation.md`) | Referenced | Confirmed mutation testing is not applicable to this planning-only PR because no production `domain` or `application` code changed. | N/A |
+
+## Scenario Coverage (@s ↔ test)
+
+Implementation is blocked pending human approval, so no tests were written in this PR.
+The executable scenarios to cover during TDD are:
+
+- @s1 → pending after approval
+- @s2 → pending after approval
+- @s3 → pending after approval
+- @s4 → pending after approval
+- @s5 → pending after approval
+- @s6 → pending after approval
+- @s7 → pending after approval
+- @s8 → pending after approval
+- @s9 → pending after approval
+
+## Result Obtained
+
+- Added `specs/backend-daily-challenge-MAZ-218.spec.md`.
+- Added `specs/backend-daily-challenge-MAZ-218.feature`.
+- Captured the MAZ-218 dependency on MAZ-219 and the implementation gate: MAZ-219 must wait
+  for this backend contract/implementation, and MAZ-218 must wait for human approval before TDD.
+- Did not modify `src/`, `tests/`, Prisma schema, backend AGENTS, or client files.
+
+## Verification
+
+- `npm ci`
+- `npm run verify`
+
+## Team Modifications Pending Human Review
+
+- Approve or change the public `GET /daily-challenge` response shape.
+- Approve or change the unauthenticated read decision.
+- Approve the deterministic UTC date-to-difficulty policy before implementation.
+- Decide during implementation whether the cache is a dedicated Prisma model/table or another
+  approved persistence mechanism. The spec recommends a dedicated cache because daily challenges
+  are not normal published catalog levels.
+
+## Lessons / Limitations
+
+- MAZ-218 was still in Linear `Backlog`, so the correct output is a contract PR, not production code.
+- The current backend already has `RandomLevelStrategy` and `LevelSolvabilityPolicy`, which should
+  reduce implementation risk for fallback and validation once the contract is approved.
+
+
+---
+
+# AI Log - MAZ-218 Daily Challenge Implementation
+
+## Task / Problem
+
+Implement the approved MAZ-218 backend contract for `GET /daily-challenge`: generate one UTC daily challenge, prefer Gemini when configured, validate and cache the challenge, fall back to deterministic generation when Gemini is unavailable or invalid, and avoid leaking provider details.
+
+The executable Gherkin contract was accepted by the human reviewer in PR #80 before implementation started.
+
+## Tool and Model
+
+- Tool: Codex CLI / terminal agent.
+- Model: GPT-5 Codex.
+
+## Prompt Used
+
+User requested implementation of ticket MAZ-218 after accepting the contract in the PR, following `AGENTS.md`, `MEMORY.md`, Linear workflow, AI usage logging, checks, commit, push, PR, and Linear updates.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | The approved PR #80 contract/spec guided implementation boundaries. | `specs/backend-daily-challenge-MAZ-218.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | The approved scenarios `@s1..@s9` were treated as the executable contract. | `specs/backend-daily-challenge-MAZ-218.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Tests were written first for application/API/infrastructure behavior, then production code was implemented and refactored. | `tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts`, `tests/api/dailyChallenge.test.ts`, `tests/infrastructure/daily-challenge/*` |
+| Judge (`.agents/judge.md`) | Not used | No separate judge agent session was run during implementation. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Referenced | Stryker mutation testing was run against the executable application use case after strengthening tests. | `reports/mutation/index.html`, score 87.43% |
+
+## Result Obtained
+
+- Added `GetDailyChallengeUseCase` with UTC date key, deterministic difficulty, current-cache reuse, Gemini-first generation, deterministic fallback, domain validation, solvability validation, and sanitized 503 failure.
+- Added application ports and DTOs for daily challenge cache and generation.
+- Added Prisma-backed `daily_challenges` cache table, schema model, migration, and repository.
+- Added Gemini generator adapter that keeps `GEMINI_API_KEY` in infrastructure and sends it through `x-goog-api-key`, never in URLs.
+- Added deterministic fallback generator using existing domain `RandomLevelStrategy`.
+- Added public `GET /daily-challenge` route, controller wiring, OpenAPI docs, README/env documentation, and optional Gemini environment variables.
+- Updated error middleware so 5xx `AppError` details are not returned to clients.
+- Replaced the architecture boundary test's shell `rg` dependency with a pure filesystem scan after GitHub Actions exposed a Jest worker serialization failure around child process errors.
+- Operational follow-up: tested configured Gemini models against the live API, found `gemini-1.5-flash` and `gemini-2.5-flash` unavailable for this key, selected `gemini-3.5-flash`, and tightened the adapter prompt so model output matches the backend domain contract (`boardSize`, `{ row, col }` paths, cardinal directions, hex colors, no extra keys).
+
+## @s -> Test Map
+
+| Scenario | Concrete tests |
+| --- | --- |
+| `@s1` Gemini boundary and secret handling | `tests/architecture/dailyChallengeGeminiBoundary.test.ts`; `tests/infrastructure/daily-challenge/GeminiDailyChallengeGenerator.test.ts` |
+| `@s2` Cache miss generates Gemini challenge | `tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts` `should_generate_validate_cache_and_return_gemini_challenge_when_cache_misses`; `tests/api/dailyChallenge.test.ts` |
+| `@s3` Cache hit reuses current challenge | `tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts` `should_return_cached_challenge_without_calling_gemini_when_cache_hit_is_current` |
+| `@s4` Invalid Gemini payload falls back | `tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts` invalid metadata cases; `tests/infrastructure/daily-challenge/GeminiDailyChallengeGenerator.test.ts` |
+| `@s5` Unsolvable Gemini candidate falls back | `tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts` `should_reject_unsolvable_gemini_candidate_and_return_validated_fallback` |
+| `@s6` Wrong date/seed/difficulty rejected | `tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts` wrong metadata and difficulty tests |
+| `@s7` UTC rollover | `tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts` UTC helper and rollover tests |
+| `@s8` Same daily payload for all users | `tests/api/dailyChallenge.test.ts` `should_return_same_payload_for_multiple_users_when_use_case_returns_cached_utc_challenge` |
+| `@s9` Sanitized unavailable response | `tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts`; `tests/api/dailyChallenge.test.ts` `should_return_503_without_provider_details_when_generation_is_unavailable` |
+
+## Verification
+
+- `npm test -- --runInBand tests/application/daily-challenge/GetDailyChallengeUseCase.test.ts` - passed, 23 tests.
+- `npm run mutation -- --mutate "src/application/daily-challenge/use-cases/GetDailyChallengeUseCase.ts"` - passed, mutation score 87.43%.
+- `npm run verify` - passed: lint, typecheck, coverage, build; 101 test suites and 647 tests passed.
+- After PR #81 initially failed GitHub Actions on `tests/architecture/dailyChallengeGeminiBoundary.test.ts`, `npm test -- --runInBand tests/architecture/dailyChallengeGeminiBoundary.test.ts` and `npm run verify` passed locally with the pure filesystem scan.
+- Operational verification after Gemini prompt/model update:
+  - Docker backend rebuilt with `GEMINI_MODEL=gemini-3.5-flash`.
+  - `GET /daily-challenge` returned `source: "gemini"` for `2026-07-11`, `targetDifficulty: "HARD"`, 10 arrows, `validation.solvable: true`, `fallbackUsed: false`.
+  - DB cache row exists in `daily_challenges` for `2026-07-11` with `source = gemini`.
+  - `npm run verify` passed after regenerating Prisma Client locally.
+
+## Team Modifications Pending Human Review
+
+- Review deterministic fallback tuning for daily challenge difficulty and time limits.
+- Review Gemini prompt text and model default (`gemini-1.5-flash`) against team expectations.
+- Apply the Prisma migration in the target environment before deploying the endpoint.
+
+## Lessons / Limitations
+
+- The initial mutation run exposed weak assertions around cache validity, metadata branches, board frame mapping, and DTO shape; additional behavior tests raised the use-case score above the configured threshold.
+- Gemini integration is intentionally defensive: provider errors or malformed responses are treated as fallback triggers, and provider details are never returned to clients.
+
+
+---
+
+# AI Usage Log - MAZ-224 Admin Manual Daily Challenge Iteration (Implementation)
+
+## Task / Problem
+
+Implement the approved MAZ-224 contract: an admin-only manual Daily Challenge iteration
+flow that re-generates the challenge for a UTC date, replaces the cached challenge only
+after a candidate fully validates, and exposes a sanitized, pollable operation log for the
+admin dashboard. The executable `.feature` (`@s1..@s12`) was approved by the human and the
+planning PR (#83) was merged to `develop` before this slice started.
+
+## Tool and Model
+
+- Tool: Claude Code
+- Model: Claude Opus 4.8 (1M context)
+- Date: 2026-07-11
+- Repository: `arrow-maze-backend`
+- Worktree: `worktrees/am-MAZ-224-backend-impl`, branch
+  `feat/backend-daily-challenge-iteration-MAZ-224` off `origin/develop`.
+
+## Prompt Used
+
+The user asked to work on MAZ-224 following the repo rules: read backend/client `AGENTS.md`,
+root `MEMORY.md`, `Linear_MCP_Guideline.md`; work in a new worktree; register AI usage and
+validate checks; review whether `MEMORY.md`/`AGENTS.md` need updates; commit, push, open a PR,
+and update Linear; and, because it is a factorization, review all affected tickets.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Not used | The spec was authored and approved in the MAZ-224 planning slice (PR #83); no new spec debate happened here. | `specs/backend-daily-challenge-manual-iteration-MAZ-224.spec.md` (pre-existing) |
+| Planner / Gherkin Author (`.agents/planner.md`) | Not used | The `.feature` contract (`@s1..@s12`) was already approved before implementation. | `specs/backend-daily-challenge-manual-iteration-MAZ-224.feature` (pre-existing) |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Followed the Three Laws / red-green discipline in this session: each layer got its tests, run per module (application → infrastructure → API → architecture), before the full `verify` gate. No separate agent session was spawned. | tests below + `@s → test` map |
+| Judge (`.agents/judge.md`) | Referenced | Applied the judge's review lens (Clean Architecture boundaries, DTO/secret leakage, HTTP mapping in framework only) while writing `tests/architecture/dailyChallengeIterationBoundary.test.ts` and the controller/route split. | `tests/architecture/dailyChallengeIterationBoundary.test.ts` |
+| Mutation Tester (`.agents/mutation.md`) | Used | Ran scoped Stryker on the new application logic; two surviving default-message mutants were killed by adding message assertions. | `reports/mutation/index.html`, `ai-log/2026-07-11-MAZ-224-mutation.md` |
+
+## Result Obtained
+
+New application layer:
+
+- `DailyChallengeGeneration.ts` — extracted the MAZ-218 context builder + provider-candidate
+  validator into a shared, framework-free module (single source of truth for the
+  Gemini/fallback validation pipeline). `GetDailyChallengeUseCase` now delegates to it; its 23
+  existing tests stay green.
+- `DailyChallengeIterationTypes.ts`, `DailyChallengeIterationErrors.ts`.
+- Ports `DailyChallengeIterationRepository`, `IterationTaskScheduler`.
+- `StartDailyChallengeIterationUseCase` (validate date → reject concurrent op → persist RUNNING
+  + REQUESTED → schedule the Gemini/fallback pipeline → replace cache only after validation →
+  terminal SUCCEEDED/FAILED with a sanitized event log) and `GetDailyChallengeIterationUseCase`.
+
+New infrastructure:
+
+- `PrismaDailyChallengeIterationRepository` + `DailyChallengeIteration` Prisma model and
+  migration `20260711000000_add_daily_challenge_iterations`.
+- `ImmediateIterationTaskScheduler` (defers the pipeline via `setImmediate` so the start
+  request returns the RUNNING snapshot).
+
+New framework:
+
+- `AdminDailyChallengeIterationController` + `adminDailyChallengeIterationRoutes` guarded by
+  `authMiddleware` + `requireAdmin`; wired in `app.ts`; OpenAPI paths/schemas + README updated.
+
+### `@s → test` map
+
+- `@s1` → `StartDailyChallengeIterationUseCase.test.ts`:
+  `should_return_running_operation_with_requested_event_when_admin_starts_for_today`,
+  `should_store_validated_challenge_for_today_after_pipeline_runs`;
+  `adminDailyChallengeIteration.test.ts`: `should_return_202_with_running_operation_when_admin_starts`.
+- `@s2` → `should_replace_existing_challenge_atomically_only_after_success`.
+- `@s3` → `should_log_gemini_source_without_secrets_when_generation_succeeds`.
+- `@s4` → `should_fall_back_and_log_fallback_usage_when_gemini_candidate_is_invalid`.
+- `@s5` → `should_fail_and_preserve_previous_challenge_when_both_generators_fail`.
+- `@s6` → `adminDailyChallengeIteration.test.ts`: `should_return_401_and_not_start_when_unauthenticated`,
+  `should_return_401_and_not_read_when_polling_without_auth`.
+- `@s7` → `should_return_403_and_not_start_when_authenticated_user_is_not_admin`.
+- `@s8` → `GetDailyChallengeIterationUseCase.test.ts` (both);
+  `adminDailyChallengeIteration.test.ts`: `should_return_200_with_ordered_events_when_admin_polls_operation`,
+  `should_return_404_when_polling_unknown_operation`.
+- `@s9` → `should_reject_duplicate_running_iteration_for_same_date`;
+  `adminDailyChallengeIteration.test.ts`: `should_return_409_with_running_operation_when_iteration_already_in_progress`.
+- `@s10` → `should_reject_malformed_date_with_format_message_before_calling_any_generator`,
+  `should_reject_calendar_invalid_date_with_format_message`;
+  `adminDailyChallengeIteration.test.ts`: `should_return_400_when_date_is_invalid`,
+  `should_return_400_with_default_message_when_date_is_not_a_string`.
+- `@s11` → `should_reject_future_date_with_future_message_before_calling_any_generator`,
+  `should_accept_today_and_reject_the_next_utc_day_at_the_boundary`.
+- `@s12` → `tests/architecture/dailyChallengeIterationBoundary.test.ts` (3 tests).
+
+### Validation
+
+- `npm run verify` GREEN: 106 suites / 675 tests, lint + typecheck + coverage + build.
+- New application logic coverage: use cases 98-100%, errors 100%.
+- Scoped Stryker mutation on the new application files: score recorded in
+  `ai-log/2026-07-11-MAZ-224-mutation.md` (≥ break threshold 80).
+
+## Affected Tickets Reviewed
+
+- `MAZ-218`: daily challenge base (generation/cache/validation). MAZ-224 reuses its
+  Gemini/fallback + `LevelSolvabilityPolicy` pipeline via the extracted
+  `DailyChallengeGeneration` module; its tests remain green after the extraction.
+- `MAZ-195`: admin route guard (`authMiddleware` + `requireAdmin`) reused for the two new
+  admin endpoints.
+- `MAZ-143`: Prisma-only infrastructure; the new operation store follows the same
+  `getClient` + `InfrastructureError` conventions and adds a Prisma Migrate migration.
+- `MAZ-223`: admin dashboard follow-up (manual iteration button + live log) is now unblocked
+  by these backend endpoints.
+- `MAZ-219`: mobile daily challenge consumer is unaffected; the public `GET /daily-challenge`
+  shape is unchanged.
+
+## Team Modifications Pending Human Review
+
+- Domain/application tests are subject to mandatory human review (AGENTS §5).
+- Confirm the synchronous-in-request vs deferred (`setImmediate`) generation timing is
+  acceptable for the admin UX; the scheduler port keeps this swappable.
+- Apply the new Prisma migration (`db:migrate`) before deploying.
+
+## Lessons / Limitations
+
+- The `IterationTaskScheduler` port keeps the RUNNING→poll→terminal contract honest and fully
+  deterministic under test (a manual scheduler lets tests assert RUNNING before running the
+  pipeline and terminal after) without introducing background-timer flakiness.
+- Stryker `--mutate` treats each value as a glob relative to repo root: an exact file path
+  under a subdirectory must include the full path (`.../use-cases/...`), otherwise Stryker
+  silently reports "no files" and a misleading `n/a` score. Always confirm the mutant count is
+  non-zero.
+- Mutation testing caught two surviving default error-message literals; those messages are
+  observable in `400`/`404` responses, so they were pinned with message assertions.
+
+
+---
+
+# AI Usage Log - MAZ-224 Mutation Testing
+
+## Task / Problem
+
+Run the mutation gate for the MAZ-224 admin manual daily-challenge iteration logic and raise
+the score above the repository break threshold (80).
+
+## Tool and Model
+
+- Tool: Claude Code + Stryker (`npm run mutation`)
+- Model: Claude Opus 4.8 (1M context)
+- Date: 2026-07-11
+
+## Scope
+
+Scoped Stryker run over the new application logic introduced by this ticket:
+
+- `src/application/daily-challenge/use-cases/StartDailyChallengeIterationUseCase.ts`
+- `src/application/daily-challenge/use-cases/GetDailyChallengeIterationUseCase.ts`
+- `src/application/daily-challenge/DailyChallengeIterationErrors.ts`
+
+`DailyChallengeGeneration.ts` is excluded from this ticket's gate: it is the MAZ-218
+context-builder + candidate-validator extracted verbatim (behavior unchanged), covered by the
+23 pre-existing `GetDailyChallengeUseCase` tests. Ports and `*Repository` files are excluded by
+`stryker.conf.json`'s `mutate` globs; infrastructure/framework are not in the mutate set.
+
+## Result
+
+Final mutation score **88.28 %** (≥ break threshold 80). Exit code 0.
+
+| File | Score | Killed | Survived |
+| --- | --- | --- | --- |
+| StartDailyChallengeIterationUseCase.ts | 87.07 % | 101 | 14 |
+| GetDailyChallengeIterationUseCase.ts | 100 % | 6 | 0 |
+| DailyChallengeIterationErrors.ts | 100 % | 6 | 0 |
+
+## What the mutation gate caught
+
+- Two surviving default error-message literals (`InvalidDailyChallengeDateError`,
+  `DailyChallengeIterationNotFoundError` → `""`). These messages are observable in `400`/`404`
+  responses, so they were pinned with message assertions in the use-case and API tests.
+- The invalid-date branch survived because a malformed key (`"not-a-date"`) also trips the
+  future-date check; the tests now assert the distinct format vs future messages, and a direct
+  `isValidUtcDateKey` unit test covers calendar-invalid keys (month 13, Feb 30, non-leap Feb 29).
+- The event-log message/type/source/`fallbackUsed`/`sequence` mutants were killed by three
+  exact ordered-event-log assertions (gemini success, fallback success, total failure).
+
+## Residual survivors (accepted, above threshold)
+
+The 14 remaining survivors are equivalent-ish edge mutants inside `isValidUtcDateKey`'s
+round-trip equality checks (already fronted by the `^\d{4}-\d{2}-\d{2}$` regex) and the
+generator-input object literal. They do not change observable behavior and the score stays
+comfortably above the 80 break threshold.
+
+## Command
+
+```
+npm run mutation -- --mutate "src/application/daily-challenge/use-cases/StartDailyChallengeIterationUseCase.ts,src/application/daily-challenge/use-cases/GetDailyChallengeIterationUseCase.ts,src/application/daily-challenge/DailyChallengeIterationErrors.ts"
+```
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Not used | Not applicable to the mutation gate. | N/A |
+| Planner / Gherkin Author (`.agents/planner.md`) | Not used | Not applicable to the mutation gate. | N/A |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Referenced | Added the tests that kill the surfaced mutants. | `tests/application/daily-challenge/StartDailyChallengeIterationUseCase.test.ts` |
+| Judge (`.agents/judge.md`) | Not used | Review handled in the implementation log. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Used | Ran Stryker, triaged survivors, iterated tests to pass the gate. | `reports/mutation/index.html` |
+
+
+---
+
+# AI Usage Log - MAZ-224 Admin Manual Daily Challenge Iteration Planning
+
+## Task / Problem
+
+Create the executable backend contract for `MAZ-224`, an admin-only manual Daily Challenge
+iteration flow that replaces the cached challenge after successful generation and exposes a
+sanitized operation log for the admin dashboard.
+
+## Tool and Model
+
+- Tool: Codex CLI / GPT-5 coding agent
+- Date: 2026-07-11
+- Repository: `arrow-maze-backend`
+
+## Prompt Used
+
+The user requested work on ticket `MAZ-224`, explicitly requiring the agent to read backend
+and client `AGENTS.md`, `MEMORY.md`, `Linear_MCP_Guideline.md`, register AI usage, validate
+checks, use a new worktree, commit/push/PR, update Linear, update memory if needed, and review
+affected tickets.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Used its required spec structure, decision recording, scope boundaries, edge cases, HTTP contract, Clean Architecture contract, and human-gate rules in the same session. | `specs/backend-daily-challenge-manual-iteration-MAZ-224.spec.md` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Used its Gherkin requirements, stable `@s` scenario tags, and stop-before-TDD rule in the same session. | `specs/backend-daily-challenge-manual-iteration-MAZ-224.feature` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Not used | Implementation is blocked until the human approves the executable `.feature` contract. | N/A |
+| Judge (`.agents/judge.md`) | Not used | No implementation review was performed in this planning-only slice. | N/A |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No production code was changed; mutation testing applies after implementation and judge approval. | N/A |
+
+## Result Obtained
+
+- Added `specs/backend-daily-challenge-manual-iteration-MAZ-224.spec.md`.
+- Added `specs/backend-daily-challenge-manual-iteration-MAZ-224.feature` with `@s1..@s12`.
+- Confirmed this is planning-only because `MAZ-224` is still in Linear `Backlog`.
+- No `src/` or `tests/` files were changed.
+
+## Affected Tickets Reviewed
+
+- `MAZ-218`: source daily challenge generation/cache contract. `MAZ-224` reuses its Gemini,
+  fallback, validation, UTC date, cache, and public `GET /daily-challenge` behavior.
+- `MAZ-223`: admin dashboard follow-up blocked by this backend contract for manual iteration
+  and live operation logs.
+- `MAZ-219`: mobile daily challenge consumer should keep using public `GET /daily-challenge`;
+  no mobile code change is expected from this planning slice.
+- `MAZ-195`: admin route guard (`authMiddleware` + `requireAdmin`) is reused for the new
+  admin endpoints.
+
+## Team Modifications Pending Human Review
+
+- Human must approve or revise the polling contract:
+  `POST /admin/daily-challenge/iterations` +
+  `GET /admin/daily-challenge/iterations/:operationId`.
+- Human must confirm whether future UTC dates should be rejected.
+- Human must approve the `@s1..@s12` scenarios before implementation starts.
+
+## Lessons / Limitations
+
+- The existing MAZ-218 public endpoint has no manual replacement or operation-log contract;
+  MAZ-224 must add that backend capability before MAZ-223 can implement the admin button.
+- Polling is the smallest backend contract for a live admin log in this slice; SSE/WebSockets
+  remain out of scope unless the team explicitly approves that complexity.
+- Because this is planning-only, no TDD or mutation gate was run beyond repository verification.
 
 
 <!-- AI_LOG_ENTRIES_END -->

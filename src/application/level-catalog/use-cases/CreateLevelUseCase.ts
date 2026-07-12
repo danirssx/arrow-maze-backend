@@ -3,6 +3,7 @@ import { Difficulty } from "../../../domain/level-catalog/enums/Difficulty.js";
 import { Direction } from "../../../domain/level-catalog/enums/Direction.js";
 import { ArrowSpec } from "../../../domain/level-catalog/value-objects/ArrowSpec.js";
 import { BoardShape } from "../../../domain/level-catalog/value-objects/BoardShape.js";
+import { BoardSize } from "../../../domain/level-catalog/value-objects/BoardSize.js";
 import { LevelDefinition } from "../../../domain/level-catalog/value-objects/LevelDefinition.js";
 import { LevelDescription } from "../../../domain/level-catalog/value-objects/LevelDescription.js";
 import { LevelName } from "../../../domain/level-catalog/value-objects/LevelName.js";
@@ -32,6 +33,11 @@ export type BoardShapeInput = {
   cells: PositionInput[];
 };
 
+export type BoardSizeInput = {
+  rows: number;
+  cols: number;
+};
+
 export type CreateLevelInput = {
   actorRole: string;
   name: string;
@@ -41,6 +47,7 @@ export type CreateLevelInput = {
   attempts?: number;
   timeLimit?: number;
   boardShape?: BoardShapeInput;
+  boardSize?: BoardSizeInput;
 };
 
 export type CreateLevelOutput = { levelId: string };
@@ -59,8 +66,7 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
     const now = this.clock.now();
     const difficulty = parseEnumFromInput(Difficulty, input.difficulty, 'difficulty');
     const arrows = input.arrows.map((arrow) => mapArrowInput(arrow));
-    const boardShape =
-      input.boardShape !== undefined ? mapBoardShapeInput(input.boardShape) : undefined;
+    const boardShape = mapBoardFrameInput(input.boardShape, input.boardSize);
     const level = Level.draft(
       id,
       LevelName.create(input.name),
@@ -78,11 +84,31 @@ export class CreateLevelUseCase implements UseCase<CreateLevelInput, CreateLevel
   }
 }
 
+function mapBoardFrameInput(
+  boardShapeInput: BoardShapeInput | undefined,
+  boardSizeInput: BoardSizeInput | undefined
+): BoardShape | undefined {
+  if (boardShapeInput !== undefined && boardSizeInput !== undefined) {
+    throw new ValidationError("boardSize and boardShape cannot be combined");
+  }
+  if (boardSizeInput !== undefined) {
+    return mapBoardSizeInput(boardSizeInput);
+  }
+  if (boardShapeInput !== undefined) {
+    return mapBoardShapeInput(boardShapeInput);
+  }
+  return undefined;
+}
+
 export function mapBoardShapeInput(input: BoardShapeInput): BoardShape {
   return BoardShape.create(
     input.type,
     input.cells.map((cell) => Position.create(cell.row, cell.col))
   );
+}
+
+export function mapBoardSizeInput(input: BoardSizeInput): BoardShape {
+  return BoardShape.cellMask(BoardSize.create(input.rows, input.cols).toCells());
 }
 
 export function mapArrowInput(input: ArrowInput): ArrowSpec {
