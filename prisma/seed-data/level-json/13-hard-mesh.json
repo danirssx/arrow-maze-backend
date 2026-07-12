@@ -3,7 +3,7 @@
   "name": "Hard Mesh",
   "description": "Dense lanes and long bodies leave very few clean first choices.",
   "difficulty": "HARD",
-  "order": 13,
+  "order": 38,
   "attempts": 4,
   "timeLimitSeconds": 100,
   "arrows": [

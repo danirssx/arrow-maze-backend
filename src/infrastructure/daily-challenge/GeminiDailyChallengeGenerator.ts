@@ -31,7 +31,7 @@ export class GeminiDailyChallengeGenerator implements DailyChallengeGenerator {
               parts: [{ text: buildPrompt(input) }],
             },
           ],
-          generationConfig: { responseMimeType: "application/json", temperature: 0 },
+          generationConfig: { responseMimeType: "application/json", temperature: 0.35 },
         }),
       });
       if (!response.ok) {
@@ -47,12 +47,13 @@ export class GeminiDailyChallengeGenerator implements DailyChallengeGenerator {
 }
 
 function buildPrompt(input: DailyChallengeGeneratorInput): string {
-  const boardSize = boardSizeFor(input.targetDifficulty);
-  const timeLimitSeconds = input.targetDifficulty === "HARD" ? 150 : 180;
+  const profile = profileFor(input.targetDifficulty);
 
   return [
     "Generate exactly one Arrow Maze daily challenge as valid JSON only.",
     "Do not include markdown, commentary, explanations, provider metadata, or extra keys.",
+    "The puzzle must feel like a handcrafted figurative level, inspired by a catalog of silhouettes such as rocket, anchor, butterfly, apple, boat, camera, crown, duck, fish, glasses, mushroom, key, lightning, space invader, trophy, and diamond.",
+    "Do not create a plain rectangle. Use a recognizable CELL_MASK silhouette and populate it densely with arrows.",
     "Use this exact JSON shape:",
     "{",
     `  "date": "${input.date}",`,
@@ -63,36 +64,83 @@ function buildPrompt(input: DailyChallengeGeneratorInput): string {
     '    "description": "A generated Arrow Maze puzzle.",',
     `    "difficulty": "${input.targetDifficulty}",`,
     '    "definition": {',
-    '      "attempts": 5,',
+    `      "attempts": ${profile.attempts},`,
     '      "arrows": [',
-    '        { "id": "arrow-0", "color": "#4B6BFB", "path": [{ "row": 0, "col": 0 }], "direction": "UP" }',
+    '        { "id": "arrow-0", "color": "#4B6BFB", "path": [{ "row": 0, "col": 0 }, { "row": 0, "col": 1 }], "direction": "RIGHT" }',
     "      ],",
-    `      "boardSize": { "rows": ${boardSize.rows}, "cols": ${boardSize.cols} }`,
+    '      "boardShape": { "type": "CELL_MASK", "cells": [{ "row": 0, "col": 0 }, { "row": 0, "col": 1 }] }',
     "    },",
-    `    "timeLimitSeconds": ${timeLimitSeconds}`,
+    `    "timeLimitSeconds": ${profile.timeLimitSeconds}`,
     "  }",
     "}",
+    "Silhouette examples from the target style. Use these as shape grammar, not as exact copies:",
+    '- Rocket: narrow nose at top, 3-cell body column, fins near bottom, flame cell below; often 8x8 with about 22 mask cells and 8-10 arrows.',
+    '- Anchor: ring/stem vertical spine, horizontal crossbar, two hooks at bottom; often 8x8 with about 18 mask cells and 5-7 arrows.',
+    '- Butterfly: centered body, two antennae, symmetric upper/lower wings; often 7x8 with about 26 mask cells and 7-9 arrows.',
+    '- Camera/trophy/crown/apple/boat/fish are also good: use a sparse figurative mask, not a filled rectangle.',
     "Rules:",
-    `- Generate ${arrowCountFor(input.targetDifficulty)} arrows.`,
+    `- Generate ${profile.minArrows} to ${profile.maxArrows} arrows.`,
+    `- Use ${profile.minCells} to ${profile.maxCells} boardShape cells inside a bounding box no larger than ${profile.maxRows} rows by ${profile.maxCols} cols.`,
+    "- Every boardShape cell should normally be occupied by exactly one arrow path cell; cover at least 80% of the mask.",
+    "- Prefer multi-cell arrows. At least 75% of arrows must have path length 2 or more, and at least two arrows should have path length 3 or more.",
+    "- Arrow paths may bend orthogonally, but each consecutive path cell must be adjacent up/down/left/right.",
+    "- Path order is tail-to-head: the last path cell is the arrow head. For multi-cell arrows, direction must never point back into the previous path cell. If the last move is down, do not use UP; if up, do not use DOWN; if right, do not use LEFT; if left, do not use RIGHT. Prefer continuing outward from the last move.",
+    "- Each path cell must be inside boardShape.cells. Do not place arrows outside the mask.",
+    "- Guarantee solvability with clear exit rays: for every arrow, starting at its head and moving in its direction, there must be no path cell from any other arrow strictly ahead in the same row or column. In other words, each arrow should be directly removable without waiting for another arrow.",
     "- Direction must be exactly one of UP, DOWN, LEFT, RIGHT.",
     "- Colors must be hex strings.",
     "- Every path item must be an object with numeric row and col properties; never use arrays.",
-    `- Keep all row values from 0 to ${boardSize.rows - 1} and col values from 0 to ${boardSize.cols - 1}.`,
-    "- Use only boardSize; do not use boardShape, gridSize, width, height, diagonal directions, or expiresAt.",
-    "- Make the puzzle solvable by keeping every arrow on an edge or clear lane pointing out of the board.",
+    `- Keep all row values from 0 to ${profile.maxRows - 1} and col values from 0 to ${profile.maxCols - 1}.`,
+    "- Use only boardShape; do not use boardSize, gridSize, width, height, diagonal directions, or expiresAt.",
+    "- The level name may mention the silhouette, for example Daily Rocket, Daily Anchor, Daily Crown, or Daily Butterfly.",
+    "- Make it fun: recognizable silhouette, dense but readable population, varied colors, and no trivial one-arrow puzzle.",
   ].join("\n");
 }
 
-function boardSizeFor(difficulty: string): { rows: number; cols: number } {
-  if (difficulty === "HARD") return { rows: 7, cols: 7 };
-  if (difficulty === "MEDIUM") return { rows: 6, cols: 6 };
-  return { rows: 5, cols: 5 };
-}
-
-function arrowCountFor(difficulty: string): number {
-  if (difficulty === "HARD") return 10;
-  if (difficulty === "MEDIUM") return 7;
-  return 4;
+function profileFor(difficulty: string): {
+  attempts: number;
+  timeLimitSeconds: number;
+  minArrows: number;
+  maxArrows: number;
+  minCells: number;
+  maxCells: number;
+  maxRows: number;
+  maxCols: number;
+} {
+  if (difficulty === "HARD") {
+    return {
+      attempts: 12,
+      timeLimitSeconds: 150,
+      minArrows: 7,
+      maxArrows: 10,
+      minCells: 21,
+      maxCells: 31,
+      maxRows: 8,
+      maxCols: 9,
+    };
+  }
+  if (difficulty === "MEDIUM") {
+    return {
+      attempts: 10,
+      timeLimitSeconds: 180,
+      minArrows: 6,
+      maxArrows: 9,
+      minCells: 18,
+      maxCells: 24,
+      maxRows: 8,
+      maxCols: 9,
+    };
+  }
+  return {
+    attempts: 8,
+    timeLimitSeconds: 210,
+    minArrows: 5,
+    maxArrows: 7,
+    minCells: 14,
+    maxCells: 20,
+    maxRows: 6,
+    maxCols: 9,
+  };
 }
 
 function extractText(value: unknown): string | null {

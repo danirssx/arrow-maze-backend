@@ -3,7 +3,7 @@
   "name": "Heart Tangle",
   "description": "A heart packed with bendable arrows — clear it from the inside out.",
   "difficulty": "MEDIUM",
-  "order": 17,
+  "order": 9,
   "attempts": 6,
   "arrows": [
     {

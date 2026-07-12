@@ -1,0 +1,234 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440057",
+  "name": "Corona",
+  "description": "Una corona real para el rey del puzzle.",
+  "difficulty": "HARD",
+  "attempts": 12,
+  "arrows": [
+    {
+      "id": "pico-izq",
+      "color": "yellow",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 3
+        }
+      ]
+    },
+    {
+      "id": "pico-centro",
+      "color": "yellow",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 5
+        }
+      ]
+    },
+    {
+      "id": "pico-der",
+      "color": "yellow",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 7
+        },
+        {
+          "row": 3,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 7
+        },
+        {
+          "row": 5,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "puente-izq",
+      "color": "orange",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 4
+        }
+      ]
+    },
+    {
+      "id": "puente-der",
+      "color": "orange",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 6
+        }
+      ]
+    },
+    {
+      "id": "base",
+      "color": "yellow",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 7
+        }
+      ]
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 1,
+        "col": 5
+      },
+      {
+        "row": 2,
+        "col": 3
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 2,
+        "col": 7
+      },
+      {
+        "row": 3,
+        "col": 3
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 7
+      },
+      {
+        "row": 4,
+        "col": 3
+      },
+      {
+        "row": 4,
+        "col": 4
+      },
+      {
+        "row": 4,
+        "col": 5
+      },
+      {
+        "row": 4,
+        "col": 6
+      },
+      {
+        "row": 4,
+        "col": 7
+      },
+      {
+        "row": 5,
+        "col": 3
+      },
+      {
+        "row": 5,
+        "col": 4
+      },
+      {
+        "row": 5,
+        "col": 5
+      },
+      {
+        "row": 5,
+        "col": 6
+      },
+      {
+        "row": 5,
+        "col": 7
+      },
+      {
+        "row": 6,
+        "col": 3
+      },
+      {
+        "row": 6,
+        "col": 4
+      },
+      {
+        "row": 6,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 7
+      }
+    ]
+  },
+  "timeLimitSeconds": 360,
+  "order": 12
+}

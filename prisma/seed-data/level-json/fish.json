@@ -1,0 +1,156 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440060",
+  "name": "Pez",
+  "description": "Una criatura marina nadando en el tablero.",
+  "difficulty": "MEDIUM",
+  "attempts": 10,
+  "arrows": [
+    {
+      "id": "lomo",
+      "color": "orange",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 6
+        }
+      ]
+    },
+    {
+      "id": "cuerpo",
+      "color": "orange",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "vientre",
+      "color": "orange",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 6
+        }
+      ]
+    },
+    {
+      "id": "cola",
+      "color": "yellow",
+      "direction": "UP",
+      "path": [
+        {
+          "row": 4,
+          "col": 8
+        },
+        {
+          "row": 3,
+          "col": 8
+        },
+        {
+          "row": 2,
+          "col": 8
+        }
+      ]
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 2,
+        "col": 4
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 2,
+        "col": 6
+      },
+      {
+        "row": 2,
+        "col": 8
+      },
+      {
+        "row": 3,
+        "col": 3
+      },
+      {
+        "row": 3,
+        "col": 4
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 7
+      },
+      {
+        "row": 3,
+        "col": 8
+      },
+      {
+        "row": 4,
+        "col": 4
+      },
+      {
+        "row": 4,
+        "col": 5
+      },
+      {
+        "row": 4,
+        "col": 6
+      },
+      {
+        "row": 4,
+        "col": 8
+      }
+    ]
+  },
+  "timeLimitSeconds": 300,
+  "order": 37
+}

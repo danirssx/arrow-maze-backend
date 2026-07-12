@@ -16,6 +16,7 @@ import { determineDailyChallengeDifficulty } from "../../../src/application/dail
 import { InvalidDailyChallengeDateError } from "../../../src/application/daily-challenge/DailyChallengeIterationErrors.js";
 import {
   StartDailyChallengeIterationUseCase,
+  iterationSeed,
   isValidUtcDateKey,
 } from "../../../src/application/daily-challenge/use-cases/StartDailyChallengeIterationUseCase.js";
 import type { DailyChallengeIterationEventDto } from "../../../src/application/daily-challenge/DailyChallengeIterationTypes.js";
@@ -88,10 +89,22 @@ class FakeIterationRepository implements DailyChallengeIterationRepository {
 class FakeGenerator implements DailyChallengeGenerator {
   readonly calls: DailyChallengeGeneratorInput[] = [];
 
-  constructor(private readonly result: unknown | Error) {}
+  constructor(
+    private readonly result:
+      | unknown
+      | Error
+      | ((input: DailyChallengeGeneratorInput) => unknown | Error)
+  ) {}
 
   async generate(input: DailyChallengeGeneratorInput): Promise<unknown> {
     this.calls.push(input);
+    if (typeof this.result === "function") {
+      const value = this.result(input);
+      if (value instanceof Error) {
+        throw value;
+      }
+      return value;
+    }
     if (this.result instanceof Error) {
       throw this.result;
     }
@@ -118,11 +131,11 @@ class ManualScheduler implements IterationTaskScheduler {
   }
 }
 
-function validCandidate(date = TODAY, overrides: { name?: string } = {}) {
+function validCandidate(date = TODAY, overrides: { name?: string; seed?: string } = {}) {
   const targetDifficulty = determineDailyChallengeDifficulty(date);
   return {
     date,
-    seed: `daily-${date}`,
+    seed: overrides.seed ?? `daily-${date}`,
     targetDifficulty,
     level: {
       name: overrides.name ?? `Daily Challenge ${date}`,
@@ -146,6 +159,11 @@ function validCandidate(date = TODAY, overrides: { name?: string } = {}) {
       timeLimitSeconds: 120,
     },
   };
+}
+
+function generatedCandidate(overrides: { name?: string } = {}) {
+  return (input: DailyChallengeGeneratorInput) =>
+    validCandidate(input.date, { ...overrides, seed: input.seed });
 }
 
 function existingChallenge(date = TODAY): DailyChallengeDto {
@@ -213,7 +231,7 @@ function eventLog(operation: DailyChallengeIterationDto) {
 describe("StartDailyChallengeIterationUseCase", () => {
   it("should_return_running_operation_with_requested_event_when_admin_starts_for_today", async () => {
     // @s1
-    const harness = makeHarness(new FakeGenerator(validCandidate()), new FakeGenerator(new Error("unused")));
+    const harness = makeHarness(new FakeGenerator(generatedCandidate()), new FakeGenerator(new Error("unused")));
 
     const result = await harness.useCase.execute({});
 
@@ -226,7 +244,7 @@ describe("StartDailyChallengeIterationUseCase", () => {
 
   it("should_store_validated_challenge_for_today_after_pipeline_runs", async () => {
     // @s1
-    const harness = makeHarness(new FakeGenerator(validCandidate()), new FakeGenerator(new Error("unused")));
+    const harness = makeHarness(new FakeGenerator(generatedCandidate()), new FakeGenerator(new Error("unused")));
 
     const { operation } = await harness.useCase.execute({});
     await harness.scheduler.runAll();
@@ -238,10 +256,32 @@ describe("StartDailyChallengeIterationUseCase", () => {
     expect(cached?.challenge.source).toBe("gemini");
   });
 
+  it("should_use_a_unique_iteration_seed_so_retries_can_replace_with_a_visible_variant", async () => {
+    // @s2
+    const harness = makeHarness(
+      new FakeGenerator(generatedCandidate()),
+      new FakeGenerator(new Error("unused"))
+    );
+
+    const first = await harness.useCase.execute({});
+    await harness.scheduler.runAll();
+    const second = await harness.useCase.execute({});
+    await harness.scheduler.runAll();
+
+    const firstStored = await harness.iterations.findById(first.operation.operationId);
+    const secondStored = await harness.iterations.findById(second.operation.operationId);
+    expect(firstStored?.challenge?.seed).toBe(iterationSeed(TODAY, "op-1"));
+    expect(secondStored?.challenge?.seed).toBe(iterationSeed(TODAY, "op-2"));
+    expect(firstStored?.challenge?.seed).not.toBe(secondStored?.challenge?.seed);
+    expect((await harness.cache.findByDate(TODAY))?.challenge.seed).toBe(
+      iterationSeed(TODAY, "op-2")
+    );
+  });
+
   it("should_replace_existing_challenge_atomically_only_after_success", async () => {
     // @s2
     const harness = makeHarness(
-      new FakeGenerator(validCandidate(TODAY, { name: "Regenerated Daily Challenge" })),
+      new FakeGenerator(generatedCandidate({ name: "Regenerated Daily Challenge" })),
       new FakeGenerator(new Error("unused"))
     );
     harness.cache.seed({ challenge: existingChallenge() });
@@ -264,7 +304,7 @@ describe("StartDailyChallengeIterationUseCase", () => {
 
   it("should_log_gemini_source_without_secrets_when_generation_succeeds", async () => {
     // @s3
-    const harness = makeHarness(new FakeGenerator(validCandidate()), new FakeGenerator(new Error("unused")));
+    const harness = makeHarness(new FakeGenerator(generatedCandidate()), new FakeGenerator(new Error("unused")));
 
     const { operation } = await harness.useCase.execute({});
     await harness.scheduler.runAll();
@@ -280,7 +320,7 @@ describe("StartDailyChallengeIterationUseCase", () => {
     // @s4
     const harness = makeHarness(
       new FakeGenerator(new Error("gemini exploded secret sk-should-not-leak")),
-      new FakeGenerator(validCandidate())
+      new FakeGenerator(generatedCandidate())
     );
 
     const { operation } = await harness.useCase.execute({});
@@ -377,11 +417,11 @@ describe("StartDailyChallengeIterationUseCase", () => {
 
   it("should_accept_today_and_reject_the_next_utc_day_at_the_boundary", async () => {
     // @s1/@s11 boundary — today passes, tomorrow is future
-    const ok = makeHarness(new FakeGenerator(validCandidate()), new FakeGenerator(new Error("unused")));
+    const ok = makeHarness(new FakeGenerator(generatedCandidate()), new FakeGenerator(new Error("unused")));
     const result = await ok.useCase.execute({ date: TODAY });
     expect(result.operation.date).toBe(TODAY);
 
-    const future = makeHarness(new FakeGenerator(validCandidate()), new FakeGenerator(new Error("unused")));
+    const future = makeHarness(new FakeGenerator(generatedCandidate()), new FakeGenerator(new Error("unused")));
     await expect(future.useCase.execute({ date: "2026-07-12" })).rejects.toMatchObject({
       message: "Daily challenge date cannot be in the future",
     });
@@ -391,7 +431,7 @@ describe("StartDailyChallengeIterationUseCase", () => {
 describe("StartDailyChallengeIterationUseCase operation event log", () => {
   it("should_record_the_exact_ordered_event_log_when_gemini_succeeds", async () => {
     // @s3
-    const harness = makeHarness(new FakeGenerator(validCandidate()), new FakeGenerator(new Error("unused")));
+    const harness = makeHarness(new FakeGenerator(generatedCandidate()), new FakeGenerator(new Error("unused")));
 
     const { operation } = await harness.useCase.execute({});
     await harness.scheduler.runAll();
@@ -410,7 +450,7 @@ describe("StartDailyChallengeIterationUseCase operation event log", () => {
     // @s4
     const harness = makeHarness(
       new FakeGenerator(new Error("gemini invalid")),
-      new FakeGenerator(validCandidate())
+      new FakeGenerator(generatedCandidate())
     );
 
     const { operation } = await harness.useCase.execute({});

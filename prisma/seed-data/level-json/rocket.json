@@ -1,0 +1,255 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440065",
+  "name": "Cohete Modificado",
+  "description": "Listo para el despegue hacia las estrellas. Ahora con propulsión triple en la punta.",
+  "difficulty": "HARD",
+  "attempts": 12,
+  "arrows": [
+    {
+      "id": "punta-izq",
+      "color": "red",
+      "direction": "UP",
+      "path": [
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 4
+        }
+      ]
+    },
+    {
+      "id": "punta-centro",
+      "color": "red",
+      "direction": "UP",
+      "path": [
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 5
+        }
+      ]
+    },
+    {
+      "id": "punta-der",
+      "color": "red",
+      "direction": "UP",
+      "path": [
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 6
+        }
+      ]
+    },
+    {
+      "id": "cuerpo-centro",
+      "color": "white",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        }
+      ]
+    },
+    {
+      "id": "cuerpo-izq",
+      "color": "white",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 4
+        }
+      ]
+    },
+    {
+      "id": "cuerpo-der",
+      "color": "white",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 6
+        }
+      ]
+    },
+    {
+      "id": "aleta-izq",
+      "color": "red",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 3
+        }
+      ]
+    },
+    {
+      "id": "aleta-der",
+      "color": "red",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 7
+        },
+        {
+          "row": 6,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "fuego",
+      "color": "orange",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 7,
+          "col": 5
+        }
+      ]
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 0,
+        "col": 5
+      },
+      {
+        "row": 1,
+        "col": 4
+      },
+      {
+        "row": 1,
+        "col": 5
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 2,
+        "col": 4
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 2,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 4
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 6
+      },
+      {
+        "row": 4,
+        "col": 4
+      },
+      {
+        "row": 4,
+        "col": 5
+      },
+      {
+        "row": 4,
+        "col": 6
+      },
+      {
+        "row": 5,
+        "col": 3
+      },
+      {
+        "row": 5,
+        "col": 4
+      },
+      {
+        "row": 5,
+        "col": 5
+      },
+      {
+        "row": 5,
+        "col": 6
+      },
+      {
+        "row": 5,
+        "col": 7
+      },
+      {
+        "row": 6,
+        "col": 3
+      },
+      {
+        "row": 6,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 7
+      },
+      {
+        "row": 7,
+        "col": 5
+      }
+    ]
+  },
+  "timeLimitSeconds": 360,
+  "order": 40
+}

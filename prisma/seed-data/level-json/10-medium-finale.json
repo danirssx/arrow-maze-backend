@@ -3,7 +3,7 @@
   "name": "Medium Finale",
   "description": "Thirty arrows close the tier with a nearly full field.",
   "difficulty": "MEDIUM",
-  "order": 10,
+  "order": 35,
   "attempts": 5,
   "timeLimitSeconds": 100,
   "arrows": [

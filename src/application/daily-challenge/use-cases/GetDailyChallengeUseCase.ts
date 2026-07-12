@@ -59,7 +59,6 @@ export class GetDailyChallengeUseCase
   private isCurrentCache(challenge: DailyChallengeDto, context: ChallengeContext): boolean {
     return (
       challenge.date === context.date &&
-      challenge.seed === context.seed &&
       Date.parse(challenge.expiresAt) > context.now.getTime()
     );
   }

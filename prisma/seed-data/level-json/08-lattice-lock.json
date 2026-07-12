@@ -3,7 +3,7 @@
   "name": "Lattice Lock",
   "description": "Longer bends make the lattice feel full without overlapping.",
   "difficulty": "MEDIUM",
-  "order": 8,
+  "order": 36,
   "attempts": 5,
   "arrows": [
     {

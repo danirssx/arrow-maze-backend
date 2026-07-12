@@ -1,0 +1,247 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440062",
+  "name": "Hongo",
+  "description": "Un champiñón del bosque. Cuidado con los colores venenosos.",
+  "difficulty": "MEDIUM",
+  "attempts": 10,
+  "arrows": [
+    {
+      "id": "sombrero-sup",
+      "color": "red",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 6
+        }
+      ]
+    },
+    {
+      "id": "sombrero-izq",
+      "color": "red",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 2
+        }
+      ]
+    },
+    {
+      "id": "sombrero-der",
+      "color": "red",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 7
+        },
+        {
+          "row": 3,
+          "col": 7
+        },
+        {
+          "row": 3,
+          "col": 8
+        }
+      ]
+    },
+    {
+      "id": "sombrero-centro-izq",
+      "color": "white",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 4
+        }
+      ]
+    },
+    {
+      "id": "sombrero-centro",
+      "color": "oran",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 5
+        }
+      ]
+    },
+    {
+      "id": "sombrero-centro-der",
+      "color": "white",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        }
+      ]
+    },
+    {
+      "id": "tallo-izq",
+      "color": "pink",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 4
+        }
+      ]
+    },
+    {
+      "id": "tallo-centro",
+      "color": "pink",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 5
+        }
+      ]
+    },
+    {
+      "id": "tallo-der",
+      "color": "pink",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 6
+        }
+      ]
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 1,
+        "col": 4
+      },
+      {
+        "row": 1,
+        "col": 5
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 2,
+        "col": 3
+      },
+      {
+        "row": 2,
+        "col": 4
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 2,
+        "col": 6
+      },
+      {
+        "row": 2,
+        "col": 7
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 3
+      },
+      {
+        "row": 3,
+        "col": 4
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 7
+      },
+      {
+        "row": 3,
+        "col": 8
+      },
+      {
+        "row": 4,
+        "col": 4
+      },
+      {
+        "row": 4,
+        "col": 5
+      },
+      {
+        "row": 4,
+        "col": 6
+      },
+      {
+        "row": 5,
+        "col": 4
+      },
+      {
+        "row": 5,
+        "col": 5
+      },
+      {
+        "row": 5,
+        "col": 6
+      }
+    ]
+  },
+  "timeLimitSeconds": 300,
+  "order": 1
+}

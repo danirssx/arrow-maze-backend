@@ -38,8 +38,8 @@ function daysAgo(days: number): Date {
 const ADMIN_USER_ID = "660e8400-e29b-41d4-a716-446655440004";
 const ADMIN_PROGRESS_ID = "770e8400-e29b-41d4-a716-446655440000";
 
-function adminCompletedLevelId(index: number): string {
-  return `bb0e8400-e29b-41d4-a716-44665544${String(index + 1).padStart(4, "0")}`;
+function adminCompletedLevelId(levelId: string): string {
+  return `bb0e8400-e29b-41d4-a716-44665544${levelId.slice(-4)}`;
 }
 
 async function main(): Promise<void> {
@@ -104,12 +104,12 @@ async function main(): Promise<void> {
       update: { version: catalogLevels.length, updatedAt: now },
     });
 
-    for (const [index, level] of catalogLevels.entries()) {
+    for (const level of catalogLevels) {
       const completedAt = new Date(ORDER_EPOCH_MS + level.order * 1000);
       await prisma.completedLevel.upsert({
         where: { progressId_levelId: { progressId: ADMIN_PROGRESS_ID, levelId: level.id } },
         create: {
-          id: adminCompletedLevelId(index),
+          id: adminCompletedLevelId(level.id),
           progressId: ADMIN_PROGRESS_ID,
           levelId: level.id,
           bestScore: 0,

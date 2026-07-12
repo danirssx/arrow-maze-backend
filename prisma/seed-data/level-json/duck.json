@@ -1,0 +1,202 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440059",
+  "name": "Pato",
+  "description": "Un pequeño pato de hule nadando.",
+  "difficulty": "MEDIUM",
+  "attempts": 12,
+  "arrows": [
+    {
+      "id": "cabeza",
+      "color": "yellow",
+      "direction": "LEFT",
+      "path": [
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        }
+      ]
+    },
+    {
+      "id": "pico",
+      "color": "orange",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 2
+        }
+      ]
+    },
+    {
+      "id": "cuello",
+      "color": "yellow",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 4
+        }
+      ]
+    },
+    {
+      "id": "cuerpo-top",
+      "color": "yellow",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "cuerpo-bot",
+      "color": "yellow",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "cola",
+      "color": "orange",
+      "direction": "UP",
+      "path": [
+        {
+          "row": 6,
+          "col": 8
+        },
+        {
+          "row": 5,
+          "col": 8
+        },
+        {
+          "row": 4,
+          "col": 8
+        }
+      ]
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 2,
+        "col": 2
+      },
+      {
+        "row": 2,
+        "col": 3
+      },
+      {
+        "row": 2,
+        "col": 4
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 3
+      },
+      {
+        "row": 3,
+        "col": 4
+      },
+      {
+        "row": 4,
+        "col": 4
+      },
+      {
+        "row": 4,
+        "col": 8
+      },
+      {
+        "row": 5,
+        "col": 4
+      },
+      {
+        "row": 5,
+        "col": 5
+      },
+      {
+        "row": 5,
+        "col": 6
+      },
+      {
+        "row": 5,
+        "col": 7
+      },
+      {
+        "row": 5,
+        "col": 8
+      },
+      {
+        "row": 6,
+        "col": 4
+      },
+      {
+        "row": 6,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 7
+      },
+      {
+        "row": 6,
+        "col": 8
+      }
+    ]
+  },
+  "timeLimitSeconds": 300,
+  "order": 6
+}

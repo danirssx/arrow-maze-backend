@@ -1,0 +1,234 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440055",
+  "name": "Cámara",
+  "description": "Sonríe para la foto.",
+  "difficulty": "MEDIUM",
+  "attempts": 10,
+  "arrows": [
+    {
+      "id": "flash",
+      "color": "yellow",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 5
+        }
+      ]
+    },
+    {
+      "id": "borde-sup",
+      "color": "gray",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "lateral-izq",
+      "color": "gray",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 3
+        }
+      ]
+    },
+    {
+      "id": "lateral-der",
+      "color": "gray",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 7
+        },
+        {
+          "row": 5,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "borde-inf",
+      "color": "gray",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "lente",
+      "color": "cyan",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 6
+        }
+      ]
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 2,
+        "col": 4
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 3
+      },
+      {
+        "row": 3,
+        "col": 4
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 7
+      },
+      {
+        "row": 4,
+        "col": 3
+      },
+      {
+        "row": 4,
+        "col": 4
+      },
+      {
+        "row": 4,
+        "col": 5
+      },
+      {
+        "row": 4,
+        "col": 6
+      },
+      {
+        "row": 4,
+        "col": 7
+      },
+      {
+        "row": 5,
+        "col": 3
+      },
+      {
+        "row": 5,
+        "col": 4
+      },
+      {
+        "row": 5,
+        "col": 5
+      },
+      {
+        "row": 5,
+        "col": 6
+      },
+      {
+        "row": 5,
+        "col": 7
+      },
+      {
+        "row": 6,
+        "col": 3
+      },
+      {
+        "row": 6,
+        "col": 4
+      },
+      {
+        "row": 6,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 6
+      },
+      {
+        "row": 6,
+        "col": 7
+      }
+    ]
+  },
+  "timeLimitSeconds": 300,
+  "order": 23
+}

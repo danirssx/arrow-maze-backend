@@ -3,7 +3,7 @@
   "name": "Full Weave",
   "description": "Twenty arrows packed tightly enough to punish random tapping.",
   "difficulty": "EASY",
-  "order": 5,
+  "order": 26,
   "attempts": 6,
   "arrows": [
     {

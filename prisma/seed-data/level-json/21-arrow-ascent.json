@@ -3,7 +3,7 @@
   "name": "Arrow Ascent",
   "description": "An arrow pointing up, snarled along its head and stem.",
   "difficulty": "MEDIUM",
-  "order": 21,
+  "order": 29,
   "attempts": 6,
   "arrows": [
     {

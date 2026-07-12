@@ -4,6 +4,19 @@ import { loadAuthoredLevels } from "../../prisma/seed-data/authoredLevels.js";
 // MAZ-168: prisma/seed-data/level-json/ is the single source of truth for the catalog.
 const CROSS_BEACON_ID = "550e8400-e29b-41d4-a716-446655440030";
 const PACKED_START_ID = "550e8400-e29b-41d4-a716-446655440010";
+const GENERATED_SHAPED_LEVEL_IDS = new Set([
+  "550e8400-e29b-41d4-a716-446655440040",
+  "550e8400-e29b-41d4-a716-446655440041",
+  "550e8400-e29b-41d4-a716-446655440042",
+  "550e8400-e29b-41d4-a716-446655440043",
+  "550e8400-e29b-41d4-a716-446655440044",
+  "550e8400-e29b-41d4-a716-446655440045",
+  "550e8400-e29b-41d4-a716-446655440046",
+  "550e8400-e29b-41d4-a716-446655440047",
+  "550e8400-e29b-41d4-a716-446655440048",
+  "550e8400-e29b-41d4-a716-446655440049",
+  "550e8400-e29b-41d4-a716-446655440050",
+]);
 
 function fixtureDir(name: string): string {
   return join(process.cwd(), "tests", "seed", "fixtures", name);
@@ -75,11 +88,12 @@ describe("loadAuthoredLevels", () => {
   });
 
   it("should_populate_generated_shaped_levels_with_only_multi_cell_arrows", () => {
-    // The generated shaped pack (order >= 17) must be dense shaped boards whose
-    // arrows each occupy 2+ cells (no single-cell arrows).
-    const shaped = loadAuthoredLevels().filter((level) => level.order >= 17);
+    // The generated shaped pack must stay dense even when catalog order is shuffled.
+    const shaped = loadAuthoredLevels().filter((level) =>
+      GENERATED_SHAPED_LEVEL_IDS.has(level.id)
+    );
 
-    expect(shaped.length).toBeGreaterThanOrEqual(10);
+    expect(shaped).toHaveLength(GENERATED_SHAPED_LEVEL_IDS.size);
     for (const level of shaped) {
       expect(level.boardShape).not.toBeNull();
       expect(level.arrows.length).toBeGreaterThan(0);

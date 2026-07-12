@@ -3,7 +3,7 @@
   "name": "Medium Gridlock",
   "description": "The medium tier starts with a crowded board and fewer free rays.",
   "difficulty": "MEDIUM",
-  "order": 6,
+  "order": 39,
   "attempts": 5,
   "arrows": [
     {

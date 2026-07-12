@@ -1,0 +1,171 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440063",
+  "name": "Llave",
+  "description": "Abre las puertas al siguiente desafío.",
+  "difficulty": "HARD",
+  "attempts": 12,
+  "arrows": [
+    {
+      "id": "cabeza-izq",
+      "color": "gold",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 2
+        }
+      ]
+    },
+    {
+      "id": "cabeza-der",
+      "color": "gold",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 3
+        }
+      ]
+    },
+    {
+      "id": "tallo",
+      "color": "silver",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 7
+        },
+        {
+          "row": 3,
+          "col": 8
+        }
+      ]
+    },
+    {
+      "id": "diente-1",
+      "color": "silver",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 7
+        },
+        {
+          "row": 5,
+          "col": 7
+        }
+      ]
+    },
+    {
+      "id": "diente-2",
+      "color": "silver",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 4,
+          "col": 8
+        },
+        {
+          "row": 5,
+          "col": 8
+        }
+      ]
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 2,
+        "col": 2
+      },
+      {
+        "row": 2,
+        "col": 3
+      },
+      {
+        "row": 3,
+        "col": 2
+      },
+      {
+        "row": 3,
+        "col": 3
+      },
+      {
+        "row": 3,
+        "col": 4
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 6
+      },
+      {
+        "row": 3,
+        "col": 7
+      },
+      {
+        "row": 3,
+        "col": 8
+      },
+      {
+        "row": 4,
+        "col": 2
+      },
+      {
+        "row": 4,
+        "col": 3
+      },
+      {
+        "row": 4,
+        "col": 7
+      },
+      {
+        "row": 4,
+        "col": 8
+      },
+      {
+        "row": 5,
+        "col": 7
+      },
+      {
+        "row": 5,
+        "col": 8
+      }
+    ]
+  },
+  "timeLimitSeconds": 360,
+  "order": 25
+}

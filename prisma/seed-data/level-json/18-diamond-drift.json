@@ -3,7 +3,7 @@
   "name": "Diamond Drift",
   "description": "A faceted diamond where every ray hides behind another.",
   "difficulty": "EASY",
-  "order": 18,
+  "order": 10,
   "attempts": 6,
   "arrows": [
     {

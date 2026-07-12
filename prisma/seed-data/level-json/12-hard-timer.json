@@ -3,7 +3,7 @@
   "name": "Hard Timer",
   "description": "A large timed board with blockers chained through the center.",
   "difficulty": "HARD",
-  "order": 12,
+  "order": 24,
   "attempts": 4,
   "timeLimitSeconds": 105,
   "arrows": [

@@ -3,7 +3,7 @@
   "name": "Hard Finale",
   "description": "Forty arrows, a packed board, and almost no room for mistakes.",
   "difficulty": "HARD",
-  "order": 15,
+  "order": 5,
   "attempts": 3,
   "timeLimitSeconds": 90,
   "arrows": [

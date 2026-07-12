@@ -1,0 +1,148 @@
+{
+  "id": "550e8400-e29b-41d4-a716-446655440064",
+  "name": "Relámpago",
+  "description": "Energía pura y giros en zigzag.",
+  "difficulty": "MEDIUM",
+  "attempts": 10,
+  "arrows": [
+    {
+      "id": "tramo-1",
+      "color": "yellow",
+      "direction": "LEFT",
+      "path": [
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 4
+        }
+      ]
+    },
+    {
+      "id": "tramo-2",
+      "color": "gold",
+      "direction": "RIGHT",
+      "path": [
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 6
+        }
+      ]
+    },
+    {
+      "id": "tramo-3",
+      "color": "yellow",
+      "direction": "LEFT",
+      "path": [
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 5
+        }
+      ]
+    },
+    {
+      "id": "tramo-4",
+      "color": "gold",
+      "direction": "DOWN",
+      "path": [
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 7,
+          "col": 4
+        }
+      ]
+    }
+  ],
+  "boardShape": {
+    "type": "CELL_MASK",
+    "cells": [
+      {
+        "row": 1,
+        "col": 5
+      },
+      {
+        "row": 1,
+        "col": 6
+      },
+      {
+        "row": 2,
+        "col": 4
+      },
+      {
+        "row": 2,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 4
+      },
+      {
+        "row": 3,
+        "col": 5
+      },
+      {
+        "row": 3,
+        "col": 6
+      },
+      {
+        "row": 4,
+        "col": 5
+      },
+      {
+        "row": 4,
+        "col": 6
+      },
+      {
+        "row": 5,
+        "col": 5
+      },
+      {
+        "row": 6,
+        "col": 4
+      },
+      {
+        "row": 6,
+        "col": 5
+      },
+      {
+        "row": 7,
+        "col": 4
+      }
+    ]
+  },
+  "timeLimitSeconds": 300,
+  "order": 19
+}

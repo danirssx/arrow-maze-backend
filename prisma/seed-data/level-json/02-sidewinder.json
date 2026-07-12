@@ -3,7 +3,7 @@
   "name": "Sidewinder",
   "description": "Short snakes fill the lane and force a right extraction order.",
   "difficulty": "EASY",
-  "order": 2,
+  "order": 20,
   "attempts": 6,
   "arrows": [
     {

@@ -3,7 +3,7 @@
   "name": "Packed Start",
   "description": "A compact board with real blockers from the first move.",
   "difficulty": "EASY",
-  "order": 1,
+  "order": 14,
   "attempts": 6,
   "arrows": [
     {
