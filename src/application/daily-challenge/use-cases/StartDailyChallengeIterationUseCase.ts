@@ -71,10 +71,11 @@ export class StartDailyChallengeIterationUseCase
       return { operation: running, alreadyRunning: true };
     }
 
-    const context = buildChallengeContext(now, date);
+    const operationId = this.idGenerator.generate();
+    const context = buildChallengeContext(now, date, iterationSeed(date, operationId));
     const requestedAt = now.toISOString();
     const startedOperation: DailyChallengeIterationDto = {
-      operationId: this.idGenerator.generate(),
+      operationId,
       date,
       status: "RUNNING",
       requestedAt,
@@ -196,6 +197,10 @@ export class StartDailyChallengeIterationUseCase
       challenge,
     });
   }
+}
+
+export function iterationSeed(date: string, operationId: string): string {
+  return `daily-${date}-i-${operationId.slice(0, 8)}`;
 }
 
 export function isValidUtcDateKey(value: string): boolean {

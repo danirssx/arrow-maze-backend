@@ -79,13 +79,17 @@ const VALIDATION_LEVEL_ID = "00000000-0000-4000-8000-000000000218";
 
 const solvabilityPolicy = new LevelSolvabilityPolicy();
 
-export function buildChallengeContext(now: Date, dateKey?: string): ChallengeContext {
+export function buildChallengeContext(
+  now: Date,
+  dateKey?: string,
+  seedOverride?: string
+): ChallengeContext {
   const date = dateKey ?? utcDateKey(now);
   return {
     now,
     generatedAt: now.toISOString(),
     date,
-    seed: `daily-${date}`,
+    seed: seedOverride ?? `daily-${date}`,
     targetDifficulty: determineDailyChallengeDifficulty(date),
     expiresAt: nextUtcMidnightIso(date),
   };

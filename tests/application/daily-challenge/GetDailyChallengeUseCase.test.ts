@@ -60,14 +60,14 @@ class FakeGenerator implements DailyChallengeGenerator {
   }
 }
 
-function validCandidate(date = "2026-07-10") {
+function validCandidate(date = "2026-07-10", overrides: { seed?: string; name?: string } = {}) {
   const targetDifficulty = determineDailyChallengeDifficulty(date);
   return {
     date,
-    seed: `daily-${date}`,
+    seed: overrides.seed ?? `daily-${date}`,
     targetDifficulty,
     level: {
-      name: `Daily Challenge ${date}`,
+      name: overrides.name ?? `Daily Challenge ${date}`,
       description: "A generated daily puzzle.",
       difficulty: targetDifficulty,
       definition: {
@@ -240,19 +240,36 @@ describe("GetDailyChallengeUseCase", () => {
     expect(gemini.calls).toHaveLength(0);
   });
 
+  it("should_return_manually_iterated_cached_challenge_even_when_seed_differs_from_daily_seed", async () => {
+    // Arrange
+    const cache = new FakeCacheRepository();
+    const manualChallenge = {
+      ...(await useCaseFor({}).useCase.execute({})).challenge,
+      seed: "daily-2026-07-10-i-op-1",
+      level: {
+        ...(await useCaseFor({}).useCase.execute({})).challenge.level,
+        name: "Regenerated Daily Challenge",
+      },
+    };
+    cache.seed({ challenge: manualChallenge });
+    const gemini = new FakeGenerator(new Error("should not call provider"));
+    const { useCase } = useCaseFor({ cache, gemini });
+
+    // Act
+    const result = await useCase.execute({});
+
+    // Assert
+    expect(result.challenge.seed).toBe("daily-2026-07-10-i-op-1");
+    expect(result.challenge.level.name).toBe("Regenerated Daily Challenge");
+    expect(gemini.calls).toHaveLength(0);
+  });
+
   it.each([
     [
       "date",
       (cached: DailyChallengeDto): DailyChallengeDto => ({
         ...cached,
         date: "2026-07-09",
-      }),
-    ],
-    [
-      "seed",
-      (cached: DailyChallengeDto): DailyChallengeDto => ({
-        ...cached,
-        seed: "daily-wrong-seed",
       }),
     ],
     [
