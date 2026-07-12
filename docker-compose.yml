@@ -7,6 +7,9 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://arrow_maze:arrow_maze@database:5432/arrow_maze
+      # The local Postgres has no TLS; pin SSL off here so a cloud-oriented
+      # DATABASE_SSL=true in .env cannot break the local Docker stack.
+      DATABASE_SSL: "false"
     depends_on:
       - database
 
