@@ -60,9 +60,14 @@ describe("GeminiDailyChallengeGenerator", () => {
     };
     expect(String(url)).toContain("gemini-test");
     expect(String(url)).not.toContain("local-secret");
-    expect(body.generationConfig).toEqual({ responseMimeType: "application/json", temperature: 0 });
-    expect(body.contents[0]?.parts[0]?.text).toContain('"boardSize"');
-    expect(body.contents[0]?.parts[0]?.text).toContain('"path": [{ "row": 0, "col": 0 }]');
+    expect(body.generationConfig).toEqual({ responseMimeType: "application/json", temperature: 0.35 });
+    expect(body.contents[0]?.parts[0]?.text).toContain('"boardShape"');
+    expect(body.contents[0]?.parts[0]?.text).toContain('"type": "CELL_MASK"');
+    expect(body.contents[0]?.parts[0]?.text).toContain("rocket, anchor, butterfly");
+    expect(body.contents[0]?.parts[0]?.text).toContain("cover at least 80% of the mask");
+    expect(body.contents[0]?.parts[0]?.text).toContain("At least 75% of arrows must have path length 2 or more");
+    expect(body.contents[0]?.parts[0]?.text).toContain("Use only boardShape; do not use boardSize");
+    expect(body.contents[0]?.parts[0]?.text).toContain('"path": [{ "row": 0, "col": 0 }, { "row": 0, "col": 1 }]');
     expect(body.contents[0]?.parts[0]?.text).toContain("Direction must be exactly one of UP, DOWN, LEFT, RIGHT");
   });
 
