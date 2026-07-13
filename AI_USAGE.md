@@ -5715,6 +5715,58 @@ affected tickets.
 - Because this is planning-only, no TDD or mutation gate was run beyond repository verification.
 
 
+---
+
+# AI Usage Log: MAZ-226 — Extend backend Position value object to 3D
+
+## Task / Problem
+
+Resolve `MAZ-226` (B1) of the M13 "3D Volumetric Boards" milestone: extend the backend domain `Position` value object from a 2D `(row, col)` lattice coordinate to a 3D `(row, col, z)` coordinate. Single-engine strategy from the sealed M13 spec — `z` is optional and defaults to `0`, so a planar (2D) level is the `z = 0` slab and every existing 2D call site keeps working unchanged. This is the foundational backend ticket that `MAZ-227` (Direction 6 + ArrowSpec deltas), `MAZ-228` (solvability raycast 3D), `MAZ-229` (BoardSize/BoardShape) and `MAZ-231` (generator) build on. This is the backend mirror of the client `MAZ-235`.
+
+## Tool and Model
+
+Claude Code / Claude Opus 4.8.
+
+## Prompt Used
+
+The user asked to pick an independent parallel ticket and run the full agent workflow again — following both repos' `AGENTS.md`, the team `MEMORY.md`, `Linear_MCP_Guideline.md`, prior ticket/plan context, AI-usage logging + validation checks, MEMORY/AGENTS update review, commit/push/PR, and Linear updates; and, because this is a refactor, to review the whole context and every affected ticket.
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | M13 grill-me spec sealed the single-engine 3D model (`Position` always 3D, `z` optional=0, 3-tuple `toKey`, no Prisma migration since arrows is JSONB). | `../M13_3D_Boards_Plan.md`, `MAZ-226` |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Milestone pre-sliced into MAZ-225..244 with blocking edges; this is B1, an independent parallel lane. No separate `.feature` authored for this VO refactor. | `MAZ-226`, milestone `M13 - 3D Volumetric Boards` |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red → Green: failing tests for `z` default/explicit/negative, non-integer `z` (and the previously-untested non-integer `row`), 3-tuple `toKey`, depth in `equals`, and 3-axis / depth-preserving `translate`; then implemented the 3-arg `Position`. | `tests/domain/level-catalog/value-objects/Position.test.ts`, `src/domain/level-catalog/value-objects/Position.ts` |
+| Judge (`.agents/judge.md`) | Referenced | Blast-radius grep: no consumer builds a coordinate key by hand (only `Position.toKey`), and the two `translate` call sites (`RandomLevelStrategy`, `ArrowSpec`) are 2-arg and stay valid via `zDelta = 0`. Full suite + `npm run verify` green. | grep, `npm run verify` exit 0 |
+| Mutation Tester (`.agents/mutation.md`) | Used | `stryker --mutate Position.ts` → 89.29% (≥ break 80). | stryker clear-text report |
+
+## Result Obtained
+
+`src/domain/level-catalog/value-objects/Position.ts`:
+- Immutable VO now carries a third integer coordinate `_z` with a `z` getter. `Position.create(row, col, z = 0)` validates all three as integers (`InvalidArgumentError`).
+- `equals` compares `z`; `toKey()` returns the 3-tuple `"row,col,z"`; `translate(rowDelta, colDelta, zDelta = 0)` moves on all three axes and stays backward-compatible with the existing 2-arg calls (`zDelta` defaults to 0).
+- Doc comment added describing the unbounded 3D lattice and the `z = 0` planar default.
+
+Tests: extended `Position.test.ts` (13 cases, AAA, `should_*_when_*`), including a previously-missing non-integer `row` guard.
+
+## Verification
+
+- `npm run verify` (lint + typecheck + coverage + build) → exit 0; **691 tests** across the full backend suite; `Position.ts` covered. Confirms the 3-tuple `toKey` change did not regress `RandomLevelStrategy` (occupancy set + arrow fingerprint), `BoardShape` (key set), or `ArrowSpec` (connectivity) — all derive keys from `toKey`, none build them by hand.
+- Mutation: `stryker --mutate Position.ts` → 89.29% (≥ break 80). The three survivors are the `InvalidArgumentError` message string literals (intentionally not pinned — asserting exact error text is brittle and violates "test observable behavior").
+
+## Team Modifications Pending Human Review
+
+- Domain VO + tests require mandatory human review (AGENTS §5).
+- `translate` gained an optional `zDelta` (default 0). `MAZ-227` will supply the depth deltas from the extended `Direction`/`ArrowSpec` (6 directions); this ticket stops at `Position`.
+- No formal Gherkin `.feature` was authored for this VO refactor; the M13 plan + sealed grill-me spec acted as the contract.
+- Observed a **pre-existing flaky test** (`tests/api/leaderboard/submitScore.test.ts`) that fails intermittently only under the parallel `--coverage` run and passes in isolation and on re-run; unrelated to this change (leaderboard is dimension-agnostic and does not use `Position`). Flagged for a separate stability fix.
+
+## Lessons / Limitations
+
+Because the backend runs no live collision physics (only static DAG solvability at publish), and every coordinate key derives from `Position.toKey()` with no hand-built key strings anywhere in the domain, extending to 3D was a strictly additive change: `z` defaults to `0`, the 2-arg `translate` calls keep compiling, and the whole 691-test suite stays green with no consumer edits — the cleanest possible blast radius. The `dimensions` field, DTO/OpenAPI wire, and the raycast/generator changes are handled by the sibling tickets (MAZ-227/228/229/231).
+
+
 <!-- AI_LOG_ENTRIES_END -->
 
 ## Critical Evaluation
