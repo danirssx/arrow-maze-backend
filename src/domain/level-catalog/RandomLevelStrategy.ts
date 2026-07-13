@@ -18,11 +18,20 @@ import type { BoardShape } from "./value-objects/BoardShape.js";
 import { LevelDefinition } from "./value-objects/LevelDefinition.js";
 import type { Position } from "./value-objects/Position.js";
 
-const DIRECTIONS: readonly Direction[] = [
+const PLANAR_DIRECTIONS: readonly Direction[] = [
   Direction.UP,
   Direction.DOWN,
   Direction.LEFT,
   Direction.RIGHT,
+];
+
+const ALL_DIRECTIONS: readonly Direction[] = [
+  Direction.UP,
+  Direction.DOWN,
+  Direction.LEFT,
+  Direction.RIGHT,
+  Direction.FORWARD,
+  Direction.BACK,
 ];
 
 const DELTAS: Record<Direction, readonly [number, number, number]> = {
@@ -81,10 +90,13 @@ export class RandomLevelStrategy {
     const maxAttempts = options.maxGenerationAttempts ?? DEFAULT_MAX_GENERATION_ATTEMPTS;
     const maskKeys = new Set(options.shape.cells.map((cell) => cell.toKey()));
     const baseSeed = hashSeed(options.seed);
+    const directions = options.shape.cells.some((cell) => cell.z !== 0)
+      ? ALL_DIRECTIONS
+      : PLANAR_DIRECTIONS;
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const rng = mulberry32(baseSeed + attempt);
-      const arrows = this.tryBuild(options, maskKeys, rng);
+      const arrows = this.tryBuild(options, maskKeys, directions, rng);
       if (arrows === null) {
         continue;
       }
@@ -109,6 +121,7 @@ export class RandomLevelStrategy {
   private tryBuild(
     options: RandomLevelOptions,
     maskKeys: ReadonlySet<string>,
+    directions: readonly Direction[],
     rng: () => number
   ): ArrowSpec[] | null {
     const cells = options.shape.cells;
@@ -116,7 +129,7 @@ export class RandomLevelStrategy {
     const arrows: ArrowSpec[] = [];
 
     for (let index = 0; index < options.arrowCount; index += 1) {
-      const arrow = RandomLevelStrategy.placeArrow(index, options, cells, maskKeys, occupied, rng);
+      const arrow = RandomLevelStrategy.placeArrow(index, options, cells, maskKeys, directions, occupied, rng);
       if (arrow === null) {
         return null;
       }
@@ -134,6 +147,7 @@ export class RandomLevelStrategy {
     options: RandomLevelOptions,
     cells: readonly Position[],
     maskKeys: ReadonlySet<string>,
+    directions: readonly Direction[],
     occupied: ReadonlySet<string>,
     rng: () => number
   ): ArrowSpec | null {
@@ -142,7 +156,7 @@ export class RandomLevelStrategy {
       if (occupied.has(start.toKey())) {
         continue;
       }
-      const direction = DIRECTIONS[Math.floor(rng() * DIRECTIONS.length)]!;
+      const direction = directions[Math.floor(rng() * directions.length)]!;
       const length = 1 + Math.floor(rng() * options.maxArrowLength);
       const path = RandomLevelStrategy.growPath(start, direction, length, maskKeys, occupied);
       if (path !== null) {
