@@ -65,13 +65,13 @@ export class LevelSolvabilityPolicy {
   private static isStrictlyAhead(head: Position, direction: Direction, cell: Position): boolean {
     switch (direction) {
       case Direction.UP:
-        return cell.col === head.col && cell.row < head.row;
+        return cell.col === head.col && cell.z === head.z && cell.row < head.row;
       case Direction.DOWN:
-        return cell.col === head.col && cell.row > head.row;
+        return cell.col === head.col && cell.z === head.z && cell.row > head.row;
       case Direction.LEFT:
-        return cell.row === head.row && cell.col < head.col;
+        return cell.row === head.row && cell.z === head.z && cell.col < head.col;
       case Direction.RIGHT:
-        return cell.row === head.row && cell.col > head.col;
+        return cell.row === head.row && cell.z === head.z && cell.col > head.col;
       case Direction.FORWARD:
         return cell.row === head.row && cell.col === head.col && cell.z > head.z;
       case Direction.BACK:
