@@ -21,9 +21,10 @@ export class LevelCatalogController {
     private readonly archiveLevelUseCase: UseCase<ArchiveLevelInput, ArchiveLevelOutput>,
   ) {}
 
-  async listLevels(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  async listLevels(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const result = await this.getLevelsUseCase.execute({});
+      const supports3d = req.headers['x-supports-3d'] === 'true';
+      const result = await this.getLevelsUseCase.execute({ supports3d });
       res.status(200).json(ApiResponsePresenter.success(result));
     } catch (err) {
       next(err);
@@ -33,7 +34,8 @@ export class LevelCatalogController {
   async getLevel(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const levelId = String(req.params['levelId']);
-      const result = await this.getLevelUseCase.execute({ levelId });
+      const supports3d = req.headers['x-supports-3d'] === 'true';
+      const result = await this.getLevelUseCase.execute({ levelId, supports3d });
       res.status(200).json(ApiResponsePresenter.success(result));
     } catch (err) {
       next(err);

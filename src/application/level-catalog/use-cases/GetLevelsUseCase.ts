@@ -1,7 +1,7 @@
 import type { UseCase } from "../../aspects/UseCase.js";
 import type { LevelRepository } from "../ports/LevelRepository.js";
 
-export type GetLevelsInput = Record<string, never>;
+export type GetLevelsInput = { supports3d?: boolean };
 
 export type LevelSummaryDto = {
   levelId: string;
@@ -18,10 +18,11 @@ export type GetLevelsOutput = { levels: LevelSummaryDto[] };
 export class GetLevelsUseCase implements UseCase<GetLevelsInput, GetLevelsOutput> {
   constructor(private readonly repo: LevelRepository) {}
 
-  async execute(_input: GetLevelsInput): Promise<GetLevelsOutput> {
+  async execute(input: GetLevelsInput): Promise<GetLevelsOutput> {
     const levels = await this.repo.findAllPublished();
+    const visible = input.supports3d ? levels : levels.filter((l) => l.dimensions === 2);
     return {
-      levels: levels.map((l) => ({
+      levels: visible.map((l) => ({
         levelId: l.id.value,
         name: l.name.value,
         difficulty: l.difficulty,

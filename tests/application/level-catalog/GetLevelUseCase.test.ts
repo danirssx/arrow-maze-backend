@@ -99,6 +99,47 @@ describe("GetLevelUseCase", () => {
     expect(result.level.definition.boardShape).toBeUndefined();
   });
 
+  // @s3 — 3D gate: 3D level hidden from client without capability
+  it("should_throw_not_found_when_level_is_3d_and_supports3d_is_false", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(make3dPublishedLevel(VALID_UUID));
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act / Assert
+    await expect(
+      useCase.execute({ levelId: VALID_UUID, supports3d: false })
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  // @s4 — 3D gate: 3D level returned to capable client
+  it("should_return_3d_level_when_supports3d_is_true", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(make3dPublishedLevel(VALID_UUID));
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ levelId: VALID_UUID, supports3d: true });
+
+    // Assert
+    expect(result.level.levelId).toBe(VALID_UUID);
+  });
+
+  // @s5 — 3D gate: 2D level always returned regardless of capability flag
+  it("should_return_2d_level_when_supports3d_is_false", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makePublishedLevel(VALID_UUID));
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ levelId: VALID_UUID, supports3d: false });
+
+    // Assert
+    expect(result.level.levelId).toBe(VALID_UUID);
+  });
+
   // @s6 — DTO includes z in arrow path cells
   it("should_include_z_in_arrow_path_cells_when_level_is_3d", async () => {
     // Arrange
@@ -107,7 +148,7 @@ describe("GetLevelUseCase", () => {
     const useCase = new GetLevelUseCase(repo);
 
     // Act
-    const result = await useCase.execute({ levelId: VALID_UUID });
+    const result = await useCase.execute({ levelId: VALID_UUID, supports3d: true });
 
     // Assert
     expect(result.level.definition.arrows[0].path[0].z).toBe(1);
@@ -121,7 +162,7 @@ describe("GetLevelUseCase", () => {
     const useCase = new GetLevelUseCase(repo);
 
     // Act
-    const result = await useCase.execute({ levelId: VALID_UUID });
+    const result = await useCase.execute({ levelId: VALID_UUID, supports3d: true });
 
     // Assert
     expect(result.level.definition.boardShape!.cells.some((c) => c.z === 1)).toBe(true);

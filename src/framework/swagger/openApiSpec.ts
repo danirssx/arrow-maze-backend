@@ -733,6 +733,15 @@ export const openApiSpec = {
       get: {
         summary: 'List all published levels',
         tags: ['Level Catalog'],
+        parameters: [
+          {
+            name: 'X-Supports-3D',
+            in: 'header',
+            required: false,
+            schema: { type: 'string', enum: ['true'] },
+            description: 'Set to "true" to include 3D levels in the response. Omit or set to any other value to receive only 2D levels.',
+          },
+        ],
         responses: {
           '200': {
             description: 'Published levels list',
@@ -832,7 +841,16 @@ export const openApiSpec = {
       get: {
         summary: 'Get a level by ID',
         tags: ['Level Catalog'],
-        parameters: [{ name: 'levelId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          { name: 'levelId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+          {
+            name: 'X-Supports-3D',
+            in: 'header',
+            required: false,
+            schema: { type: 'string', enum: ['true'] },
+            description: 'Set to "true" to allow receiving 3D levels. Without this header, 3D levels return 404.',
+          },
+        ],
         responses: {
           '200': {
             description: 'Level detail',
