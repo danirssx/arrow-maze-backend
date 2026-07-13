@@ -41,4 +41,8 @@ export class LevelDefinition {
   get attempts(): number {
     return this._attempts;
   }
+
+  get dimensions(): 2 | 3 {
+    return this._arrows.some((arrow) => arrow.path.some((cell) => cell.z !== 0)) ? 3 : 2;
+  }
 }

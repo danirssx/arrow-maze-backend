@@ -10,6 +10,9 @@ import { Position } from "../../../../src/domain/level-catalog/value-objects/Pos
 const arrow = (id: string) =>
   ArrowSpec.create(id, "#5262FB", [Position.create(0, 0)], Direction.UP);
 
+const arrow3d = (id: string) =>
+  ArrowSpec.create(id, "#5262FB", [Position.create(0, 0, 1)], Direction.FORWARD);
+
 describe("LevelDefinition", () => {
   it("should_create_when_arrows_are_valid", () => {
     const def = LevelDefinition.create([arrow("a")], 3);
@@ -42,5 +45,29 @@ describe("LevelDefinition", () => {
     );
 
     expect(() => LevelDefinition.create(arrows)).toThrow("must not exceed");
+  });
+
+  // --- @s1: all arrows at z=0 → dimensions=2 ---
+
+  it("should_return_dimensions_2_when_all_arrow_cells_are_at_z0", () => {
+    const def = LevelDefinition.create([arrow("a"), arrow("b")]);
+
+    expect(def.dimensions).toBe(2);
+  });
+
+  // --- @s2: any arrow with z≠0 → dimensions=3 ---
+
+  it("should_return_dimensions_3_when_any_arrow_cell_has_z_not_zero", () => {
+    const def = LevelDefinition.create([arrow3d("a")]);
+
+    expect(def.dimensions).toBe(3);
+  });
+
+  // --- @s3: mix of 2D and 3D arrows → dimensions=3 ---
+
+  it("should_return_dimensions_3_when_mix_of_2d_and_3d_arrows", () => {
+    const def = LevelDefinition.create([arrow("a"), arrow3d("b")]);
+
+    expect(def.dimensions).toBe(3);
   });
 });

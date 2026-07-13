@@ -152,4 +152,5 @@ export class Level extends Entity<LevelId> {
   get updatedAt(): Date { return this._updatedAt; }
   get isDraft(): boolean { return this._status === LevelStatus.DRAFT; }
   get isPublished(): boolean { return this._status === LevelStatus.PUBLISHED; }
+  get dimensions(): 2 | 3 { return this._definition.dimensions; }
 }
