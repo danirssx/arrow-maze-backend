@@ -84,4 +84,77 @@ describe("LevelSolvabilityPolicy", () => {
 
     expect(policy.isSolvable(def)).toBe(true);
   });
+
+  // --- @s1: UP blocked only by cell on same z-plane ---
+
+  it("should_detect_cycle_when_up_arrows_block_each_other_on_same_z_plane", () => {
+    const def = LevelDefinition.create([
+      arrow3d("a", [[2, 1, 1]], Direction.UP),
+      arrow3d("b", [[0, 1, 1]], Direction.DOWN),
+    ]);
+
+    expect(policy.isSolvable(def)).toBe(false);
+  });
+
+  // --- @s2: UP arrow NOT blocked by cell on different z-plane ---
+
+  it("should_not_block_up_arrow_when_blocker_is_on_different_z_plane", () => {
+    const def = LevelDefinition.create([
+      arrow3d("a", [[2, 1, 1]], Direction.UP),
+      arrow3d("b", [[0, 1, 0]], Direction.DOWN),
+    ]);
+
+    expect(policy.isSolvable(def)).toBe(true);
+  });
+
+  // --- @s3: RIGHT arrow NOT blocked by cell on different z-plane ---
+
+  it("should_not_block_right_arrow_when_blocker_is_on_different_z_plane", () => {
+    const def = LevelDefinition.create([
+      arrow3d("a", [[0, 0, 2]], Direction.RIGHT),
+      arrow3d("b", [[0, 1, 0]], Direction.LEFT),
+    ]);
+
+    expect(policy.isSolvable(def)).toBe(true);
+  });
+
+  // --- @s4: 2D regression (z=0) unaffected ---
+
+  it("should_still_detect_2d_cycle_after_3d_fix", () => {
+    const def = LevelDefinition.create([
+      arrow("a", [[0, 0]], Direction.RIGHT),
+      arrow("b", [[0, 2]], Direction.LEFT),
+    ]);
+
+    expect(policy.isSolvable(def)).toBe(false);
+  });
+
+  it("should_not_block_down_arrow_when_blocker_is_on_different_z_plane", () => {
+    const def = LevelDefinition.create([
+      arrow3d("a", [[0, 1, 1]], Direction.DOWN),
+      arrow3d("b", [[2, 1, 0]], Direction.UP),
+    ]);
+
+    expect(policy.isSolvable(def)).toBe(true);
+  });
+
+  it("should_not_block_left_arrow_when_blocker_is_on_different_z_plane", () => {
+    const def = LevelDefinition.create([
+      arrow3d("a", [[0, 2, 1]], Direction.LEFT),
+      arrow3d("b", [[0, 0, 0]], Direction.RIGHT),
+    ]);
+
+    expect(policy.isSolvable(def)).toBe(true);
+  });
+
+  // --- @s5: planar cycle on same z-plane detected ---
+
+  it("should_detect_cycle_for_left_right_arrows_on_same_z_plane", () => {
+    const def = LevelDefinition.create([
+      arrow3d("a", [[0, 0, 3]], Direction.RIGHT),
+      arrow3d("b", [[0, 2, 3]], Direction.LEFT),
+    ]);
+
+    expect(policy.isSolvable(def)).toBe(false);
+  });
 });
