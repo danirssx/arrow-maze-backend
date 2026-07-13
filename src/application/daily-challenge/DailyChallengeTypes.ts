@@ -9,12 +9,12 @@ export type DailyChallengeLevelDto = {
     readonly arrows: {
       readonly id: string;
       readonly color: string;
-      readonly path: { readonly row: number; readonly col: number }[];
+      readonly path: { readonly row: number; readonly col: number; readonly z: number }[];
       readonly direction: string;
     }[];
     readonly boardShape?: {
       readonly type: string;
-      readonly cells: { readonly row: number; readonly col: number }[];
+      readonly cells: { readonly row: number; readonly col: number; readonly z: number }[];
     };
   };
   readonly timeLimitSeconds?: number;

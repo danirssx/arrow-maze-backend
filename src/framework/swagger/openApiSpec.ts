@@ -63,11 +63,11 @@ export const openApiSpec = {
                             {
                               id: 'arrow-0',
                               color: '#4B6BFB',
-                              path: [{ row: 0, col: 0 }],
+                              path: [{ row: 0, col: 0, z: 0 }],
                               direction: 'RIGHT',
                             },
                           ],
-                          boardShape: { type: 'CELL_MASK', cells: [{ row: 0, col: 0 }] },
+                          boardShape: { type: 'CELL_MASK', cells: [{ row: 0, col: 0, z: 0 }] },
                         },
                         timeLimitSeconds: 120,
                       },
@@ -771,7 +771,7 @@ export const openApiSpec = {
                   {
                     id: 'a',
                     color: '#5262FB',
-                    path: [{ row: 0, col: 0 }, { row: 0, col: 1 }],
+                    path: [{ row: 0, col: 0, z: 0 }, { row: 0, col: 1, z: 0 }],
                     direction: 'RIGHT',
                   },
                 ],
@@ -1430,6 +1430,7 @@ export const openApiSpec = {
         properties: {
           row: { type: 'integer' },
           col: { type: 'integer' },
+          z: { type: 'integer', default: 0, description: 'Depth plane; 0 for 2D levels' },
         },
       },
       ArrowSpec: {
@@ -1443,7 +1444,7 @@ export const openApiSpec = {
             minItems: 1,
             items: { $ref: '#/components/schemas/PositionInput' },
           },
-          direction: { type: 'string', enum: ['UP', 'DOWN', 'LEFT', 'RIGHT'] },
+          direction: { type: 'string', enum: ['UP', 'DOWN', 'LEFT', 'RIGHT', 'FORWARD', 'BACK'] },
         },
       },
       BoardShapeInput: {

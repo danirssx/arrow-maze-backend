@@ -4,6 +4,8 @@ import {
   FakeLevelRepository,
   makePublishedLevel,
   makeShapedPublishedLevel,
+  make3dPublishedLevel,
+  makeShapedPublishedLevel3d,
   VALID_UUID,
 } from "./helpers/levelFixtures";
 
@@ -69,6 +71,21 @@ describe("GetLevelUseCase", () => {
     expect(result.level.definition.boardShape!.cells).toHaveLength(4);
   });
 
+  it("should_include_time_limit_seconds_in_dto_when_level_has_time_limit", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    const { makeTimedDraftLevel } = await import("./helpers/levelFixtures");
+    const timedLevel = makeTimedDraftLevel(VALID_UUID, 120);
+    repo.seed(timedLevel);
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ levelId: VALID_UUID });
+
+    // Assert
+    expect(result.level.timeLimitSeconds).toBe(120);
+  });
+
   it("should_omit_board_shape_when_level_has_none", async () => {
     // Arrange
     const repo = new FakeLevelRepository();
@@ -80,5 +97,33 @@ describe("GetLevelUseCase", () => {
 
     // Assert
     expect(result.level.definition.boardShape).toBeUndefined();
+  });
+
+  // @s6 — DTO includes z in arrow path cells
+  it("should_include_z_in_arrow_path_cells_when_level_is_3d", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(make3dPublishedLevel(VALID_UUID));
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ levelId: VALID_UUID });
+
+    // Assert
+    expect(result.level.definition.arrows[0].path[0].z).toBe(1);
+  });
+
+  // @s7 — DTO includes z in board shape cells
+  it("should_include_z_in_board_shape_cells_when_shape_is_3d", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(makeShapedPublishedLevel3d(VALID_UUID));
+    const useCase = new GetLevelUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ levelId: VALID_UUID });
+
+    // Assert
+    expect(result.level.definition.boardShape!.cells.some((c) => c.z === 1)).toBe(true);
   });
 });
