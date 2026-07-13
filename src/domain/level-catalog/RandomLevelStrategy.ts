@@ -25,11 +25,13 @@ const DIRECTIONS: readonly Direction[] = [
   Direction.RIGHT,
 ];
 
-const DELTAS: Record<Direction, readonly [number, number]> = {
-  [Direction.UP]: [-1, 0],
-  [Direction.DOWN]: [1, 0],
-  [Direction.LEFT]: [0, -1],
-  [Direction.RIGHT]: [0, 1],
+const DELTAS: Record<Direction, readonly [number, number, number]> = {
+  [Direction.UP]: [-1, 0, 0],
+  [Direction.DOWN]: [1, 0, 0],
+  [Direction.LEFT]: [0, -1, 0],
+  [Direction.RIGHT]: [0, 1, 0],
+  [Direction.FORWARD]: [0, 0, 1],
+  [Direction.BACK]: [0, 0, -1],
 };
 
 const PALETTE: readonly string[] = [
@@ -158,7 +160,7 @@ export class RandomLevelStrategy {
     maskKeys: ReadonlySet<string>,
     occupied: ReadonlySet<string>
   ): Position[] | null {
-    const [rowDelta, colDelta] = DELTAS[direction];
+    const [rowDelta, colDelta, zDelta] = DELTAS[direction];
     const path: Position[] = [];
     let current = start;
 
@@ -168,7 +170,7 @@ export class RandomLevelStrategy {
         return null;
       }
       path.push(current);
-      current = current.translate(rowDelta, colDelta);
+      current = current.translate(rowDelta, colDelta, zDelta);
     }
 
     return path;
