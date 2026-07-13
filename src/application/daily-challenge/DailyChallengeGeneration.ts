@@ -165,7 +165,7 @@ export function validateDailyChallengeCandidate(
         arrows: level.definition.arrows.map((arrow) => ({
           id: arrow.id,
           color: arrow.color,
-          path: arrow.path.map((position) => ({ row: position.row, col: position.col })),
+          path: arrow.path.map((position) => ({ row: position.row, col: position.col, z: position.z })),
           direction: arrow.direction,
         })),
         ...(level.boardShape !== undefined
@@ -175,6 +175,7 @@ export function validateDailyChallengeCandidate(
                 cells: level.boardShape.cells.map((cell) => ({
                   row: cell.row,
                   col: cell.col,
+                  z: cell.z,
                 })),
               },
             }
