@@ -251,4 +251,24 @@ describe("Level injected clock", () => {
     level.archive(archiveNow);
     expect(level.updatedAt).toBe(archiveNow);
   });
+
+  // --- @s4: Level.dimensions delegates to definition ---
+
+  it("should_return_dimensions_2_when_level_has_a_2d_definition", () => {
+    const level = makeDraftLevel();
+
+    expect(level.dimensions).toBe(2);
+  });
+
+  // --- @s5: Level.dimensions updates after updateDefinition ---
+
+  it("should_return_dimensions_3_after_update_definition_with_a_3d_definition", () => {
+    const level = makeDraftLevel();
+    const def3d = LevelDefinition.create([
+      ArrowSpec.create("a", "#5262FB", [Position.create(0, 0, 1)], Direction.FORWARD),
+    ]);
+    level.updateDefinition(def3d, FIXED_LEVEL_NOW);
+
+    expect(level.dimensions).toBe(3);
+  });
 });
