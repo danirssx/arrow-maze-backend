@@ -6206,13 +6206,6 @@ client capability declaration so that existing clients (which don't know about t
 never receive 3D levels and break silently. The gate uses the `X-Supports-3D: true` request header;
 the check lives in the application layer (use cases), not in the framework layer.
 
----
-
-# AI Usage Log: MAZ-234 — Seed Hand-Made 3D Launch Levels (B9)
-
-## Task / Problem
-
-Resolve `MAZ-234` (B9) of the M13 "3D Volumetric Boards" milestone. Author and seed 3–5 hand-crafted 3D launch levels: update the authored level loader type to support `z` in path/boardShape cells, add fixture test cases for the 3D loader paths, and drop 3 validated 3D JSON levels into `prisma/seed-data/level-json/`.
 ## Tool and Model
 
 Claude Code / Claude Sonnet 4.6.
@@ -6221,9 +6214,6 @@ Claude Code / Claude Sonnet 4.6.
 
 User approved Gherkin scenarios @s1–@s5 after context review, then asked to proceed: "sí".
 
----
-
-User approved Gherkin scenarios @s1–@s4 after context review, then asked to proceed: "sí".
 ## Agent Roles Used
 
 | Agent | Status | How it was used | Evidence |
@@ -6234,13 +6224,6 @@ User approved Gherkin scenarios @s1–@s4 after context review, then asked to pr
 | Judge (`.agents/judge.md`) | Referenced | Blast-radius: `GetLevelUseCase.ts`, `GetLevelsUseCase.ts`, `LevelCatalogController.ts`, `openApiSpec.ts`, controller test mocks. No new entities or use cases introduced. | git diff |
 | Mutation Tester (`.agents/mutation.md`) | Used | `stryker run --mutate "GetLevelUseCase.ts,GetLevelsUseCase.ts"` — see Verification section. | stryker clear-text report |
 
----
-
-| Spec Partner (`.agents/spec-partner.md`) | Referenced | Gherkin scenarios presented to user and approved before touching code. Design decision (type extension vs runtime-only; loader change vs domain change) documented in conversation. | Conversation approval |
-| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Scenarios @s1–@s4 defined before implementation. | Approved scenarios |
-| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red (@s4 failing — no 3D files in catalog) → Green: fixture dirs + JSON files + type update. | `tests/seed/authoredLevels.test.ts`, `prisma/seed-data/level-json/45-*.json` |
-| Judge (`.agents/judge.md`) | Referenced | Blast-radius: `authoredLevels.ts` (type only), 3 new JSON files, 2 fixture dirs, test file. No use-case or domain changes. | git diff |
-| Mutation Tester (`.agents/mutation.md`) | Not used | No new production logic introduced — only a type widening and JSON data files. Mutation on type-only changes produces no meaningful signal. | N/A |
 ## @s → test map
 
 | Scenario | Test |
@@ -6294,8 +6277,37 @@ User approved Gherkin scenarios @s1–@s4 after context review, then asked to pr
 - `GetLevelsInput` was previously typed `Record<string, never>` (empty object). Changing it to `{ supports3d?: boolean }` required updating the `execute({})` call in the controller and passing `{}` in existing tests, which was a zero-friction change.
 - The `level.dimensions` getter (B6) is the single source of truth for the 2D/3D check — no scanning of arrow cells in the use case.
 
+
 ---
 
+# AI Usage Log: MAZ-234 — Seed Hand-Made 3D Launch Levels (B9)
+
+## Task / Problem
+
+Resolve `MAZ-234` (B9) of the M13 "3D Volumetric Boards" milestone. Author and seed 3–5 hand-crafted 3D launch levels: update the authored level loader type to support `z` in path/boardShape cells, add fixture test cases for the 3D loader paths, and drop 3 validated 3D JSON levels into `prisma/seed-data/level-json/`.
+
+## Tool and Model
+
+Claude Code / Claude Sonnet 4.6.
+
+## Prompt Used
+
+User approved Gherkin scenarios @s1–@s4 after context review, then asked to proceed: "sí".
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Gherkin scenarios presented to user and approved before touching code. Design decision (type extension vs runtime-only; loader change vs domain change) documented in conversation. | Conversation approval |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Scenarios @s1–@s4 defined before implementation. | Approved scenarios |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red (@s4 failing — no 3D files in catalog) → Green: fixture dirs + JSON files + type update. | `tests/seed/authoredLevels.test.ts`, `prisma/seed-data/level-json/45-*.json` |
+| Judge (`.agents/judge.md`) | Referenced | Blast-radius: `authoredLevels.ts` (type only), 3 new JSON files, 2 fixture dirs, test file. No use-case or domain changes. | git diff |
+| Mutation Tester (`.agents/mutation.md`) | Not used | No new production logic introduced — only a type widening and JSON data files. Mutation on type-only changes produces no meaningful signal. | N/A |
+
+## @s → test map
+
+| Scenario | Test |
+| --- | --- |
 | @s1 | `loadAuthoredLevels should_load_3d_level_with_z_in_path_cells_without_throwing` |
 | @s2 | `loadAuthoredLevels should_preserve_z_value_in_returned_path_cells` |
 | @s3 | `loadAuthoredLevels should_throw_not_solvable_when_forward_back_arrows_form_a_cycle` |
@@ -6345,6 +6357,7 @@ User approved Gherkin scenarios @s1–@s4 after context review, then asked to pr
 - `AuthoredLevelJson` was typed with `{ row, col }` only, but `LevelMapper.recordToLevel` already accepted `z?: number` from B7. The loader passed JSON data through at runtime even without the type — the fix was purely additive TypeScript.
 - For 3D FORWARD/BACK blocking, the key insight is: a FORWARD arrow (head at z=k) is blocked by any cell at (same row, same col, z > k). The arrow body does not need to travel in the z direction; the direction field alone determines the exit axis.
 - Three independent solvability chains confirmed by manually tracing the blocking graph DAG before writing the JSON files.
+
 
 <!-- AI_LOG_ENTRIES_END -->
 
