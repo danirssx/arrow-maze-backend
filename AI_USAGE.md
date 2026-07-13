@@ -5958,6 +5958,73 @@ User approved Gherkin scenarios @s1–@s9 (5 for BoardSize, 4 for BoardShape) af
 `Position.toKey()` being extended to `r,c,z` in B1 made `BoardShape` effectively 3D for free — a good example of the VO chain propagating 3D semantics upward without changes at higher layers. The key insight is that key-based membership sets always inherit the semantics of the key function, so extending `toKey` once is sufficient for all consumers. `BoardSize.toCells()` needed explicit depth propagation because it constructs positions (it's a generator, not a consumer).
 
 
+---
+
+# AI Usage Log: MAZ-231 — Extend RandomLevelStrategy to generate solvable 3D levels
+
+## Task / Problem
+
+Resolve `MAZ-231` (B5) of the M13 "3D Volumetric Boards" milestone. `RandomLevelStrategy`
+had FORWARD/BACK in its `DELTAS` map (added in B2) but the direction pool for arrow
+placement was intentionally left at the 4 planar values until the full 3D pipeline was
+ready (B3 solvability fix + B4 BoardSize depth). B5 adds the 6-direction pool for 3D
+shapes — activated only when the `BoardShape` has cells at z≠0, preserving all existing
+2D seeds byte-for-byte.
+
+## Tool and Model
+
+Claude Code / Claude Sonnet 4.6.
+
+## Prompt Used
+
+User approved Gherkin scenarios @s1–@s4 after context review, then asked to proceed with
+the full agent workflow: "ok seguimos con el B5, mismo flujo de trabajo."
+
+## Agent Roles Used
+
+| Agent | Status | How it was used | Evidence |
+| --- | --- | --- | --- |
+| Spec Partner (`.agents/spec-partner.md`) | Referenced | Gherkin scenarios presented to user and approved before touching code. Key design decision (shape-driven pool vs. unconditional 6D) discussed and approved. | Conversation approval |
+| Planner / Gherkin Author (`.agents/planner.md`) | Referenced | Scenarios @s1–@s4 defined before implementation. @s2 was redesigned mid-TDD: original "seed forces FORWARD/BACK" was fragile (length=1 arrows accept any direction); replaced with a 30-seed probe that proves FORWARD/BACK appear in the 6D pool. | Approved scenarios |
+| TDD Implementer (`.agents/tdd-implementer.md`) | Used | Red (1 failing test) → Green: tests written first, then production code. @s2 redesigned during red phase after discovering length=1 flaw. | `tests/domain/level-catalog/RandomLevelStrategy.test.ts` |
+| Judge (`.agents/judge.md`) | Referenced | Blast-radius check: only `RandomLevelStrategy.ts` modified in production. `DIRECTIONS` renamed to `PLANAR_DIRECTIONS`; `ALL_DIRECTIONS` added; `directions` variable computed per-call from shape; passed into `tryBuild` and `placeArrow`. No other files touched. | git status |
+| Mutation Tester (`.agents/mutation.md`) | Used | `NODE_OPTIONS=--experimental-vm-modules stryker run --mutate RandomLevelStrategy.ts` — see Verification section for score. | stryker clear-text report |
+
+## Result Obtained
+
+**`src/domain/level-catalog/RandomLevelStrategy.ts`**:
+- `DIRECTIONS` constant renamed to `PLANAR_DIRECTIONS` (4 values, unchanged)
+- New `ALL_DIRECTIONS` constant (6 values: planar + FORWARD + BACK)
+- `generate()`: computes `directions` from shape — `ALL_DIRECTIONS` if any cell has `z !== 0`, `PLANAR_DIRECTIONS` otherwise
+- `tryBuild()`: receives `directions` parameter instead of reading the module-level constant
+- `placeArrow()`: receives `directions` parameter; picks from it instead of the constant
+
+**`tests/domain/level-catalog/RandomLevelStrategy.test.ts`**: 4 new tests + `grid3d` helper:
+- @s1: 3D grid(2,2,2) generates ok=true, cells in shape, level solvable
+- @s2: 30-seed probe on z-column proves FORWARD/BACK appear in the pool (impossible with 4D)
+- @s3: seed="alpha" on grid(5,5) still produces identical known layout including z=0 paths
+- @s4: same 3D seed → same result twice
+
+**`specs/random-level-3d-MAZ-231.spec.md`** and **`.feature`**: created.
+
+## Verification
+
+- 11/11 RandomLevelStrategy tests green (4 new + 7 existing).
+- Full suite: 721 passing; 2 pre-existing failures (`dailyChallengeGeminiBoundary` × 2) on develop base.
+- TypeScript: 5 pre-existing Prisma typecheck errors on develop baseline; zero new errors from B5.
+- Mutation: `stryker --mutate RandomLevelStrategy.ts` → **91.27%** (≥ break threshold 80). 11 survivors are pre-existing boundary conditions in placement/PRNG logic (e.g. `growPath` null-return equivalence mutants); 16 timeouts on infinite-loop-adjacent mutations in the generation loop.
+
+## Team Modifications Pending Human Review
+
+- Domain strategy changes and tests require mandatory human review (AGENTS §5).
+- The shape-driven pool selection (`cells.some(c => c.z !== 0)`) is a convention decision. An alternative is an explicit `mode: "2d" | "3d"` option; the current approach is implicit and automatic.
+- Pre-existing Prisma typecheck failures and `dailyChallengeGeminiBoundary` test failure are on develop baseline and not in scope for B5.
+
+## Lessons / Limitations
+
+A key design pitfall: adding FORWARD/BACK unconditionally to the pool would shift the PRNG pick index from N=4 to N=6, silently changing every existing 2D seed's output. The shape-driven pool selection avoids this without exposing any new API surface. The @s2 test also surfaced a subtle issue: length=1 arrows are always valid in any direction, so "z-axis-only column" cannot truly force FORWARD/BACK unless multi-cell paths are required. The 30-seed probe is a more honest expression of the intent: "FORWARD/BACK statistically appear in the 6D pool."
+
+
 <!-- AI_LOG_ENTRIES_END -->
 
 ## Critical Evaluation
