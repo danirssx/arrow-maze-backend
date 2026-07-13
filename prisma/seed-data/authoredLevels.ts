@@ -28,8 +28,8 @@ type AuthoredLevelJson = {
   order: number;
   attempts: number;
   timeLimitSeconds?: number | null;
-  arrows: { id: string; color: string; path: { row: number; col: number }[]; direction: string }[];
-  boardShape?: { type: string; cells: { row: number; col: number }[] } | null;
+  arrows: { id: string; color: string; path: { row: number; col: number; z?: number }[]; direction: string }[];
+  boardShape?: { type: string; cells: { row: number; col: number; z?: number }[] } | null;
 };
 
 /** A seed-ready level record (the shape `prisma/seed.ts` upserts), sorted by `order`. */
@@ -41,10 +41,10 @@ export type AuthoredLevelRecord = {
   status: "PUBLISHED";
   version: number;
   order: number;
-  arrows: AuthoredLevelJson["arrows"];
+  arrows: { id: string; color: string; path: { row: number; col: number; z?: number }[]; direction: string }[];
   attempts: number;
   timeLimitSeconds: number | null;
-  boardShape: AuthoredLevelJson["boardShape"] | null;
+  boardShape: { type: string; cells: { row: number; col: number; z?: number }[] } | null;
 };
 
 const DEFAULT_DIR = join(process.cwd(), "prisma", "seed-data", "level-json");

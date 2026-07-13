@@ -1,0 +1,64 @@
+{
+  "id": "660e8400-e29b-41d4-a716-446655440046",
+  "name": "Cross Layers",
+  "description": "Arrows weave between two planes — trace the chain from top to bottom.",
+  "difficulty": "MEDIUM",
+  "order": 46,
+  "attempts": 5,
+  "arrows": [
+    {
+      "id": "a",
+      "color": "blue",
+      "path": [
+        { "row": 0, "col": 0, "z": 0 },
+        { "row": 0, "col": 1, "z": 0 }
+      ],
+      "direction": "FORWARD"
+    },
+    {
+      "id": "b",
+      "color": "green",
+      "path": [
+        { "row": 0, "col": 1, "z": 1 },
+        { "row": 1, "col": 1, "z": 1 }
+      ],
+      "direction": "DOWN"
+    },
+    {
+      "id": "c",
+      "color": "yellow",
+      "path": [
+        { "row": 2, "col": 1, "z": 1 },
+        { "row": 3, "col": 1, "z": 1 }
+      ],
+      "direction": "DOWN"
+    },
+    {
+      "id": "d",
+      "color": "pink",
+      "path": [
+        { "row": 2, "col": 2, "z": 1 },
+        { "row": 2, "col": 2, "z": 0 }
+      ],
+      "direction": "BACK"
+    },
+    {
+      "id": "e",
+      "color": "cyan",
+      "path": [
+        { "row": 3, "col": 0, "z": 0 },
+        { "row": 3, "col": 1, "z": 0 }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "f",
+      "color": "purple",
+      "path": [
+        { "row": 3, "col": 2, "z": 0 },
+        { "row": 3, "col": 3, "z": 0 }
+      ],
+      "direction": "RIGHT"
+    }
+  ]
+}

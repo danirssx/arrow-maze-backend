@@ -1,0 +1,46 @@
+{
+  "id": "660e8400-e29b-41d4-a716-446655440045",
+  "name": "Layer Shift",
+  "description": "A 3D debut — clear the upper layer to free the FORWARD arrow below.",
+  "difficulty": "EASY",
+  "order": 45,
+  "attempts": 6,
+  "arrows": [
+    {
+      "id": "a",
+      "color": "blue",
+      "path": [
+        { "row": 0, "col": 0, "z": 0 },
+        { "row": 0, "col": 1, "z": 0 }
+      ],
+      "direction": "FORWARD"
+    },
+    {
+      "id": "b",
+      "color": "green",
+      "path": [
+        { "row": 0, "col": 1, "z": 1 },
+        { "row": 0, "col": 2, "z": 1 }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "c",
+      "color": "yellow",
+      "path": [
+        { "row": 0, "col": 2, "z": 0 },
+        { "row": 1, "col": 2, "z": 0 }
+      ],
+      "direction": "DOWN"
+    },
+    {
+      "id": "d",
+      "color": "pink",
+      "path": [
+        { "row": 3, "col": 0, "z": 0 },
+        { "row": 2, "col": 0, "z": 0 }
+      ],
+      "direction": "UP"
+    }
+  ]
+}

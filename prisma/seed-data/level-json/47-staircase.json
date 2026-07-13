@@ -1,0 +1,83 @@
+{
+  "id": "660e8400-e29b-41d4-a716-446655440047",
+  "name": "Staircase",
+  "description": "Three layers, eight arrows — follow the staircase down to clear the board.",
+  "difficulty": "HARD",
+  "order": 47,
+  "attempts": 4,
+  "arrows": [
+    {
+      "id": "a",
+      "color": "blue",
+      "path": [
+        { "row": 0, "col": 0, "z": 0 },
+        { "row": 0, "col": 1, "z": 0 }
+      ],
+      "direction": "FORWARD"
+    },
+    {
+      "id": "b",
+      "color": "green",
+      "path": [
+        { "row": 0, "col": 1, "z": 1 },
+        { "row": 0, "col": 2, "z": 1 }
+      ],
+      "direction": "FORWARD"
+    },
+    {
+      "id": "c",
+      "color": "yellow",
+      "path": [
+        { "row": 0, "col": 2, "z": 2 },
+        { "row": 0, "col": 3, "z": 2 }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "d",
+      "color": "pink",
+      "path": [
+        { "row": 1, "col": 3, "z": 2 },
+        { "row": 1, "col": 3, "z": 1 },
+        { "row": 1, "col": 3, "z": 0 }
+      ],
+      "direction": "BACK"
+    },
+    {
+      "id": "e",
+      "color": "cyan",
+      "path": [
+        { "row": 2, "col": 0, "z": 0 },
+        { "row": 2, "col": 1, "z": 0 }
+      ],
+      "direction": "RIGHT"
+    },
+    {
+      "id": "f",
+      "color": "purple",
+      "path": [
+        { "row": 1, "col": 2, "z": 0 },
+        { "row": 2, "col": 2, "z": 0 }
+      ],
+      "direction": "DOWN"
+    },
+    {
+      "id": "g",
+      "color": "crimson",
+      "path": [
+        { "row": 2, "col": 3, "z": 1 },
+        { "row": 2, "col": 2, "z": 1 }
+      ],
+      "direction": "LEFT"
+    },
+    {
+      "id": "h",
+      "color": "white",
+      "path": [
+        { "row": 2, "col": 1, "z": 1 },
+        { "row": 2, "col": 0, "z": 1 }
+      ],
+      "direction": "LEFT"
+    }
+  ]
+}

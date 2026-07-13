@@ -102,4 +102,33 @@ describe("loadAuthoredLevels", () => {
       }
     }
   });
+
+  // @s1 — 3D: loader accepts a valid 3D level JSON with z in path cells
+  it("should_load_3d_level_with_z_in_path_cells_without_throwing", () => {
+    expect(() => loadAuthoredLevels(fixtureDir("level-json-3d-valid"))).not.toThrow();
+  });
+
+  // @s2 — 3D: z values are preserved in the returned authored record
+  it("should_preserve_z_value_in_returned_path_cells", () => {
+    const levels = loadAuthoredLevels(fixtureDir("level-json-3d-valid"));
+    const forwardArrow = levels[0]!.arrows.find((a) => a.direction === "FORWARD")!;
+    const cellAtZ0 = forwardArrow.path.find((cell) => cell.z === 0);
+    expect(cellAtZ0).toBeDefined();
+    const arrowOnUpperLayer = levels[0]!.arrows.find((a) => a.direction === "RIGHT")!;
+    expect(arrowOnUpperLayer.path[0]!.z).toBe(1);
+  });
+
+  // @s3 — 3D: loader rejects a 3D level whose FORWARD/BACK blocking graph has a cycle
+  it("should_throw_not_solvable_when_forward_back_arrows_form_a_cycle", () => {
+    expect(() => loadAuthoredLevels(fixtureDir("level-json-3d-cycle"))).toThrow(/not solvable/);
+  });
+
+  // @s4 — 3D: the three 3D launch levels appear in the main catalog
+  it("should_include_3d_launch_levels_in_main_catalog", () => {
+    const levels = loadAuthoredLevels();
+    const levels3d = levels.filter((level) =>
+      level.arrows.some((a) => a.path.some((cell) => cell.z !== undefined && cell.z > 0))
+    );
+    expect(levels3d.length).toBeGreaterThanOrEqual(3);
+  });
 });
