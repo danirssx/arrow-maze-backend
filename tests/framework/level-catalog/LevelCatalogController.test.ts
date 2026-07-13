@@ -17,8 +17,8 @@ function makeNext(): jest.MockedFunction<NextFunction> {
   return jest.fn() as jest.MockedFunction<NextFunction>;
 }
 
-const ADMIN_REQ = { params: {}, body: {}, user: { userId: 'u-admin', role: 'ADMIN' } } as unknown as Request;
-const USER_REQ  = { params: {}, body: {}, user: { userId: 'u-1',     role: 'USER'  } } as unknown as Request;
+const ADMIN_REQ = { params: {}, body: {}, headers: {}, user: { userId: 'u-admin', role: 'ADMIN' } } as unknown as Request;
+const USER_REQ  = { params: {}, body: {}, headers: {}, user: { userId: 'u-1',     role: 'USER'  } } as unknown as Request;
 
 function fakeUseCase<I, O>(resolved: O): jest.Mocked<UseCase<I, O>> {
   return { execute: jest.fn().mockResolvedValue(resolved) } as unknown as jest.Mocked<UseCase<I, O>>;
@@ -75,7 +75,7 @@ describe('LevelCatalogController', () => {
       const next = makeNext();
 
       // Act
-      await controller.listLevels({} as Request, res, next);
+      await controller.listLevels({ headers: {} } as unknown as Request, res, next);
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(200);
@@ -87,7 +87,7 @@ describe('LevelCatalogController', () => {
     it('should_return_200_with_level_when_found', async () => {
       // Arrange
       const controller = makeController();
-      const req = { params: { levelId: 'l-1' } } as unknown as Request;
+      const req = { params: { levelId: 'l-1' }, headers: {} } as unknown as Request;
       const res = makeRes();
       const next = makeNext();
 
@@ -111,7 +111,7 @@ describe('LevelCatalogController', () => {
         fakeUseCase<PublishLevelInput, PublishLevelOutput>({ levelId: 'l-1' }),
         fakeUseCase<ArchiveLevelInput, ArchiveLevelOutput>({ levelId: 'l-1' }),
       );
-      const req = { params: { levelId: 'bad-id' } } as unknown as Request;
+      const req = { params: { levelId: 'bad-id' }, headers: {} } as unknown as Request;
       const res = makeRes();
       const next = makeNext();
 

@@ -3,7 +3,7 @@ import { NotFoundError } from "../../../shared/errors/ApplicationError.js";
 import type { UseCase } from "../../aspects/UseCase.js";
 import type { LevelRepository } from "../ports/LevelRepository.js";
 
-export type GetLevelInput = { levelId: string };
+export type GetLevelInput = { levelId: string; supports3d?: boolean };
 
 export type LevelDto = {
   levelId: string;
@@ -43,6 +43,7 @@ export class GetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
     const levelId = LevelId.create(input.levelId);
     const level = await this.repo.findById(levelId);
     if (!level) throw new NotFoundError(`Level not found: ${input.levelId}`);
+    if (!input.supports3d && level.dimensions === 3) throw new NotFoundError(`Level not found: ${input.levelId}`);
 
     return {
       level: {

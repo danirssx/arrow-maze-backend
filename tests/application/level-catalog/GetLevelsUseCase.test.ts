@@ -1,6 +1,6 @@
 import { GetLevelsUseCase } from "../../../src/application/level-catalog/use-cases/GetLevelsUseCase";
 import { LevelStatus } from "../../../src/domain/level-catalog/enums/LevelStatus";
-import { FakeLevelRepository, makeDraftLevel, makePublishedLevel, VALID_UUID } from "./helpers/levelFixtures";
+import { FakeLevelRepository, makeDraftLevel, makePublishedLevel, make3dPublishedLevel, VALID_UUID } from "./helpers/levelFixtures";
 
 // Subject to human review — application use case test
 
@@ -51,6 +51,41 @@ describe("GetLevelsUseCase", () => {
     expect(typeof dto.difficulty).toBe("string");
     expect(typeof dto.createdAt).toBe('string');
     expect(dto.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  // @s1 — 3D gate: 3D levels hidden from clients without capability
+  it("should_exclude_3d_levels_when_supports3d_is_false", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(
+      makePublishedLevel("550e8400-e29b-41d4-a716-446655440001"),
+      make3dPublishedLevel("550e8400-e29b-41d4-a716-446655440002")
+    );
+    const useCase = new GetLevelsUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ supports3d: false });
+
+    // Assert
+    expect(result.levels).toHaveLength(1);
+    expect(result.levels[0].levelId).toBe("550e8400-e29b-41d4-a716-446655440001");
+  });
+
+  // @s2 — 3D gate: clients with capability receive all levels
+  it("should_include_3d_levels_when_supports3d_is_true", async () => {
+    // Arrange
+    const repo = new FakeLevelRepository();
+    repo.seed(
+      makePublishedLevel("550e8400-e29b-41d4-a716-446655440001"),
+      make3dPublishedLevel("550e8400-e29b-41d4-a716-446655440002")
+    );
+    const useCase = new GetLevelsUseCase(repo);
+
+    // Act
+    const result = await useCase.execute({ supports3d: true });
+
+    // Assert
+    expect(result.levels).toHaveLength(2);
   });
 
   it("should_not_return_archived_levels", async () => {
