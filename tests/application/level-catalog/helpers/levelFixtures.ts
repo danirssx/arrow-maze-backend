@@ -100,6 +100,61 @@ export function makeShapedPublishedLevel(id = VALID_UUID): Level {
   return level;
 }
 
+/** A level whose single arrow has a path cell at z=1 (3D). */
+export function make3dPublishedLevel(id = VALID_UUID): Level {
+  const definition = LevelDefinition.create([
+    ArrowSpec.create("a", "#5262FB", [Position.create(0, 0, 1)], Direction.FORWARD),
+  ]);
+  const level = Level.draft(
+    LevelId.create(id),
+    LevelName.create("3D Level"),
+    LevelDescription.create("A 3D test level"),
+    definition,
+    Difficulty.EASY,
+    LevelVersion.initial(),
+    FIXED_LEVEL_NOW
+  );
+  level.publish(new LevelSolvabilityPolicy(), FIXED_LEVEL_NOW);
+  level.pullDomainEvents();
+  return level;
+}
+
+/** A CELL_MASK board shape whose cells span z=0 and z=1. */
+export function make3dBoardShape(): BoardShape {
+  return BoardShape.cellMask([
+    Position.create(0, 0, 0),
+    Position.create(0, 1, 0),
+    Position.create(0, 0, 1),
+    Position.create(0, 1, 1),
+  ]);
+}
+
+/** A level with a 3D board shape containing cells at z=1. */
+export function makeShapedPublishedLevel3d(id = VALID_UUID): Level {
+  const definition = LevelDefinition.create([
+    ArrowSpec.create(
+      "a",
+      "#5262FB",
+      [Position.create(0, 0, 0), Position.create(0, 1, 0)],
+      Direction.RIGHT
+    ),
+  ]);
+  const level = Level.draft(
+    LevelId.create(id),
+    LevelName.create("3D Shaped Level"),
+    LevelDescription.create("A 3D shaped level"),
+    definition,
+    Difficulty.EASY,
+    LevelVersion.initial(),
+    FIXED_LEVEL_NOW,
+    undefined,
+    make3dBoardShape()
+  );
+  level.publish(new LevelSolvabilityPolicy(), FIXED_LEVEL_NOW);
+  level.pullDomainEvents();
+  return level;
+}
+
 export class FakeLevelRepository implements LevelRepository {
   private store = new Map<string, Level>();
   savedLevels: Level[] = [];

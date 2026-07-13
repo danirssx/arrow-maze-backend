@@ -38,13 +38,13 @@ export type LevelRecord = {
 type ArrowRecord = {
   id: string;
   color: string;
-  path: { row: number; col: number }[];
+  path: { row: number; col: number; z?: number }[];
   direction: string;
 };
 
 export type BoardShapeRecord = {
   type: string;
-  cells: { row: number; col: number }[];
+  cells: { row: number; col: number; z?: number }[];
 };
 
 export function recordToLevel(record: LevelRecord): Level {
@@ -52,7 +52,7 @@ export function recordToLevel(record: LevelRecord): Level {
     ArrowSpec.create(
       arrow.id,
       arrow.color,
-      arrow.path.map((position) => Position.create(position.row, position.col)),
+      arrow.path.map((position) => Position.create(position.row, position.col, position.z ?? 0)),
       parseEnumFromDb(Direction, arrow.direction, 'direction'),
     ),
   );
@@ -75,7 +75,7 @@ export function arrowsToRecord(level: Level): ArrowRecord[] {
   return level.definition.arrows.map((arrow) => ({
     id: arrow.id,
     color: arrow.color,
-    path: arrow.path.map((position) => ({ row: position.row, col: position.col })),
+    path: arrow.path.map((position) => ({ row: position.row, col: position.col, z: position.z })),
     direction: arrow.direction,
   }));
 }
@@ -88,7 +88,7 @@ export function boardShapeToRecord(level: Level): BoardShapeRecord | null {
   }
   return {
     type: shape.type,
-    cells: shape.cells.map((cell) => ({ row: cell.row, col: cell.col })),
+    cells: shape.cells.map((cell) => ({ row: cell.row, col: cell.col, z: cell.z })),
   };
 }
 
@@ -102,7 +102,7 @@ function parseBoardShape(value: unknown): BoardShape | undefined {
   try {
     return BoardShape.create(
       value.type,
-      value.cells.map((cell) => Position.create(cell.row, cell.col)),
+      value.cells.map((cell) => Position.create(cell.row, cell.col, cell.z ?? 0)),
     );
   } catch (err) {
     throw new InfrastructureError('Corrupted DB value for board_shape', { cause: String(err) });
@@ -115,13 +115,7 @@ function isBoardShapeRecord(value: unknown): value is BoardShapeRecord {
   return (
     typeof record['type'] === 'string' &&
     Array.isArray(record['cells']) &&
-    record['cells'].every(
-      (cell) =>
-        typeof cell === 'object' &&
-        cell !== null &&
-        Number.isInteger((cell as Record<string, unknown>)['row']) &&
-        Number.isInteger((cell as Record<string, unknown>)['col']),
-    )
+    record['cells'].every((cell) => isPositionCell(cell))
   );
 }
 
@@ -137,6 +131,16 @@ function parseArrowRecords(value: unknown): ArrowRecord[] {
   });
 }
 
+function isPositionCell(pos: unknown): boolean {
+  if (typeof pos !== 'object' || pos === null) return false;
+  const p = pos as Record<string, unknown>;
+  return (
+    Number.isInteger(p['row']) &&
+    Number.isInteger(p['col']) &&
+    (!('z' in p) || Number.isInteger(p['z']))
+  );
+}
+
 function isArrowRecord(value: unknown): value is ArrowRecord {
   if (typeof value !== 'object' || value === null) return false;
   const record = value as Record<string, unknown>;
@@ -145,12 +149,6 @@ function isArrowRecord(value: unknown): value is ArrowRecord {
     typeof record['color'] === 'string' &&
     typeof record['direction'] === 'string' &&
     Array.isArray(record['path']) &&
-    record['path'].every(
-      (pos) =>
-        typeof pos === 'object' &&
-        pos !== null &&
-        Number.isInteger((pos as Record<string, unknown>)['row']) &&
-        Number.isInteger((pos as Record<string, unknown>)['col']),
-    )
+    record['path'].every((pos) => isPositionCell(pos))
   );
 }

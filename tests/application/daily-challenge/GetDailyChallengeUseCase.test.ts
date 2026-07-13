@@ -203,13 +203,13 @@ describe("GetDailyChallengeUseCase", () => {
           {
             id: "arrow-0",
             color: "#4B6BFB",
-            path: [{ row: 0, col: 0 }],
+            path: [{ row: 0, col: 0, z: 0 }],
             direction: "RIGHT",
           },
         ],
         boardShape: {
           type: "CELL_MASK",
-          cells: [{ row: 0, col: 0 }],
+          cells: [{ row: 0, col: 0, z: 0 }],
         },
       },
       timeLimitSeconds: 120,
@@ -437,7 +437,7 @@ describe("GetDailyChallengeUseCase", () => {
     expect(result.challenge.source).toBe("fallback");
     expect(result.challenge.level.definition.boardShape).toEqual({
       type: "CELL_MASK",
-      cells: [{ row: 0, col: 0 }],
+      cells: [{ row: 0, col: 0, z: 0 }],
     });
   });
 
@@ -453,10 +453,10 @@ describe("GetDailyChallengeUseCase", () => {
     expect(result.challenge.level.definition.boardShape).toEqual({
       type: "CELL_MASK",
       cells: [
-        { row: 0, col: 0 },
-        { row: 0, col: 1 },
-        { row: 1, col: 0 },
-        { row: 1, col: 1 },
+        { row: 0, col: 0, z: 0 },
+        { row: 0, col: 1, z: 0 },
+        { row: 1, col: 0, z: 0 },
+        { row: 1, col: 1, z: 0 },
       ],
     });
   });
