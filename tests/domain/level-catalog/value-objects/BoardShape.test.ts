@@ -8,6 +8,9 @@ import { Position } from "../../../../src/domain/level-catalog/value-objects/Pos
 const cells = (...c: [number, number][]) =>
   c.map(([row, col]) => Position.create(row, col));
 
+const cells3d = (...c: [number, number, number][]) =>
+  c.map(([row, col, z]) => Position.create(row, col, z));
+
 describe("BoardShape", () => {
   it("should_create_a_cell_mask_when_cells_are_valid", () => {
     const shape = BoardShape.cellMask(cells([0, 0], [0, 1], [1, 0]));
@@ -71,5 +74,35 @@ describe("BoardShape", () => {
     expect(() => BoardShape.create("HEXAGON", cells([0, 0]))).toThrow(
       InvalidArgumentError
     );
+  });
+
+  // --- @s6: contains returns false for same row/col but different z ---
+
+  it("should_return_false_when_position_has_same_row_col_but_different_z", () => {
+    const shape = BoardShape.cellMask(cells3d([0, 0, 0]));
+
+    expect(shape.contains(Position.create(0, 0, 1))).toBe(false);
+  });
+
+  // --- @s7: contains returns true for a 3D position present in the shape ---
+
+  it("should_return_true_when_3d_position_is_in_the_shape", () => {
+    const shape = BoardShape.cellMask(cells3d([0, 0, 1]));
+
+    expect(shape.contains(Position.create(0, 0, 1))).toBe(true);
+  });
+
+  // --- @s8: Position(0,0,0) and Position(0,0,1) are distinct cells ---
+
+  it("should_treat_same_row_col_different_z_as_distinct_cells", () => {
+    const shape = BoardShape.cellMask(cells3d([0, 0, 0], [0, 0, 1]));
+
+    expect(shape.size).toBe(2);
+  });
+
+  // --- @s9: exact 3D duplicate throws ---
+
+  it("should_throw_when_exact_3d_duplicate_is_present", () => {
+    expect(() => BoardShape.cellMask(cells3d([0, 0, 1], [0, 0, 1]))).toThrow("Duplicate");
   });
 });
