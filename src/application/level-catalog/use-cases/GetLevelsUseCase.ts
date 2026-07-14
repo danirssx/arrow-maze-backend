@@ -9,6 +9,7 @@ export type LevelSummaryDto = {
   difficulty: string;
   arrowCount: number;
   attempts: number;
+  dimensions: 2 | 3;
   timeLimitSeconds?: number;
   createdAt: string;
 };
@@ -27,6 +28,7 @@ export class GetLevelsUseCase implements UseCase<GetLevelsInput, GetLevelsOutput
         difficulty: l.difficulty,
         arrowCount: l.definition.arrows.length,
         attempts: l.definition.attempts,
+        dimensions: l.definition.dimensions,
         ...(l.timeLimit !== undefined ? { timeLimitSeconds: l.timeLimit.value } : {}),
         createdAt: l.createdAt.toISOString(),
       })),

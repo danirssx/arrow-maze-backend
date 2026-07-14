@@ -25,10 +25,11 @@ export type BoardShapeDto = {
 
 export type LevelDefinitionDto = {
   attempts: number;
+  dimensions: 2 | 3;
   arrows: {
     id: string;
     color: string;
-    path: { row: number; col: number }[];
+    path: { row: number; col: number; z?: number }[];
     direction: string;
   }[];
   boardShape?: BoardShapeDto;
@@ -54,10 +55,15 @@ export class GetLevelUseCase implements UseCase<GetLevelInput, GetLevelOutput> {
         version: level.version.value,
         definition: {
           attempts: level.definition.attempts,
+          dimensions: level.definition.dimensions,
           arrows: level.definition.arrows.map((arrow) => ({
             id: arrow.id,
             color: arrow.color,
-            path: arrow.path.map((position) => ({ row: position.row, col: position.col })),
+            path: arrow.path.map((position) => ({
+              row: position.row,
+              col: position.col,
+              ...(position.z !== 0 ? { z: position.z } : {}),
+            })),
             direction: arrow.direction,
           })),
           ...(level.boardShape !== undefined
