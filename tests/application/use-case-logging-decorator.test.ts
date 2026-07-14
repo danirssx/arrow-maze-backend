@@ -95,7 +95,8 @@ describe("UseCaseLoggingDecorator", () => {
           durationMs: 6,
           status: "error",
           errorName: "Error",
-          errorMessage: "Invalid Bearer [REDACTED]"
+          errorMessage: "Invalid Bearer [REDACTED]",
+          errorCause: expect.any(String)
         }
       }
     ]);

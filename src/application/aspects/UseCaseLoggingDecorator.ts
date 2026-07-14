@@ -39,7 +39,8 @@ export class UseCaseLoggingDecorator<Input, Output> implements UseCase<Input, Ou
         durationMs,
         status: "error",
         errorName: error instanceof Error ? error.name : "UnknownError",
-        errorMessage: error instanceof Error ? error.message : "Unknown error"
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
+        errorCause: error instanceof Error && (error as { details?: unknown }).details ? JSON.stringify((error as { details?: unknown }).details) : String(error)
       }));
 
       throw error;
