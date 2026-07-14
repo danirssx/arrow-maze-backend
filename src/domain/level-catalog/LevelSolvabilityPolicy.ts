@@ -72,6 +72,10 @@ export class LevelSolvabilityPolicy {
         return cell.row === head.row && cell.col < head.col;
       case Direction.RIGHT:
         return cell.row === head.row && cell.col > head.col;
+      case Direction.FORWARD:
+        return cell.row === head.row && cell.col === head.col && cell.z > head.z;
+      case Direction.BACK:
+        return cell.row === head.row && cell.col === head.col && cell.z < head.z;
     }
   }
 }

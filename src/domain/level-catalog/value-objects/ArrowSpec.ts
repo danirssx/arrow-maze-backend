@@ -3,11 +3,13 @@ import { InvalidArgumentError } from "../../errors/DomainError.js";
 import { Direction } from "../enums/Direction.js";
 import type { Position } from "./Position.js";
 
-const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
-  [Direction.UP]: [-1, 0],
-  [Direction.DOWN]: [1, 0],
-  [Direction.LEFT]: [0, -1],
-  [Direction.RIGHT]: [0, 1],
+const DIRECTION_DELTAS: Record<Direction, readonly [number, number, number]> = {
+  [Direction.UP]: [-1, 0, 0],
+  [Direction.DOWN]: [1, 0, 0],
+  [Direction.LEFT]: [0, -1, 0],
+  [Direction.RIGHT]: [0, 1, 0],
+  [Direction.FORWARD]: [0, 0, 1],
+  [Direction.BACK]: [0, 0, -1],
 };
 
 export class ArrowSpec {
@@ -48,8 +50,8 @@ export class ArrowSpec {
     if (path.length >= 2) {
       const head = path[path.length - 1]!;
       const penultimate = path[path.length - 2]!;
-      const [rowDelta, colDelta] = DIRECTION_DELTAS[direction];
-      if (head.translate(rowDelta, colDelta).equals(penultimate)) {
+      const [rowDelta, colDelta, zDelta] = DIRECTION_DELTAS[direction];
+      if (head.translate(rowDelta, colDelta, zDelta).equals(penultimate)) {
         throw new InvalidArgumentError(`ArrowSpec ${id} head points back into its own body`);
       }
     }
