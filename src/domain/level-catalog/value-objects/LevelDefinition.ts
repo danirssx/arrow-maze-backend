@@ -7,10 +7,11 @@ export const LEVEL_DEFINITION_MAX_ARROWS = 60;
 export class LevelDefinition {
   private constructor(
     private readonly _arrows: readonly ArrowSpec[],
-    private readonly _attempts: number
+    private readonly _attempts: number,
+    private readonly _dimensions: 2 | 3 = 2
   ) {}
 
-  static create(arrows: ArrowSpec[], attempts = DEFAULT_ATTEMPTS): LevelDefinition {
+  static create(arrows: ArrowSpec[], attempts = DEFAULT_ATTEMPTS, dimensions: 2 | 3 = 2): LevelDefinition {
     if (arrows.length === 0) {
       throw new InvalidArgumentError("Level definition must contain at least one arrow");
     }
@@ -31,7 +32,7 @@ export class LevelDefinition {
       ids.add(arrow.id);
     }
 
-    return new LevelDefinition([...arrows], attempts);
+    return new LevelDefinition([...arrows], attempts, dimensions);
   }
 
   get arrows(): readonly ArrowSpec[] {
@@ -40,5 +41,9 @@ export class LevelDefinition {
 
   get attempts(): number {
     return this._attempts;
+  }
+
+  get dimensions(): 2 | 3 {
+    return this._dimensions;
   }
 }

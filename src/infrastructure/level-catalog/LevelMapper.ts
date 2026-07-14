@@ -30,6 +30,7 @@ export type LevelRecord = {
   arrows: unknown;
   attempts: number | null;
   timeLimitSeconds: number | null;
+  dimensions: number | null;
   createdAt: Date;
   updatedAt: Date;
   boardShape?: unknown;
@@ -38,7 +39,7 @@ export type LevelRecord = {
 type ArrowRecord = {
   id: string;
   color: string;
-  path: { row: number; col: number }[];
+  path: { row: number; col: number; z?: number }[];
   direction: string;
 };
 
@@ -48,11 +49,12 @@ export type BoardShapeRecord = {
 };
 
 export function recordToLevel(record: LevelRecord): Level {
+  const dimensions: 2 | 3 = record.dimensions === 3 ? 3 : 2;
   const arrows = parseArrowRecords(record.arrows).map((arrow) =>
     ArrowSpec.create(
       arrow.id,
       arrow.color,
-      arrow.path.map((position) => Position.create(position.row, position.col)),
+      arrow.path.map((position) => Position.create(position.row, position.col, position.z ?? 0)),
       parseEnumFromDb(Direction, arrow.direction, 'direction'),
     ),
   );
@@ -60,7 +62,7 @@ export function recordToLevel(record: LevelRecord): Level {
     LevelId.create(record.id),
     LevelName.create(record.name),
     LevelDescription.create(record.description),
-    LevelDefinition.create(arrows, record.attempts ?? undefined),
+    LevelDefinition.create(arrows, record.attempts ?? undefined, dimensions),
     parseEnumFromDb(Difficulty, record.difficulty, 'difficulty'),
     parseEnumFromDb(LevelStatus, record.status, 'status'),
     LevelVersion.create(record.version),
@@ -75,7 +77,11 @@ export function arrowsToRecord(level: Level): ArrowRecord[] {
   return level.definition.arrows.map((arrow) => ({
     id: arrow.id,
     color: arrow.color,
-    path: arrow.path.map((position) => ({ row: position.row, col: position.col })),
+    path: arrow.path.map((position) => ({
+      row: position.row,
+      col: position.col,
+      ...(position.z !== 0 ? { z: position.z } : {}),
+    })),
     direction: arrow.direction,
   }));
 }
@@ -150,7 +156,8 @@ function isArrowRecord(value: unknown): value is ArrowRecord {
         typeof pos === 'object' &&
         pos !== null &&
         Number.isInteger((pos as Record<string, unknown>)['row']) &&
-        Number.isInteger((pos as Record<string, unknown>)['col']),
+        Number.isInteger((pos as Record<string, unknown>)['col']) &&
+        ((pos as Record<string, unknown>)['z'] === undefined || Number.isInteger((pos as Record<string, unknown>)['z'])),
     )
   );
 }
