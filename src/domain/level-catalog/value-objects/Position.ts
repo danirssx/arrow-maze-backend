@@ -36,8 +36,8 @@ export class Position {
     return this._row === other._row && this._col === other._col && this._z === other._z;
   }
 
-  translate(rowDelta: number, colDelta: number): Position {
-    return Position.create(this._row + rowDelta, this._col + colDelta, this._z);
+  translate(rowDelta: number, colDelta: number, zDelta = 0): Position {
+    return Position.create(this._row + rowDelta, this._col + colDelta, this._z + zDelta);
   }
 
   toKey(): string {
