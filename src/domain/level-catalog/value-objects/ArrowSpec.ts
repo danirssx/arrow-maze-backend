@@ -78,6 +78,6 @@ export class ArrowSpec {
   }
 
   private static areOrthogonallyAdjacent(a: Position, b: Position): boolean {
-    return Math.abs(a.row - b.row) + Math.abs(a.col - b.col) === 1;
+    return Math.abs(a.row - b.row) + Math.abs(a.col - b.col) + Math.abs(a.z - b.z) === 1;
   }
 }
