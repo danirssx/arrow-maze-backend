@@ -23,7 +23,7 @@ export class LevelCatalogController {
 
   async listLevels(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const supports3d = req.headers['x-supports-3d'] === 'true';
+      const supports3d = req.headers['x-supports-3d'] === 'true' || req.headers['x-client-caps'] === '3d';
       const result = await this.getLevelsUseCase.execute({ supports3d });
       res.status(200).json(ApiResponsePresenter.success(result));
     } catch (err) {
@@ -34,7 +34,7 @@ export class LevelCatalogController {
   async getLevel(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const levelId = String(req.params['levelId']);
-      const supports3d = req.headers['x-supports-3d'] === 'true';
+      const supports3d = req.headers['x-supports-3d'] === 'true' || req.headers['x-client-caps'] === '3d';
       const result = await this.getLevelUseCase.execute({ levelId, supports3d });
       res.status(200).json(ApiResponsePresenter.success(result));
     } catch (err) {
